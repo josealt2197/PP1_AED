@@ -10,13 +10,19 @@
 #include <string.h>
 #include<time.h>
 
+FILE* ArchRequerimiento;
+
 //Procedimientos para Menus de Opciones
 void MenuPrincipal();
 void GestionEquipo();
 void GestionAsignacion();
 void GestionRequerimiento();
+void agregarRequerimiento();
+void guardar_requerimiento();
 void GestionIncidentes();
 void AnalisisDeDatos();
+
+typedef struct Requerimiento Requerimiento;
 
 struct Requerimiento{
     char identificador[50];
@@ -27,7 +33,8 @@ struct Requerimiento{
     char recursos[55];
     char estado [15];
     char esfuerzo[5];
-}datosRequerimiento;
+    struct Requerimiento *siguiente;
+};
 
 struct MiembroEquipo{
     char nombre_completo[50];
@@ -59,6 +66,7 @@ struct Incidentes{
 void Temporal(){
 	getchar();
 }
+
 
 void MenuPrincipal(){
 	char opcion;
@@ -141,7 +149,7 @@ void GestionEquipo(){
 	fflush(stdin);
 	getchar();
 }
-
+//-------------------------------------*Requerimientos*--------------------------------------------------
 void GestionRequerimiento(){
 	char opcion, ch;	
 
@@ -164,7 +172,7 @@ void GestionRequerimiento(){
 		
 		while((ch = getchar()) != EOF && ch != '\n');
 			switch(opcion){
-				case '1': Temporal();
+				case '1': agregarRequerimiento();
 					break;
 				case '2': Temporal();
 					break;
@@ -183,6 +191,58 @@ void GestionRequerimiento(){
 	}while(opcion!=3);			
 	fflush(stdin);
 	getchar();
+}
+
+void agregarRequerimiento(){
+	system( "CLS" );
+	
+	struct Requerimiento *requerimiento;
+
+	requerimiento= (struct Requerimiento *) malloc (sizeof(struct Requerimiento));
+	
+	if(requerimiento == NULL){
+		printf("Espacio insuficiente para almacenar los datos.\n");	
+	}
+		
+	printf("\n --Requerimientos--\n");
+	printf("\n Ingrese el identificador: ");
+	gets(requerimiento->identificador);
+	printf("\n Ingrese el tipo: ");
+	gets(requerimiento->tipo);
+	printf("\n Ingrese la descripcion: ");
+	gets(requerimiento->descripcion);
+	printf("\n Ingrese el riesgo: \n");
+	gets(requerimiento->riesgo);
+	printf("\n Ingrese la dependencia: \n");
+	gets(requerimiento->dependencia);
+	printf("\n Ingrese los recursos: \n");
+	gets(requerimiento->recursos);
+	//printf("\n Ingrese el estado: \n");
+	//gets(requerimiento->estado);
+	printf("\n Ingrese el esfuerzo: \n");
+	gets(requerimiento->esfuerzo);
+	printf("\n");
+	requerimiento->siguiente=NULL;
+
+	guardar_requerimiento(requerimiento);
+	getchar();	
+}
+
+void guardar_requerimiento(Requerimiento *requerimiento){
+	
+
+	ArchRequerimiento=fopen("Archivos\\Requerimientos.txt","a+");
+	if(ArchRequerimiento==NULL){
+		printf("\n Error al intentar usar el archivo.\n");	
+	}else{
+		fprintf(ArchRequerimiento,"%s / %s / %s / %s / %s / %s / %s \n", requerimiento->identificador, requerimiento->tipo, requerimiento->descripcion,
+						requerimiento->riesgo, requerimiento->dependencia, requerimiento->recursos, requerimiento->esfuerzo);
+	}
+	fclose(ArchRequerimiento);
+	printf("\n\n ==>Informacion guardada<==.\n");
+	
+	printf("\n\nPresione una tecla para regresar..." ); 
+
 }
 
 void GestionAsignacion(){
