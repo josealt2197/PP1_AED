@@ -1,0 +1,24 @@
+RQ001
+Funcional
+Debe abrir ventana 1
+Alto
+Ninguna
+Ninguno
+Por hacer
+8
+RQ002
+Funcional
+Debe cerrar la ventana
+Alto
+Ninguna
+Ninguno
+Por hacer
+6
+RQ003
+Funcional
+Debe hacer algo
+Bajo
+Ninguna
+Ninguno
+Por hacer
+6

@@ -29,7 +29,9 @@ typedef struct Asignacion Asignacion;
 typedef struct Incidentes Incidentes;
 
 typedef struct ListaMiembros ListaMiembros;
+typedef struct ListaRequerimientos ListaRequerimientos;
 typedef struct ListaAsignaciones ListaAsignaciones;
+typedef struct ListaIncidentes ListaIncidentes;
 
 //Procedimientos para Miembros de Equipo
 void registrarMiembro();
@@ -38,6 +40,8 @@ void guardarMiembro(MiembroEquipo *miembro);
 //Procedimientos para Requerimientos
 void registrarRequerimiento();
 void guardarRequerimiento(Requerimiento *requerimiento);
+void cargarRequerimientos(struct ListaRequerimientos *L);
+void consultarRequerimiento();
 
 //Procedimientos para Asignaciones
 void registrarAsignacion();
@@ -57,6 +61,7 @@ struct Requerimiento{
     char estado [15];
     char esfuerzo[5];
     Requerimiento *siguiente;
+    Requerimiento *anterior;
 };
 
 struct MiembroEquipo{
@@ -93,9 +98,19 @@ struct ListaMiembros {
 	MiembroEquipo *inicio;
 };
 
+struct ListaRequerimientos{
+	Requerimiento *inicio;
+	Requerimiento *final;
+};
+
+struct ListaIncidentes{
+	Incidentes *inicio;
+};
+
 struct ListaAsignaciones{
 	Asignacion *inicio;
 };
+
 
 void Temporal(){
 	getchar();
@@ -120,7 +135,7 @@ void MenuPrincipal(){
 		printf( "\n 1 - Gestion de Miembros de Equipo" );
 	    printf( "\n 2 - Gestion de Requerimientos" );
 	    printf( "\n 3 - Gestion de Asignaciones" );
-	    printf( "\n 4 - Gestion de Incidencias" );
+	    printf( "\n 4 - Gestion de Incidentes" );
 		printf( "\n 5 - Analisis de Datos" );   
 	    printf( "\n 6 - Salir" );
 	    printf("\n");
@@ -229,7 +244,7 @@ void GestionRequerimiento(){
 					break;
 				case '3': Temporal();
 					break;
-				case '4': Temporal();
+				case '4': consultarRequerimiento();
 					break;
 				case '0': MenuPrincipal();
 					break;
@@ -430,7 +445,7 @@ void guardarMiembro(MiembroEquipo *miembro){
 	if(ArchMiembros==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		fprintf(ArchMiembros,"%s %s %s %s %s\n", miembro->cedula, miembro->nivel_acceso, miembro->correo, miembro->nivel_acceso, miembro->telefono);
+		fprintf(ArchMiembros,"%s\n%s\n%s\n%s\n%s\n", miembro->cedula, miembro->nombre_completo, miembro->correo, miembro->nivel_acceso, miembro->telefono);
 	}
 	fclose(ArchMiembros);
 	printf("\n\n ==>Informacion guardada<==\n");
@@ -466,15 +481,16 @@ void registrarRequerimiento(){
 	gets(requerimiento->tipo);
 	printf("\n Ingrese la descripcion: ");
 	gets(requerimiento->descripcion);
-	printf("\n Ingrese el riesgo: \n");
+	printf("\n Ingrese el riesgo: ");
 	gets(requerimiento->riesgo);
-	printf("\n Ingrese la dependencia: \n");
+	printf("\n Ingrese la dependencia: ");
 	gets(requerimiento->dependencia);
-	printf("\n Ingrese los recursos: \n");
+	printf("\n Ingrese los recursos: ");
 	gets(requerimiento->recursos);
 	//printf("\n Ingrese el estado: \n");
 	//gets(requerimiento->estado);
-	printf("\n Ingrese el esfuerzo: \n");
+	strcpy(requerimiento->estado, "Por hacer");
+	printf("\n Ingrese el esfuerzo: ");
 	gets(requerimiento->esfuerzo);
 	printf("\n");
 	requerimiento->siguiente=NULL;
@@ -495,15 +511,151 @@ void guardarRequerimiento(Requerimiento *requerimiento){
 	if(ArchRequerimiento==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		fprintf(ArchRequerimiento,"%s / %s / %s / %s / %s / %s / %s \n", requerimiento->identificador, requerimiento->tipo, requerimiento->descripcion,
-						requerimiento->riesgo, requerimiento->dependencia, requerimiento->recursos, requerimiento->esfuerzo);
+		fprintf(ArchRequerimiento,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", requerimiento->identificador, requerimiento->tipo, requerimiento->descripcion,
+						requerimiento->riesgo, requerimiento->dependencia, requerimiento->recursos, requerimiento->estado,  requerimiento->esfuerzo);
 	}
 	fclose(ArchRequerimiento);
-	printf("\n\n ==>Informacion guardada<==.\n");
+	printf("\n ==>Informacion guardada<==.\n");
 	
 	printf("\n\nPresione una tecla para regresar..." ); 
 
 }
+
+void quitaFinLinea(char linea[]){
+	int i;
+	for(i=0; linea[i]!='\0'; i++){
+		if(linea[i] == '\n'){
+			linea[i]='\0';
+			break;
+		}
+	}
+}
+
+void cargarRequerimientos(struct ListaRequerimientos *L){
+
+	struct Requerimiento *requerimiento, *aux;
+		
+	aux = (struct Requerimiento *) malloc(sizeof(struct Requerimiento));
+
+	ArchRequerimiento = fopen("Archivos\\Requerimientos.txt","r");
+
+	if(ArchRequerimiento==NULL){
+		printf("\n Error al intentar abrir el archivo.\n");	
+	}else{
+
+		while(!feof(ArchRequerimiento)){
+			fgets(aux->identificador, 50, ArchRequerimiento); 
+			quitaFinLinea(aux->identificador);
+			fgets(aux->tipo, 12, ArchRequerimiento); 
+			quitaFinLinea(aux->tipo);
+			fgets(aux->descripcion, 100, ArchRequerimiento);
+			quitaFinLinea(aux->descripcion);			
+			fgets(aux->riesgo, 60, ArchRequerimiento);
+			quitaFinLinea(aux->riesgo);
+			fgets(aux->dependencia, 100, ArchRequerimiento);
+			quitaFinLinea(aux->dependencia);
+			fgets(aux->recursos, 55, ArchRequerimiento);
+			quitaFinLinea(aux->recursos);
+			fgets(aux->estado, 15, ArchRequerimiento);
+			quitaFinLinea(aux->estado);
+			fgets(aux->esfuerzo, 5, ArchRequerimiento);
+			quitaFinLinea(aux->esfuerzo); 
+			
+			if(L->inicio == NULL) 
+			{
+				//Inserta al inicio de la lista
+				L->inicio = (struct Requerimiento *) malloc (sizeof(struct Requerimiento));
+				strcpy(L->inicio->identificador , aux->identificador);
+				strcpy(L->inicio->tipo , aux->tipo); 
+				strcpy(L->inicio->descripcion , aux->descripcion ); 
+				strcpy(L->inicio->riesgo , aux->riesgo); 
+				strcpy(L->inicio->dependencia , aux->dependencia); 
+				strcpy(L->inicio->recursos , aux->recursos); 
+				strcpy(L->inicio->estado , aux->estado); 
+				strcpy(L->inicio->esfuerzo , aux->esfuerzo);
+				L->inicio->siguiente = NULL; 
+				L->inicio->anterior = NULL; 
+				L->final = L->inicio;
+	
+			}else{	
+				//Inserta al final de la lista	
+				L->final->siguiente = (struct Requerimiento *) malloc (sizeof(struct Requerimiento));
+				strcpy(L->final->siguiente->identificador , aux->identificador);
+				strcpy(L->final->siguiente->tipo , aux->tipo); 
+				strcpy(L->final->siguiente->descripcion , aux->descripcion ); 
+				strcpy(L->final->siguiente->riesgo , aux->riesgo); 
+				strcpy(L->final->siguiente->dependencia , aux->dependencia); 
+				strcpy(L->final->siguiente->recursos , aux->recursos); 
+				strcpy(L->final->siguiente->estado , aux->estado); 
+				strcpy(L->final->siguiente->esfuerzo , aux->esfuerzo);
+				L->final->siguiente->siguiente = NULL; 
+				L->final->siguiente->anterior = L->final; 
+				L->final = L->final->siguiente;
+			}		
+		}
+		
+		
+	}	
+	fclose(ArchRequerimiento);
+}
+
+void consultarRequerimiento(){
+
+	struct ListaRequerimientos *L;
+	struct Requerimiento *i;
+	int val=3;
+	char id[10];
+	
+	system( "CLS" );
+	printf("\n\n+-------------------------------+\n");
+	printf("      Gestor de Requerimientos       \n");
+	printf("+-------------------------------+\n");
+	printf( "  Agregar nuevo requerimiento\n" );
+	printf("+-------------------------------+\n");
+	
+	printf("\n Ingrese el identificador: ");
+	gets(id);
+
+	L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
+	L->inicio = NULL;
+	L->final = NULL;
+
+	cargarRequerimientos(L);
+
+	if(L->inicio == NULL)
+	{
+		printf("La lista esta vacia...\n");		
+	}
+	else
+	{
+		printf("+-------------------------------+");
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+			val=strcmp(id,i->identificador);
+			if(val==0){
+				printf("\nIdentificador: %s \n", i->identificador);
+				printf("Tipo: %s \n", i->tipo);
+				printf("Descripcion: %s \n", i->descripcion);
+				printf("Riesgo: %s \n", i->riesgo);
+				printf("Dependencia: %s \n", i->dependencia);
+				printf("Recursos: %s \n", i->recursos);
+				printf("Estado: %s \n", i->estado);
+				printf("Esfuerzo: %s \n", i->esfuerzo);
+				printf("+-------------------------------+\n");
+			
+			}
+			i = i->siguiente;
+		}
+		if(val==1){
+			printf( "\n***Articulo no encontrado***");
+		}		
+	}	
+
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);
+}
+
 
 /*
 	Entradas:
@@ -540,7 +692,7 @@ void registrarAsignacion(){
 	gets(asignacion->identificador);
 	printf("\n Ingrese la Descripcion: ");
 	gets(asignacion->descripcion);
-	printf("\n Ingrese las Cédulas de los Miembros: ");
+	printf("\n Ingrese las Cedulas de los Miembros: ");
 	//Mostrar Miembros
 	gets(asignacion->miembros);
 	//strcpy(asignacion->prioridad, prioridad[prioridad]);
@@ -621,7 +773,7 @@ void guardarIncidentes(Incidentes *incidente){
 	if(ArchIncidente==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		fprintf(ArchIncidente,"%s / %s / %s / %s \n", incidente->codigoRequerimiento, incidente->codigoAsignacion, incidente->descripcionIncidente,
+		fprintf(ArchIncidente,"%s %s %s %s \n", incidente->codigoRequerimiento, incidente->codigoAsignacion, incidente->descripcionIncidente,
 						incidente->fecha);
 	}
 	fclose(ArchIncidente);
