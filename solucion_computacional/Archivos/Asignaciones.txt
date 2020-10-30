@@ -1,1 +1,8 @@
- lx 1:00 6:00 Ninguno RQ001 Apertura de Ventana 305000781 ALTA En proceso
+29-10-2020
+12:30
+14_50
+Ninguno
+RQ001
+Ninguna
+ALTA
+En proceso

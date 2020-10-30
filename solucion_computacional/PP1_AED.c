@@ -13,7 +13,7 @@
 FILE* ArchRequerimiento;
 FILE* ArchMiembros;
 FILE* ArchAsignaciones;
-FILE* ArchIncidente;
+FILE* ArchIncidentes;
 
 //Procedimientos para Menus de Opciones
 void MenuPrincipal();
@@ -48,10 +48,14 @@ void consultarRequerimiento();
 //Procedimientos para Asignaciones
 void registrarAsignacion();
 void guardarAsignacion(Asignacion *asignacion);
+void cargarAsignaciones(struct ListaAsignaciones *L);
+void consultarAsignaciones();
 
 //Procedimientos para Incidentes
 void registrarIncidentes();
 void guardarIncidentes(Incidentes *incidente);
+void cargarIncidentes(struct ListaIncidentes *L);
+void consultarIncidentes();
 
 struct Requerimiento{
     char identificador[50];
@@ -86,6 +90,7 @@ struct Asignacion{
     char miembros[15];
     char prioridad[15];
     char estado[15];
+    Asignacion *anterior;
     Asignacion *siguiente;
 };
 
@@ -94,6 +99,7 @@ struct Incidentes{
     char codigoAsignacion[15];
     char descripcionIncidente[100];
     char fecha[20];
+    Incidentes *anterior;
     Incidentes *siguiente;
 };
 
@@ -109,10 +115,12 @@ struct ListaRequerimientos{
 
 struct ListaIncidentes{
 	Incidentes *inicio;
+	Incidentes *final;
 };
 
 struct ListaAsignaciones{
 	Asignacion *inicio;
+	Asignacion *final;
 };
 
 
@@ -294,7 +302,7 @@ void GestionAsignacion(){
 			switch(opcion){
 				case '1':  registrarAsignacion();
 					break;
-				case '2': Temporal();
+				case '2': consultarAsignaciones();
 					break;
 				case '3': Temporal();
 					break;
@@ -316,7 +324,7 @@ void GestionAsignacion(){
 /*
 	Entradas: Un número (tipo char) en un rango de 0 a 2 para escoger una de las opciones disponibles en el menú. 
 	Salidas: en caso de que el número ingresado sea 0 se devuelve al menú principal, si el número es 1 se a llama la funcion registrarIncidentes(), 
-	         Si el número ingresado es 2 se llama a la función **
+	         Si el número ingresado es 2 se llama a la función **, Si el número ingresado es 3 se llama a la función **
 	Restricciones: Solo se deben ingresar números en un rango de 0 a 2.
 */
 void GestionIncidentes(){
@@ -342,7 +350,9 @@ void GestionIncidentes(){
 			switch(opcion){
 				case '1': registrarIncidentes();
 					break;
-				case '2': Temporal();
+				case '2': consultarIncidentes();
+					break;
+				case '3': consultarIncidentes();
 					break;
 				case '0': MenuPrincipal();
 					break;
@@ -405,6 +415,28 @@ void AnalisisDeDatos(){
 	}while(opcion!=3);			
 	fflush(stdin);
 	getchar();
+}
+
+/*
+	Entradas: Una puntero a una cadena de caacteres.
+	Salidas: La cadena de caracteres recibida, con el valor de la fecha actual, siguiendo el formato dd/MM/AAAA.
+	Restricciones: Ninguna.
+*/
+void obtenerFechaActual(char *hoy){
+	time_t t = time(NULL);
+	struct tm tm = *localtime(&t);
+	
+	char dia[3], mes[3], anho[3];
+	sprintf(dia, "%d", tm.tm_mday);
+	sprintf(mes, "%d", (tm.tm_mon + 1));
+	sprintf(anho, "%d", (tm.tm_year + 1900));
+	
+	strcat(hoy, dia);  
+	strcat(hoy, "-");
+	strcat(hoy, mes); 
+	strcat(hoy, "-");
+	strcat(hoy, anho);
+ 	
 }
 
 /*
@@ -483,7 +515,7 @@ void guardarMiembro(MiembroEquipo *miembro){
 */
 void cargarMiembros(struct ListaMiembros *L){
 	
-	struct MiembroEquipo *miembro, *aux;
+	struct MiembroEquipo *aux;
 
 	aux =(struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
 
@@ -501,7 +533,7 @@ void cargarMiembros(struct ListaMiembros *L){
 			quitaFinLinea(aux->correo);			
 			fgets(aux->nivel_acceso, 4, ArchMiembros);
 			quitaFinLinea(aux->nivel_acceso);
-			fgets(aux->telefono, 15, ArchRequerimiento);
+			fgets(aux->telefono, 15, ArchMiembros);
 			quitaFinLinea(aux->telefono);
 			
 			if(L->inicio == NULL) 
@@ -570,22 +602,22 @@ void consultarMiembroEquipo(){
 	}
 	else
 	{
-		printf("\n+-------------------------------+");
 		i = L->inicio;
 		while( i->siguiente!= NULL){
 			val=strcmp(id,i->cedula);
 			if(val==0){
+				printf("\n+-------------------------------+");
 				printf("\nCedula: %s \n", i->cedula);
 				printf("Nombre: %s \n", i->nombre_completo);
 				printf("Correo Electronico: %s \n", i->correo);
 				printf("Nivel de Acceso: %s \n", i->nivel_acceso);
-				printf("Numero Telefónico: %s \n", i->telefono);
+				printf("Numero Telefonico: %s \n", i->telefono);
 				printf("+-------------------------------+\n");
-			
+				break;
 			}
 			i = i->siguiente;
 		}
-		if(val==1){
+		if(val!=0){
 			printf( "\n***Miembro no encontrado***");
 		}		
 	}	
@@ -790,7 +822,7 @@ void consultarRequerimiento(){
 			}
 			i = i->siguiente;
 		}
-		if(val==1){
+		if(val!=0){
 			printf( "\n***Requerimiento no encontrado***");
 		}		
 	}	
@@ -803,7 +835,7 @@ void consultarRequerimiento(){
 /*
 	Entradas: Los diferentes objetos de la estructura Asignacion(fechaSolicitud, horaInicio, horaFin, recurso, identificador 
 			descripcion, miembros, prioridad y estado). 
-	Salidas: LLama a la función guardarAsignacion para guardar los datos al registrarlos en un archivo .txt. 
+	Salidas: Llama a la función guardarAsignacion para guardar los datos al registrarlos en un archivo .txt. 
 	Restricciones: No tiene restricciones.
 */
 void registrarAsignacion(){
@@ -819,12 +851,11 @@ void registrarAsignacion(){
 //	char prioridad [3][10] = {"ALTA", "MEDIA", "BAJA"};
 //	int aleatorio = (rand() % (2 – 0 + 1));
 	
-	time_t t = time(NULL);
-	struct tm *tm = localtime(&t);
-	
 	asignacion=(struct Asignacion *) malloc (sizeof(struct Asignacion));
-
-	strcpy(asignacion->descripcion, asctime(tm));
+	
+	char fecha [50];
+	obtenerFechaActual(fecha);
+	strcpy(asignacion->fechaSolicitud, fecha);
 	printf("\n Ingrese la Hora de Inicio: ");
 	gets(asignacion->horaInicio);
 	printf("\n Ingrese el Hora de Fin: ");
@@ -860,13 +891,155 @@ void guardarAsignacion(Asignacion *asignacion){
 	if(ArchAsignaciones==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		fprintf(ArchAsignaciones,"%s %s %s %s %s %s %s %s %s\n", asignacion->fechaSolicitud, asignacion->horaInicio, asignacion->horaFin, asignacion->recurso, asignacion->identificador, 
-																asignacion->descripcion, asignacion->miembros, asignacion->prioridad, asignacion->estado);
+		fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", asignacion->fechaSolicitud, asignacion->horaInicio, asignacion->horaFin, asignacion->recurso, asignacion->identificador, 
+																asignacion->descripcion,  asignacion->prioridad, asignacion->estado);
+//																asignacion->miembros,
 	}
 	fclose(ArchAsignaciones);
 	printf("\n\n ==>Informacion guardada<==\n");
 	
 	printf("\n\nPresione una tecla para regresar..." ); 
+}
+
+/*
+	Entradas: Una puntero a una lista del tipo ListaAsiganciones de Asignaciones.
+	Salidas: Una lista doblemente enlazada con los diferentes objetos de la estructura Asignacion (fechaSolicitud, horaInicio, 
+			horaFin, recurso, identificador, descripcion, miembros, prioridad y estado). 
+	Restricciones: Ninguna.
+*/
+void cargarAsignaciones(struct ListaAsignaciones *L){
+	
+	struct Asignacion *asignacion, *aux;
+
+	aux =(struct Asignacion *) malloc (sizeof(struct Asignacion));
+
+	ArchAsignaciones = fopen("Archivos\\Asignaciones.txt","r");
+
+	if(ArchAsignaciones==NULL){
+		printf("\n Error al intentar abrir el archivo.\n");	
+	}else{
+
+		while(!feof(ArchAsignaciones)){
+			fgets(aux->fechaSolicitud, 50, ArchAsignaciones); 
+			quitaFinLinea(aux->fechaSolicitud);
+			fgets(aux->horaInicio, 15, ArchAsignaciones); 
+			quitaFinLinea(aux->horaInicio);
+			fgets(aux->horaFin, 15, ArchAsignaciones);
+			quitaFinLinea(aux->horaFin);	
+			fgets(aux->recurso, 50, ArchAsignaciones);
+			quitaFinLinea(aux->recurso);		
+			fgets(aux->identificador, 10, ArchAsignaciones);
+			quitaFinLinea(aux->identificador);
+			fgets(aux->descripcion, 100, ArchAsignaciones);
+			quitaFinLinea(aux->descripcion);
+//			fgets(aux->miembros, 15, ArchAsignaciones);
+//			quitaFinLinea(aux->miembros);
+			fgets(aux->prioridad, 15, ArchAsignaciones);
+			quitaFinLinea(aux->prioridad);
+			fgets(aux->estado, 15, ArchAsignaciones);
+			quitaFinLinea(aux->estado);
+			
+			if(L->inicio == NULL) 
+			{
+				//Inserta al inicio de la lista
+				L->inicio =(struct Asignacion *) malloc (sizeof(struct Asignacion));
+				strcpy(L->inicio->fechaSolicitud , aux->fechaSolicitud);
+				strcpy(L->inicio->horaInicio , aux->horaInicio ); 
+				strcpy(L->inicio->horaFin , aux->horaFin); 
+				strcpy(L->inicio->recurso , aux->recurso); 
+				strcpy(L->inicio->identificador , aux->identificador); 
+				strcpy(L->inicio->descripcion , aux->descripcion);
+//				strcpy(L->inicio->miembros , aux->miembros); 
+				strcpy(L->inicio->prioridad , aux->prioridad ); 
+				strcpy(L->inicio->estado , aux->estado); 
+				L->inicio->siguiente = NULL; 
+				L->inicio->anterior = NULL; 
+				L->final = L->inicio;
+	
+			}else{	
+				//Inserta al final de la lista	
+				L->final->siguiente =(struct Asignacion *) malloc (sizeof(struct Asignacion));
+				strcpy(L->final->siguiente->fechaSolicitud , aux->fechaSolicitud);
+				strcpy(L->final->siguiente->horaInicio , aux->horaInicio ); 
+				strcpy(L->final->siguiente->horaFin , aux->horaFin); 
+				strcpy(L->final->siguiente->identificador , aux->identificador); 
+				strcpy(L->final->siguiente->descripcion , aux->descripcion);
+				strcpy(L->final->siguiente->recurso , aux->recurso);
+//				strcpy(L->final->siguiente->miembros , aux->miembros); 
+				strcpy(L->final->siguiente->prioridad , aux->prioridad ); 
+				strcpy(L->final->siguiente->estado , aux->estado); 
+				L->final->siguiente->siguiente = NULL; 
+				L->final->siguiente->anterior = L->final; 
+				L->final = L->final->siguiente;
+			}		
+		}
+		
+	}	
+	fclose(ArchAsignaciones);
+}
+
+/*
+	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar las Asignaciones
+	Salidas: Los datos relacionado a las Asignaciones del Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
+			que no se han encontrado.
+	Restricciones: Ninguna
+*/
+void consultarAsignaciones(){
+
+	struct ListaAsignaciones *L;
+	struct Asignacion *i;
+	int val=3;
+	char id[12];
+	
+	system( "CLS" );
+	printf("\n\n+-------------------------------------+\n");
+	printf("      Gestor de Requerimientos       \n");
+	printf("+-------------------------------------+\n");
+	printf( "Consultar Asignaciones de un Miembro\n" );
+	printf("+-------------------------------------+\n");
+	
+	printf("\n Ingrese la la cedula del miembro: ");
+	gets(id);
+
+	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+	L->inicio = NULL;
+	L->final = NULL;
+
+	cargarAsignaciones(L);
+
+	if(L->inicio == NULL)
+	{
+		printf("La lista esta vacia...\n");		
+	}
+	else
+	{
+		printf("\n+-------------------------------+\n");
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+//			val=strcmp(id,i->miembros);
+//			if(val==0){
+				printf("Fecha de Solicitud: %s \n", i->fechaSolicitud);
+				printf("Hora de Inicio: %s \n", i->horaInicio ); 
+				printf("Hora de Fin: %s \n", i->horaFin); 
+				printf("Identificador: %s \n", i->identificador); 
+				printf("Recurso: %s \n", i->recurso); 
+				printf("Descripcion: %s \n", i->descripcion);
+//				printf("Miembros: %s \n", i->miembros); 
+				printf("Priodidad: %s \n", i->prioridad ); 
+				printf("Estado: %s \n", i->estado); 
+				printf("+-------------------------------+\n");
+			
+//			}
+			i = i->siguiente;
+		}
+		if(val!=0){
+			printf( "\n***No se han encontrado Asigaciones***");
+		}		
+	}	
+
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);
 }
 
 /*
@@ -913,22 +1086,140 @@ void registrarIncidentes(){
 void guardarIncidentes(Incidentes *incidente){
 	
 
-	ArchIncidente=fopen("Archivos\\Incidentes.txt","a+");
-	if(ArchIncidente==NULL){
+	ArchIncidentes=fopen("Archivos\\Incidentes.txt","a+");
+	if(ArchIncidentes==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		fprintf(ArchIncidente,"%s %s %s %s \n", incidente->codigoRequerimiento, incidente->codigoAsignacion, incidente->descripcionIncidente,
+		fprintf(ArchIncidentes,"%s\n%s\n%s\n%s\n", incidente->codigoRequerimiento, incidente->codigoAsignacion, incidente->descripcionIncidente,
 						incidente->fecha);
 	}
-	fclose(ArchIncidente);
+	fclose(ArchIncidentes);
 	printf("\n\n ==>Informacion guardada<==.\n");
 	
 	printf("\n\nPresione una tecla para regresar..." ); 
 
 }
 
+/*
+	Entradas: Una puntero a una lista del tipo ListaIncidentes de Incidentes.
+	Salidas: Una lista doblemente enlazada con los diferentes objetos de la estructura Incidente (codigoRequerimiento, codigoAsignacion, 
+			descripcionIncidente, fecha). 
+	Restricciones: Ninguna.
+*/
+void cargarIncidentes(struct ListaIncidentes *L){
+	
+	struct Incidentes *aux;
 
-int main(){   
-    MenuPrincipal();    
+	aux = (struct Incidentes *) malloc (sizeof(struct Incidentes));
+
+	ArchIncidentes = fopen("Archivos\\Incidentes.txt","r");
+
+	if(ArchIncidentes==NULL){
+		printf("\n Error al intentar abrir el archivo.\n");	
+	}else{
+	
+		while(!feof(ArchIncidentes)){
+			fgets(aux->codigoRequerimiento, 15, ArchIncidentes); 
+			quitaFinLinea(aux->codigoRequerimiento);
+			fgets(aux->codigoAsignacion, 15, ArchIncidentes); 
+			quitaFinLinea(aux->codigoAsignacion);
+			fgets(aux->descripcionIncidente, 100, ArchIncidentes);
+			quitaFinLinea(aux->descripcionIncidente);	
+			fgets(aux->fecha, 20, ArchIncidentes);
+			quitaFinLinea(aux->fecha);		
+						
+			if(L->inicio == NULL){
+				//Inserta al inicio de la lista
+				L->inicio = (struct Incidentes *) malloc (sizeof(struct Incidentes));
+				strcpy(L->inicio->codigoRequerimiento , aux->codigoRequerimiento);
+				strcpy(L->inicio->codigoAsignacion , aux->codigoAsignacion ); 
+				strcpy(L->inicio->descripcionIncidente , aux->descripcionIncidente); 
+				strcpy(L->inicio->fecha , aux->fecha); 
+				L->inicio->siguiente = NULL; 
+				L->inicio->anterior = NULL; 
+				L->final = L->inicio;
+	
+			}else{
+				//Inserta al final de la lista	
+				L->final->siguiente =(struct Incidentes *) malloc (sizeof(struct Incidentes));
+				strcpy(L->final->siguiente->codigoRequerimiento , aux->codigoRequerimiento);
+				strcpy(L->final->siguiente->codigoAsignacion , aux->codigoAsignacion ); 
+				strcpy(L->final->siguiente->descripcionIncidente , aux->descripcionIncidente); 
+				strcpy(L->final->siguiente->fecha , aux->fecha); 
+				L->final->siguiente->siguiente = NULL; 
+				L->final->siguiente->anterior = L->final; 
+				L->final = L->final->siguiente;
+			}		
+		}
+		
+		struct Incidentes *i;
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+			printf("\n+-------------------------------+\n");
+			printf("Requerimiento: %s \n", i->codigoRequerimiento);
+			printf("Asignacion: %s \n", i->codigoAsignacion ); 
+			printf("Descripcion: %s \n", i->descripcionIncidente); 
+			printf("Fecha de Incidente: %s \n", i->fecha); 
+			printf("+-------------------------------+\n");
+	
+			i = i->siguiente;
+		}
+		
+	}	
+	fclose(ArchIncidentes);
+}
+
+/*
+	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar los Incidentes
+	Salidas: Los datos relacionado a los Incidentes en caso de que existan, de lo contrario un mensaje indicando 
+			que no se han encontrado.
+	Restricciones: Ninguna
+*/
+void consultarIncidentes(){
+
+	struct ListaIncidentes *L;
+	struct Incidentes *i;
+	int val=3;
+	
+	system( "CLS" );
+	printf("\n\n+-------------------------------------+\n");
+	printf("      Gestor de Requerimientos         \n");
+	printf("+-------------------------------------+\n");
+	printf( "       Consultar Incidentes           \n");
+	printf("+-------------------------------------+\n");
+
+	L = (struct ListaIncidentes *) malloc(sizeof(struct ListaIncidentes));
+	L->inicio = NULL;
+	L->final = NULL;
+
+	cargarIncidentes(L);
+
+//	if(L->inicio == NULL)
+//	{
+//		printf("La lista esta vacia...\n");		
+//	}
+//	else
+//	{	
+//		i = L->inicio;
+//		while( i->siguiente!= NULL){
+//			printf("\n+-------------------------------+\n");
+//			printf("Requerimiento: %s \n", i->codigoRequerimiento);
+//			printf("Asignacion: %s \n", i->codigoAsignacion ); 
+//			printf("Descripcion: %s \n", i->descripcionIncidente); 
+//			printf("Fecha de Incidente: %s \n", i->fecha); 
+//			printf("+-------------------------------+\n");
+//	
+//			i = i->siguiente;
+//		}				
+//	}	
+
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);
+}
+
+
+int main(){ 
+	MenuPrincipal();    
 	return 0; 
 }
