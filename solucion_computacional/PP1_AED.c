@@ -36,6 +36,8 @@ typedef struct ListaIncidentes ListaIncidentes;
 //Procedimientos para Miembros de Equipo
 void registrarMiembro();
 void guardarMiembro(MiembroEquipo *miembro);
+void cargarMiembros(struct ListaMiembros *L);
+void consultarMiembroEquipo();
 
 //Procedimientos para Requerimientos
 void registrarRequerimiento();
@@ -70,6 +72,7 @@ struct MiembroEquipo{
     char correo[50];
     char nivel_acceso[3];
     char telefono[15];
+    MiembroEquipo *anterior;
     MiembroEquipo *siguiente;
 };
 
@@ -96,6 +99,7 @@ struct Incidentes{
 
 struct ListaMiembros {
 	MiembroEquipo *inicio;
+	MiembroEquipo *final;
 };
 
 struct ListaRequerimientos{
@@ -194,7 +198,7 @@ void GestionEquipo(){
 			switch(opcion){
 				case '1':  registrarMiembro();
 					break;
-				case '2': Temporal();
+				case '2': consultarMiembroEquipo();
 					break;
 				case '0': MenuPrincipal();
 					break;
@@ -310,10 +314,10 @@ void GestionAsignacion(){
 }
 
 /*
-	Entradas: Un número (tipo char) en un rango de 0 a 4 para escoger una de las opciones disponibles en el menú. 
+	Entradas: Un número (tipo char) en un rango de 0 a 2 para escoger una de las opciones disponibles en el menú. 
 	Salidas: en caso de que el número ingresado sea 0 se devuelve al menú principal, si el número es 1 se a llama la funcion registrarIncidentes(), 
 	         Si el número ingresado es 2 se llama a la función **
-	Restricciones: Solo se deben ingresar números en un rango de 0 a 4.
+	Restricciones: Solo se deben ingresar números en un rango de 0 a 2.
 */
 void GestionIncidentes(){
 	char opcion, ch;	
@@ -354,9 +358,11 @@ void GestionIncidentes(){
 }
 
 /*
-	Entradas:
-	Salidas:
-	Restricciones:
+	Entradas: Un número (tipo char) en un rango de 0 a 4 para escoger una de las opciones disponibles en el menú. 
+	Salidas: en caso de que el número ingresado sea 0 se devuelve al menú principal, si el número es 1 se a llama la funcion registrarIncidentes(), 
+	         Si el número ingresado es 2 se llama a la función **, Si el número ingresado es 3 se llama a la función **,
+	         Si el número ingresado es 4 se llama a la función ***.
+	Restricciones: Solo se deben ingresar números en un rango de 0 a 4.
 */
 void AnalisisDeDatos(){
 	char opcion, ch;	
@@ -402,9 +408,25 @@ void AnalisisDeDatos(){
 }
 
 /*
-	Entradas:
-	Salidas:
-	Restricciones:
+	Entradas: Una cadena de caacteres.
+	Salidas: La cadena de caracteres recibida, sustituyendo el valor de los campos con un salto de linea (\n) por un caracter nulo.
+	Restricciones: El parametro debe corresponder con el tipo cadena de caracteres.
+*/
+void quitaFinLinea(char linea[]){
+	int i;
+	for(i=0; linea[i]!='\0'; i++){
+		if(linea[i] == '\n'){
+			linea[i]='\0';
+			break;
+		}
+	}
+}
+
+/*
+	Entradas: Los diferentes objetos de la estructura Miembro de Equipo(nombre, cedula, correo, telefono, nivel  
+	          de acceso). 
+	Salidas: LLama a la función guardarMiembro para guardar los datos al registrarlos en un archivo .txt. 
+	Restricciones: No tiene restricciones.
 */
 void registrarMiembro(){
 	system( "CLS" );
@@ -435,9 +457,9 @@ void registrarMiembro(){
 }
 
 /*
-	Entradas:
-	Salidas:
-	Restricciones:
+	Entradas: Una estructura de Miembro de Equipo. 
+	Salidas: Guardar los datos de la estructura en un archivo .txt. 
+	Restricciones: No tiene restricciones.
 */
 void guardarMiembro(MiembroEquipo *miembro){
 	
@@ -454,9 +476,129 @@ void guardarMiembro(MiembroEquipo *miembro){
 }
 
 /*
+	Entradas: Una puntero a una lista del tipo ListaMiembros de Miembros de equipo.
+	Salidas: Una lista doblemente enlazada con los diferentes objetos de la estructura Miembro de Equipo(nombre, 
+			cedula, correo, telefono, nivel de acceso).
+	Restricciones: Ninguna.
+*/
+void cargarMiembros(struct ListaMiembros *L){
+	
+	struct MiembroEquipo *miembro, *aux;
+
+	aux =(struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
+
+	ArchMiembros = fopen("Archivos\\MiembroEquipo.txt","r");
+
+	if(ArchMiembros==NULL){
+		printf("\n Error al intentar abrir el archivo.\n");	
+	}else{
+		while(!feof(ArchMiembros)){
+			fgets(aux->cedula, 12, ArchMiembros); 
+			quitaFinLinea(aux->cedula);
+			fgets(aux->nombre_completo, 50, ArchMiembros); 
+			quitaFinLinea(aux->nombre_completo);
+			fgets(aux->correo, 50, ArchMiembros);
+			quitaFinLinea(aux->correo);			
+			fgets(aux->nivel_acceso, 4, ArchMiembros);
+			quitaFinLinea(aux->nivel_acceso);
+			fgets(aux->telefono, 15, ArchRequerimiento);
+			quitaFinLinea(aux->telefono);
+			
+			if(L->inicio == NULL) 
+			{
+				//Inserta al inicio de la lista
+				L->inicio = (struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
+				strcpy(L->inicio->cedula , aux->cedula);
+				strcpy(L->inicio->nombre_completo , aux->nombre_completo); 
+				strcpy(L->inicio->correo , aux->correo ); 
+				strcpy(L->inicio->nivel_acceso , aux->nivel_acceso); 
+				strcpy(L->inicio->telefono , aux->telefono); 
+				L->inicio->siguiente = NULL; 
+				L->inicio->anterior = NULL; 
+				L->final = L->inicio;
+	
+			}else{	
+				//Inserta al final de la lista	
+				L->final->siguiente = (struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
+				strcpy(L->final->siguiente->cedula , aux->cedula);
+				strcpy(L->final->siguiente->nombre_completo , aux->nombre_completo); 
+				strcpy(L->final->siguiente->correo , aux->correo ); 
+				strcpy(L->final->siguiente->nivel_acceso , aux->nivel_acceso); 
+				strcpy(L->final->siguiente->telefono , aux->telefono); 
+				L->final->siguiente->siguiente = NULL; 
+				L->final->siguiente->anterior = L->final; 
+				L->final = L->final->siguiente;
+			}		
+		}
+		
+	}	
+	fclose(ArchMiembros);
+}
+
+/*
+	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar
+	Salidas: Los datos relacionado al Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
+			que no se ha encontrado.
+	Restricciones: Ninguna
+*/
+void consultarMiembroEquipo(){
+
+	struct ListaMiembros *L;
+	struct MiembroEquipo *i;
+	int val=3;
+	char id[12];
+	
+	system( "CLS" );
+	printf("\n\n+-------------------------------+\n");
+	printf("      Gestor de Requerimientos       \n");
+	printf("+-------------------------------+\n");
+	printf( "  Consultar Miembro de Equipo\n" );
+	printf("+-------------------------------+\n");
+	
+	printf("\n Ingrese la cedula: ");
+	gets(id);
+
+	L = (struct ListaMiembros *) malloc(sizeof(struct ListaMiembros));
+	L->inicio = NULL;
+	L->final = NULL;
+
+	cargarMiembros(L);
+
+	if(L->inicio == NULL)
+	{
+		printf("La lista esta vacia...\n");		
+	}
+	else
+	{
+		printf("\n+-------------------------------+");
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+			val=strcmp(id,i->cedula);
+			if(val==0){
+				printf("\nCedula: %s \n", i->cedula);
+				printf("Nombre: %s \n", i->nombre_completo);
+				printf("Correo Electronico: %s \n", i->correo);
+				printf("Nivel de Acceso: %s \n", i->nivel_acceso);
+				printf("Numero Telefónico: %s \n", i->telefono);
+				printf("+-------------------------------+\n");
+			
+			}
+			i = i->siguiente;
+		}
+		if(val==1){
+			printf( "\n***Miembro no encontrado***");
+		}		
+	}	
+
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);
+}
+
+/*
 	Entradas: Los diferentes objetos de la estructura Requerimiento(identificador, tipo, descripcion, riesgo, 
 	           dependencia, recursos, esfuerzo). 
-	Salidas: LLama a la función guardarRequerimiento para guardar los datos antes registrados en un archivo .txt. 
+	Salidas: LLama a la función guardarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
 	Restricciones: No tiene restricciones.
 */
 void registrarRequerimiento(){
@@ -502,7 +644,7 @@ void registrarRequerimiento(){
 
 /*
 	Entradas: Una estructura Requerimiento. 
-	Salidas: Guardar los datos de la estructura requerimiento en un archivo .txt. 
+	Salidas: Guardar los datos de la estructura en un archivo .txt. 
 	Restricciones: No tiene restricciones.
 */
 void guardarRequerimiento(Requerimiento *requerimiento){
@@ -521,16 +663,12 @@ void guardarRequerimiento(Requerimiento *requerimiento){
 
 }
 
-void quitaFinLinea(char linea[]){
-	int i;
-	for(i=0; linea[i]!='\0'; i++){
-		if(linea[i] == '\n'){
-			linea[i]='\0';
-			break;
-		}
-	}
-}
-
+/*
+	Entradas: Una puntero a una lista del tipo ListaRequerimientos de Requerimientos.
+	Salidas: Una lista doblemente enlazada con los diferentes objetos de la estructura Requerimiento(identificador, tipo, 
+			descripcion, riesgo, dependencia, recursos, esfuerzo).
+	Restricciones: Ninguna.
+*/
 void cargarRequerimientos(struct ListaRequerimientos *L){
 
 	struct Requerimiento *requerimiento, *aux;
@@ -599,6 +737,12 @@ void cargarRequerimientos(struct ListaRequerimientos *L){
 	fclose(ArchRequerimiento);
 }
 
+/*
+	Entradas: Un dato que indique el identificador del Requerimiento por consultar
+	Salidas: Los datos relacionado al Requerimiento consultado en caso de que existan, de lo contrario un mensaje indicando 
+			que no se ha encontrado.
+	Restricciones: Ninguna
+*/
 void consultarRequerimiento(){
 
 	struct ListaRequerimientos *L;
@@ -610,7 +754,7 @@ void consultarRequerimiento(){
 	printf("\n\n+-------------------------------+\n");
 	printf("      Gestor de Requerimientos       \n");
 	printf("+-------------------------------+\n");
-	printf( "  Agregar nuevo requerimiento\n" );
+	printf( "  Consultar un Requerimiento\n" );
 	printf("+-------------------------------+\n");
 	
 	printf("\n Ingrese el identificador: ");
@@ -628,7 +772,7 @@ void consultarRequerimiento(){
 	}
 	else
 	{
-		printf("+-------------------------------+");
+		printf("\n+-------------------------------+");
 		i = L->inicio;
 		while( i->siguiente!= NULL){
 			val=strcmp(id,i->identificador);
@@ -647,7 +791,7 @@ void consultarRequerimiento(){
 			i = i->siguiente;
 		}
 		if(val==1){
-			printf( "\n***Articulo no encontrado***");
+			printf( "\n***Requerimiento no encontrado***");
 		}		
 	}	
 
@@ -656,11 +800,11 @@ void consultarRequerimiento(){
 	fflush(stdin);
 }
 
-
 /*
-	Entradas:
-	Salidas:
-	Restricciones:
+	Entradas: Los diferentes objetos de la estructura Asignacion(fechaSolicitud, horaInicio, horaFin, recurso, identificador 
+			descripcion, miembros, prioridad y estado). 
+	Salidas: LLama a la función guardarAsignacion para guardar los datos al registrarlos en un archivo .txt. 
+	Restricciones: No tiene restricciones.
 */
 void registrarAsignacion(){
 	system( "CLS" );
@@ -706,9 +850,9 @@ void registrarAsignacion(){
 }
 
 /*
-	Entradas:
-	Salidas:
-	Restricciones:
+	Entradas: Una estructura Asignación. 
+	Salidas: Guardar los datos de la estructura en un archivo .txt. 
+	Restricciones: No tiene restricciones.
 */
 void guardarAsignacion(Asignacion *asignacion){
 	
@@ -726,9 +870,9 @@ void guardarAsignacion(Asignacion *asignacion){
 }
 
 /*
-	Entradas:
-	Salidas:
-	Restricciones:
+	Entradas: Los diferentes objetos de la estructura Incidente(codigoRequerimiento, codigoAsignacion, descripcionIncidente, fecha). 
+	Salidas: LLama a la función guardarIncidente para guardar los datos al registrarlos en un archivo .txt. 
+	Restricciones: No tiene restricciones.
 */
 void registrarIncidentes(){
 	system( "CLS" );
@@ -762,9 +906,9 @@ void registrarIncidentes(){
 }
 
 /*
-	Entradas:
-	Salidas:
-	Restricciones:
+	Entradas: Una estructura Incidente. 
+	Salidas: Guardar los datos de la estructura en un archivo .txt. 
+	Restricciones: No tiene restricciones.
 */
 void guardarIncidentes(Incidentes *incidente){
 	
@@ -783,11 +927,7 @@ void guardarIncidentes(Incidentes *incidente){
 
 }
 
-/*
-	Entradas:
-	Salidas:
-	Restricciones:
-*/
+
 int main(){   
     MenuPrincipal();    
 	return 0; 
