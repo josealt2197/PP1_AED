@@ -38,24 +38,29 @@ void registrarMiembro();
 void guardarMiembro(MiembroEquipo *miembro);
 void cargarMiembros(struct ListaMiembros *L);
 void consultarMiembroEquipo();
+void liberarListaMiembros(ListaMiembros *L);
 
 //Procedimientos para Requerimientos
 void registrarRequerimiento();
 void guardarRequerimiento(Requerimiento *requerimiento);
 void cargarRequerimientos(struct ListaRequerimientos *L);
 void consultarRequerimiento();
+int validarIDRequerimiento(const char identificador []);
+void liberarListaRequerimientos(ListaRequerimientos *L);
 
 //Procedimientos para Asignaciones
 void registrarAsignacion();
 void guardarAsignacion(Asignacion *asignacion);
 void cargarAsignaciones(struct ListaAsignaciones *L);
 void consultarAsignaciones();
+void liberarListaAsignaciones(ListaAsignaciones *L);
 
 //Procedimientos para Incidentes
 void registrarIncidentes();
 void guardarIncidentes(Incidentes *incidente);
 void cargarIncidentes(struct ListaIncidentes *L);
 void consultarIncidentes();
+void liberarListaIncidentes(ListaIncidentes *L);
 
 struct Requerimiento{
     char identificador[50];
@@ -461,31 +466,41 @@ void quitaFinLinea(char linea[]){
 	Restricciones: No tiene restricciones.
 */
 void registrarMiembro(){
-	system( "CLS" );
+    char validacion[15];
+    system( "CLS" );
     printf("\n\n+-------------------------------+\n");
-	printf("      Gestor de Requerimientos          \n");
-	printf("+-------------------------------+\n");
-	printf( "  Registrar Miembro de Equipo\n" );
-	printf("+-------------------------------+\n");	
+    printf("      Gestor de Requerimientos          \n");
+    printf("+-------------------------------+\n");
+    printf( "  Registrar Miembro de Equipo\n" );
+    printf("+-------------------------------+\n");
 
-	struct MiembroEquipo *miembro;
+    struct MiembroEquipo *miembro;
 
-	miembro=(struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
+    miembro=(struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
 
-	printf("\n Ingrese la Cedula: ");
-	gets(miembro->cedula);
-	printf("\n Ingrese el Nombre Completo: ");
-	gets(miembro->nombre_completo);
-	printf("\n Ingrese el Correo Electronico: ");
-	gets(miembro->correo);
-	printf("\n Ingrese el Nivel de Acceso: ");
-	gets(miembro->nivel_acceso);
-	printf("\n Ingrese un Numero Telefonico: ");
-	gets(miembro->telefono);
+    do{
+        printf("\n Ingrese la Cedula: ");
+        gets(miembro->cedula);
 
-	guardarMiembro(miembro);
-	free(miembro);
-	getchar();	
+        if(validarCedula(miembro->cedula)==1){
+            printf("\n Esta cedula ya ha sido registrada\n ");
+        }else{
+            break;
+        }
+    }while(1);
+    
+    printf("\n Ingrese el Nombre Completo: ");
+    gets(miembro->nombre_completo);
+    printf("\n Ingrese el Correo Electronico: ");
+    gets(miembro->correo);
+    printf("\n Ingrese el Nivel de Acceso: ");
+    gets(miembro->nivel_acceso);
+    printf("\n Ingrese un Numero Telefonico: ");
+    gets(miembro->telefono);
+
+    guardarMiembro(miembro);
+    free(miembro);
+    getchar();
 }
 
 /*
@@ -564,6 +579,8 @@ void cargarMiembros(struct ListaMiembros *L){
 		}
 		
 	}	
+	liberarListaMiembros(L);
+	
 	fclose(ArchMiembros);
 }
 
@@ -628,6 +645,59 @@ void consultarMiembroEquipo(){
 }
 
 /*
+    Entradas: Un dato que indique la cedula del Miembro de Equipo
+    Salidas: Retorna 1 en caso de que el valor recibido coindicida con una cedula ya registrado, caso contrario retorna un 0.
+    Restricciones: Ninguna
+*/
+int validarCedula(const char identificador []){
+
+    struct ListaMiembros *L;
+    struct MiembroEquipo *i;
+    char id [50];
+    int j=0, similitud=0;
+
+    L = (struct ListaMiembros *) malloc(sizeof(struct ListaMiembros));
+    L->inicio = NULL;
+    L->final = NULL;
+
+    cargarMiembros(L);
+
+    if(L->inicio == NULL)
+    {
+        printf("La lista esta vacia...\n");
+    }
+    else
+    {
+        i = L->inicio;
+        while( i->siguiente!= NULL){
+            strcpy(id, i->cedula);
+
+            while(1){
+
+                if(id[j] == '\0' || identificador[j]== '\0')
+                    break;
+
+                if(id[j] != identificador[j]){
+                    similitud=0;
+                    break;
+                }else{
+                    similitud=1;
+                }
+
+                j++;
+            }
+            if(similitud==1){
+            	//liberarListaMiembros(L);
+                return 1;
+            }
+            i = i->siguiente;
+        }
+    }
+	//liberarListaMiembros(L);
+    return 0;
+}
+
+/*
 	Entradas: Los diferentes objetos de la estructura Requerimiento(identificador, tipo, descripcion, riesgo, 
 	           dependencia, recursos, esfuerzo). 
 	Salidas: LLama a la función guardarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
@@ -649,8 +719,18 @@ void registrarRequerimiento(){
 		printf("Espacio insuficiente para almacenar los datos.\n");	
 	}
 
-	printf("\n Ingrese el identificador: ");
-	gets(requerimiento->identificador);
+	do{
+		printf("\n Ingrese el identificador: ");
+		gets(requerimiento->identificador);
+		
+		if(validarIDRequerimiento(requerimiento->identificador)==1){
+			printf("\n ***Este identificador ya ha sido registrado***\n ");
+		}else{
+			break;
+		}		
+		
+	}while(1);
+	
 	printf("\n Ingrese el tipo: ");
 	gets(requerimiento->tipo);
 	printf("\n Ingrese la descripcion: ");
@@ -777,20 +857,73 @@ void cargarRequerimientos(struct ListaRequerimientos *L){
 */
 void consultarRequerimiento(){
 
+    struct ListaRequerimientos *L;
+    struct Requerimiento *i;
+    int val=3;
+    char id[10];
+
+    system( "CLS" );
+    printf("\n\n+-------------------------------+\n");
+    printf("      Gestor de Requerimientos       \n");
+    printf("+-------------------------------+\n");
+    printf( "  Consultar un Requerimiento\n" );
+    printf("+-------------------------------+\n");
+
+    printf("\n Ingrese el identificador: ");
+    gets(id);
+
+    L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
+    L->inicio = NULL;
+    L->final = NULL;
+
+    cargarRequerimientos(L);
+
+    if(L->inicio == NULL)
+    {
+        printf("La lista esta vacia...\n");
+    }
+    else
+    {
+        printf("\n+-------------------------------+");
+        i = L->inicio;
+        while( i->siguiente!= NULL){
+            val=strcmp(id,i->identificador);
+            if(val==0){
+                printf("\nIdentificador: %s \n", i->identificador);
+                printf("Tipo: %s \n", i->tipo);
+                printf("Descripcion: %s \n", i->descripcion);
+                printf("Riesgo: %s \n", i->riesgo);
+                printf("Dependencia: %s \n", i->dependencia);
+                printf("Recursos: %s \n", i->recursos);
+                printf("Estado: %s \n", i->estado);
+                printf("Esfuerzo: %s \n", i->esfuerzo);
+                printf("+-------------------------------+\n");
+
+            }
+            i = i->siguiente;
+        }
+        if(val!=0){
+            printf( "\n**Requerimiento no encontrado***");
+        }
+    }
+	
+	liberarListaRequerimientos(L);
+    printf("\n\nPresione una tecla para regresar..." ); 
+    getchar();
+    fflush(stdin);
+}
+
+/*
+	Entradas: Un dato que indique el identificador del Requerimiento
+	Salidas: Retorna 1 en caso de que el valor recibido coindicida con un Requerimiento ya registrado, caso contrario retorna un 0.
+	Restricciones: Ninguna
+*/
+int validarIDRequerimiento(const char identificador []){
+
 	struct ListaRequerimientos *L;
 	struct Requerimiento *i;
-	int val=3;
-	char id[10];
-	
-	system( "CLS" );
-	printf("\n\n+-------------------------------+\n");
-	printf("      Gestor de Requerimientos       \n");
-	printf("+-------------------------------+\n");
-	printf( "  Consultar un Requerimiento\n" );
-	printf("+-------------------------------+\n");
-	
-	printf("\n Ingrese el identificador: ");
-	gets(id);
+	char id [50];
+	int j=0, similitud=0;
 
 	L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
 	L->inicio = NULL;
@@ -804,32 +937,33 @@ void consultarRequerimiento(){
 	}
 	else
 	{
-		printf("\n+-------------------------------+");
 		i = L->inicio;
 		while( i->siguiente!= NULL){
-			val=strcmp(id,i->identificador);
-			if(val==0){
-				printf("\nIdentificador: %s \n", i->identificador);
-				printf("Tipo: %s \n", i->tipo);
-				printf("Descripcion: %s \n", i->descripcion);
-				printf("Riesgo: %s \n", i->riesgo);
-				printf("Dependencia: %s \n", i->dependencia);
-				printf("Recursos: %s \n", i->recursos);
-				printf("Estado: %s \n", i->estado);
-				printf("Esfuerzo: %s \n", i->esfuerzo);
-				printf("+-------------------------------+\n");
-			
-			}
-			i = i->siguiente;
-		}
-		if(val!=0){
-			printf( "\n***Requerimiento no encontrado***");
-		}		
-	}	
+			strcpy(id, i->identificador);
 
-	printf("\n\nPresione una tecla para regresar..." ); 
-	getchar();
-	fflush(stdin);
+			while(1){
+
+				if(id[j] == '\0' || identificador[j]== '\0')
+					break;
+
+				if(id[j] != identificador[j]){
+					similitud=0;
+					break;
+				}else{
+					similitud=1;
+				}
+				
+				j++;		
+			}
+			if(similitud==1){
+				liberarListaRequerimientos(L);
+				return 1;
+			}
+			i = i->siguiente;			
+		}		
+	}
+	liberarListaRequerimientos(L);
+	return 0;		
 }
 
 /*
@@ -1036,7 +1170,8 @@ void consultarAsignaciones(){
 			printf( "\n***No se han encontrado Asigaciones***");
 		}		
 	}	
-
+	liberarListaAsignaciones(L);
+	
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
@@ -1151,20 +1286,7 @@ void cargarIncidentes(struct ListaIncidentes *L){
 				L->final = L->final->siguiente;
 			}		
 		}
-		
-		struct Incidentes *i;
-		i = L->inicio;
-		while( i->siguiente!= NULL){
-			printf("\n+-------------------------------+\n");
-			printf("Requerimiento: %s \n", i->codigoRequerimiento);
-			printf("Asignacion: %s \n", i->codigoAsignacion ); 
-			printf("Descripcion: %s \n", i->descripcionIncidente); 
-			printf("Fecha de Incidente: %s \n", i->fecha); 
-			printf("+-------------------------------+\n");
-	
-			i = i->siguiente;
-		}
-		
+				
 	}	
 	fclose(ArchIncidentes);
 }
@@ -1194,30 +1316,118 @@ void consultarIncidentes(){
 
 	cargarIncidentes(L);
 
-//	if(L->inicio == NULL)
-//	{
-//		printf("La lista esta vacia...\n");		
-//	}
-//	else
-//	{	
-//		i = L->inicio;
-//		while( i->siguiente!= NULL){
-//			printf("\n+-------------------------------+\n");
-//			printf("Requerimiento: %s \n", i->codigoRequerimiento);
-//			printf("Asignacion: %s \n", i->codigoAsignacion ); 
-//			printf("Descripcion: %s \n", i->descripcionIncidente); 
-//			printf("Fecha de Incidente: %s \n", i->fecha); 
-//			printf("+-------------------------------+\n");
-//	
-//			i = i->siguiente;
-//		}				
-//	}	
-
+	if(L->inicio == NULL)
+	{
+		printf("La lista esta vacia...\n");		
+	}
+	else
+	{	
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+			printf("\n+-------------------------------+\n");
+			printf("Requerimiento: %s \n", i->codigoRequerimiento);
+			printf("Asignacion: %s \n", i->codigoAsignacion ); 
+			printf("Descripcion: %s \n", i->descripcionIncidente); 
+			printf("Fecha de Incidente: %s \n", i->fecha); 
+			printf("+-------------------------------+\n");
+	
+			i = i->siguiente;
+		}				
+	}	
+	liberarListaIncidentes(L);
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
 }
 
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct Miembros de Equipo.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarListaMiembros(ListaMiembros *L){
+	struct MiembroEquipo *n, *aux;
+	if(L->inicio == NULL)
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
+
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct Asignacion.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarListaAsignaciones(ListaAsignaciones *L){
+	struct Asignacion *n, *aux;
+	if(L->inicio == NULL)
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
+
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct Requerimiento.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarListaRequerimientos(ListaRequerimientos *L){
+	struct Requerimiento *n, *aux;
+	if(L->inicio == NULL)
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
+
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct Incidentes.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarListaIncidentes(ListaIncidentes *L){
+		
+	struct Incidentes *n, *aux;
+	if(L->inicio == NULL)
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
 
 int main(){ 
 	MenuPrincipal();    
