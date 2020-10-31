@@ -47,6 +47,7 @@ int cargarRequerimientos(struct ListaRequerimientos *L);
 void consultarRequerimiento();
 int validarIDRequerimiento(const char identificador []);
 void liberarListaRequerimientos(ListaRequerimientos *L);
+void modificarRequerimiento();
 
 //Procedimientos para Asignaciones
 void registrarAsignacion();
@@ -261,7 +262,7 @@ void GestionRequerimiento(){
 			switch(opcion){
 				case '1': registrarRequerimiento();
 					break;
-				case '2': Temporal();
+				case '2': modificarRequerimiento();
 					break;
 				case '3': Temporal();
 					break;
@@ -464,6 +465,34 @@ int numeroAleatorio(){
 }
 
 /*
+	Entradas: Dos cadenas de caracteres.
+	Salidas: Un valor de 1 si ambas cadenas son iguales y cero si son diferentes.
+	Restricciones: Ninguna.
+*/
+int compararCadenas(const char cadena1[], const char cadena2[] ){
+    int j=0, similitud=0;
+
+
+    while(1){
+
+        if(cadena1[j] == '\0' || cadena2[j]== '\0')
+            break;
+        if(cadena1[j] != cadena2[j]){
+            similitud=0;
+            break;
+        }else{
+            similitud=1;
+        }
+
+        j++;
+        }
+    if(similitud==1){
+        return 1;
+    }
+    return 0;
+}
+
+/*
 	Entradas: Una cadena de caacteres.
 	Salidas: La cadena de caracteres recibida, sustituyendo el valor de los campos con un salto de linea (\n) por un caracter nulo.
 	Restricciones: El parametro debe corresponder con el tipo cadena de caracteres.
@@ -610,55 +639,109 @@ int cargarMiembros(struct ListaMiembros *L){
 */
 void consultarMiembroEquipo(){
 
-	struct ListaMiembros *L;
-	struct MiembroEquipo *i;
-	int val=3, res=0;
-	char id[12];
-	
-	system( "CLS" );
-	printf("\n\n+-------------------------------+\n");
-	printf("      Gestor de Requerimientos       \n");
-	printf("+-------------------------------+\n");
-	printf( "  Consultar Miembro de Equipo\n" );
-	printf("+-------------------------------+\n");
-	
-	printf("\n Ingrese la cedula: (Ejm.208140809) \n ");
-	gets(id);
+    struct ListaMiembros *L;
+    struct MiembroEquipo *i;
 
-	L = (struct ListaMiembros *) malloc(sizeof(struct ListaMiembros));
-	L->inicio = NULL;
-	L->final = NULL;
+    struct ListaAsignaciones *LAsig;
+    struct Asignacion *iAsig;
 
-	res=cargarMiembros(L);
+    struct ListaRequerimientos *LReque;
+    struct Requerimiento *iReque;
 
-	if(res==1){
-		
-		i = L->inicio;
-		while( i->siguiente!= NULL){
-			val=strcmp(id,i->cedula);
-			if(val==0){
-				printf("\n+-------------------------------+");
-				printf("\nCedula: %s \n", i->cedula);
-				printf("Nombre: %s \n", i->nombre_completo);
-				printf("Correo Electronico: %s \n", i->correo);
-				printf("Nivel de Acceso: %s \n", i->nivel_acceso);
-				printf("Numero Telefonico: %s \n", i->telefono);
-				printf("+-------------------------------+\n");
-				break;
-			}
-			i = i->siguiente;
-		}
-		if(val!=0){
-			printf( "\n***Miembro no encontrado***");
-		}
-			
-	}else{		
-		printf( "\n**No se ha registrado ningún Miembro***");
-	}	
-	liberarListaMiembros(L);
-	printf("\n\nPresione una tecla para regresar..." ); 
-	getchar();
-	fflush(stdin);
+    int val=3, val2=3, res=0, resRequerimiento=0, resAsignacion=0;
+    char id[12];
+
+    system( "CLS" );
+    printf("\n\n+-------------------------------+\n");
+    printf("      Gestor de Requerimientos       \n");
+    printf("+-------------------------------+\n");
+    printf( "  Consultar Miembro de Equipo\n" );
+    printf("+-------------------------------+\n");
+
+    printf("\n Ingrese la cedula: (Ejm.208140809) \n ");
+    gets(id);
+
+    L = (struct ListaMiembros *) malloc(sizeof(struct ListaMiembros));
+    L->inicio = NULL;
+    L->final = NULL;
+
+    LAsig = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+    LAsig->inicio = NULL;
+    LAsig->final = NULL;
+
+    LReque = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
+    LReque->inicio = NULL;
+    LReque->final = NULL;
+
+    resAsignacion=cargarAsignaciones(LAsig);
+
+    resRequerimiento = cargarRequerimientos(LReque);
+
+    res=cargarMiembros(L);
+		if(res==1){
+
+	        i = L->inicio;
+	        while( i->siguiente!= NULL){
+	            val=strcmp(id,i->cedula);
+	            if(val==0){
+	                printf("\n+-------------------------------+");
+	                printf("\nCedula: %s \n", i->cedula);
+	                printf("Nombre: %s \n", i->nombre_completo);
+	                printf("Correo Electronico: %s \n", i->correo);
+	                printf("Nivel de Acceso: %s \n", i->nivel_acceso);
+	                printf("Numero Telefonico: %s \n", i->telefono);
+	                printf("+------------------------------------+\n");
+	                printf( "      Requerimientops asignados   \n" );
+	                printf("+-------------------------------------+\n");
+					if(resRequerimiento=1)
+                	{
+
+                    iAsig = LAsig->inicio;
+                    while( iAsig->siguiente!= NULL){
+                        if(compararCadenas(iAsig->miembros, i->cedula)==1){
+                            val2=0;
+                            printf("Asignacion Numero: %s \n", iAsig->identificador);
+                            printf("Descripcion: %s \n", iAsig->descripcion);
+                            printf("Priodidad: %s \n", iAsig->prioridad ); 
+                            printf("Estado: %s \n", iAsig->estado);
+                            iReque = LReque->inicio;
+                            while(iReque->siguiente!= NULL){
+                                if (compararCadenas(iAsig->identificador , iReque->identificador)==1){
+                                    printf("\n Datos del Requerimiento \n");
+                                    printf("\nIdentificador: %s \n", iReque->identificador);
+                                    printf("Descripcion: %s \n", iReque->descripcion);
+                                    printf("Estado: %s \n", iReque->estado);
+                                    printf("+-------------------------------------+\n");
+								}
+                                iReque = iReque->siguiente;
+                            }
+
+                        }
+
+                        iAsig = iAsig->siguiente;
+                    }
+                    if(val2!=0){
+                        printf( "\nNo tiene requerimentos asignados");
+                    }
+                }else{
+                    printf( "\nNo se han registrado Requerimientos");
+                }
+
+                break;
+            }
+            i = i->siguiente;
+        }
+        if(val!=0){
+            printf( "\nMiembro no encontrado");
+        }
+
+    }else{
+        printf( "\nNo se ha registrado ningún Miembro*");
+    }
+    liberarListaMiembros(L);
+    printf("\n\nPresione una tecla para regresar..." ); 
+    getchar();
+    fflush(stdin);
 }
 
 /*
@@ -671,7 +754,7 @@ int validarCedula(const char identificador []){
     struct ListaMiembros *L;
     struct MiembroEquipo *i;
     char id [50], res=0;
-    int j=0, similitud=0;
+    int similitud=0;
 
     L = (struct ListaMiembros *) malloc(sizeof(struct ListaMiembros));
     L->inicio = NULL;
@@ -684,21 +767,7 @@ int validarCedula(const char identificador []){
          i = L->inicio;
         while( i->siguiente!= NULL){
             strcpy(id, i->cedula);
-
-            while(1){
-
-                if(id[j] == '\0' || identificador[j]== '\0')
-                    break;
-
-                if(id[j] != identificador[j]){
-                    similitud=0;
-                    break;
-                }else{
-                    similitud=1;
-                }
-
-                j++;
-            }
+			similitud = compararCadenas(id, identificador);
             if(similitud==1){
             	liberarListaMiembros(L);
                 return 1;
@@ -892,11 +961,11 @@ void consultarRequerimiento(){
 
     if(res==1)
     {
-        printf("\n+-------------------------------+");
         i = L->inicio;
         while( i->siguiente!= NULL){
             val=strcmp(id,i->identificador);
             if(val==0){
+            	printf("\n+-------------------------------+");
                 printf("\nIdentificador: %s \n", i->identificador);
                 printf("Tipo: %s \n", i->tipo);
                 printf("Descripcion: %s \n", i->descripcion);
@@ -933,7 +1002,7 @@ int validarIDRequerimiento(const char identificador []){
 	struct ListaRequerimientos *L;
 	struct Requerimiento *i;
 	char id [50], res=0;
-	int j=0, similitud=0;
+	int similitud=0;
 
 	L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
 	L->inicio = NULL;
@@ -946,21 +1015,7 @@ int validarIDRequerimiento(const char identificador []){
 		i = L->inicio;
 		while( i->siguiente!= NULL){
 			strcpy(id, i->identificador);
-
-			while(1){
-
-				if(id[j] == '\0' || identificador[j]== '\0')
-					break;
-
-				if(id[j] != identificador[j]){
-					similitud=0;
-					break;
-				}else{
-					similitud=1;
-				}
-				
-				j++;		
-			}
+			similitud = compararCadenas(id, identificador);
 			if(similitud==1){
 				liberarListaRequerimientos(L);
 				return 1;
@@ -970,6 +1025,138 @@ int validarIDRequerimiento(const char identificador []){
 	}
 	liberarListaRequerimientos(L);
 	return 0;		
+}
+
+/*
+	Entradas: Los objetos de tipo, recursos o estado de la estructura Requerimiento.
+	Salidas: Llama a la función guardarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
+	Restricciones: No tiene restricciones.
+*/
+void modificarRequerimiento(){
+	system( "CLS" );
+	printf("\n\n+-------------------------------+\n");
+	printf("      Gestor de Requerimientos       \n");
+	printf("+-------------------------------+\n");
+	printf( "  Modificar un Requerimiento\n" );
+	printf("+-------------------------------+\n");
+	
+	struct ListaRequerimientos *L;
+    struct Requerimiento *i;
+	char id[10], respuesta[2], tipo[12], recursos[55], estado [15];
+	int val=3, res=0, resp;
+	
+	printf("\n Ingrese el identificador: (Ejm. RQ000) \n ");
+    gets(id);
+
+    L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
+    L->inicio = NULL;
+    L->final = NULL;
+
+    res = cargarRequerimientos(L);
+
+    if(res==1)
+    {
+ 
+        i = L->inicio;
+        while( i->siguiente!= NULL){
+            val=strcmp(id,i->identificador);
+            if(val==0){
+            	printf("\n+------------------------------------+");
+				printf("\n      Datos del  Requerimiento " );
+            	printf("\n+------------------------------------+");
+                printf("\nIdentificador: %s \n", i->identificador);
+                printf("Tipo: %s \n", i->tipo);
+                printf("Descripcion: %s \n", i->descripcion);
+                printf("Riesgo: %s \n", i->riesgo);
+                printf("Dependencia: %s \n", i->dependencia);
+                printf("Recursos: %s \n", i->recursos);
+                printf("Estado: %s \n", i->estado);
+                printf("Esfuerzo: %s \n", i->esfuerzo);
+                printf("+-------------------------------------+\n");
+                
+                //Modificar el Tipo de Requerimiento
+                do{
+			        printf("\nDesea modificar el tipo? (1-Si 2-No)\n" );
+                	gets(respuesta);
+					resp=atoi(respuesta);
+                
+			        if(resp==1 || resp==2){
+			            break;
+			        }
+			    }while(1);
+                
+                if(resp==1){
+                	printf("\n Ingrese el Tipo: (Ejm. Funcional) \n");
+					gets(tipo);	
+					strcpy(i->tipo, tipo);
+				}
+				
+				//Modificar los Recursos
+				do{
+			        printf("\nDesea modificar los Recursos? (1-Si 2-No)\n" );
+                	gets(respuesta);
+					resp=atoi(respuesta);
+                
+			        if(resp==1 || resp==2){
+			            break;
+			        }
+			    }while(1);
+                
+                if(resp==1){
+                	printf("\n Ingrese los Recursos: \n");
+					gets(recursos);	
+					strcpy(i->recursos, recursos);
+						
+				}
+				
+				//Modificar el Estado del Requerimiento
+				do{
+			        printf("\nDesea modificar el Estado? (1-Si 2-No)\n" );
+                	gets(respuesta);
+					resp=atoi(respuesta);
+                
+			        if(resp==1 || resp==2){
+			            break;
+			        }
+			    }while(1);
+                
+                if(resp==1){
+                	printf("\n Ingrese el Estado del Requerimiento \n");
+					gets(estado);	
+					strcpy(i->recursos, estado);
+						
+				}
+				
+				break;
+            }
+            i = i->siguiente;
+        }
+        if(val!=0){
+            printf( "\n**Requerimiento no encontrado***");
+        }
+    }else{		
+		printf("\n**No se ha registrado ningún requerimiento***");
+	}
+	
+	i = L->inicio;
+	while( i->siguiente!= NULL){
+		printf("\n+-------------------------------+");
+	    printf("\nIdentificador: %s \n", i->identificador);
+	    printf("Tipo: %s \n", i->tipo);
+	    printf("Descripcion: %s \n", i->descripcion);
+	    printf("Riesgo: %s \n", i->riesgo);
+	    printf("Dependencia: %s \n", i->dependencia);
+	    printf("Recursos: %s \n", i->recursos);
+	    printf("Estado: %s \n", i->estado);
+	    printf("Esfuerzo: %s \n", i->esfuerzo);
+	    printf("+-------------------------------+\n");
+	    i = i->siguiente;
+    }
+	
+	liberarListaRequerimientos(L);
+		
+	//guardarRequerimiento(requerimiento);
+	getchar();	
 }
 
 /*
