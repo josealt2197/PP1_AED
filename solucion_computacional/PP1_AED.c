@@ -299,7 +299,7 @@ void GestionAsignacion(){
 		printf( "     Gestion de Asignaciones\n" );
 		printf("+-------------------------------+\n");
 		printf("\n 0. Volver al Menu Principal.");
-		printf("\n 1. Crear una nueva asignación.");
+		printf("\n 1. Crear una nueva asignacion.");
 		printf("\n 2. Consultar asignaciones de un miembro.");
 		printf("\n 3. Cancelar una asignacion.");
 		printf("\n 4. Atender una asignacion.");
@@ -498,7 +498,7 @@ void registrarMiembro(){
     miembro=(struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
 
     do{
-        printf("\n Ingrese la Cedula: (Ejm.208140809) \n");
+        printf("\n Ingrese la Cedula: (Ejm.105450656) \n");
         gets(miembro->cedula);
 
         if(validarCedula(miembro->cedula)==1){
@@ -508,11 +508,11 @@ void registrarMiembro(){
         }
     }while(1);
     
-    printf("\n Ingrese el Nombre Completo: (Ejm.Josue Brenes Alfaro) \n");
+    printf("\n Ingrese el Nombre Completo: (Ejm.Juan Perez) \n");
     gets(miembro->nombre_completo);
     printf("\n Ingrese el Correo Electronico: (ejemplousuario@correo.com) \n");
     gets(miembro->correo);
-    printf("\n Ingrese el Nivel de Acceso: (Ejm. 1...10) \n");
+    printf("\n Ingrese el Nivel de Acceso (1-10) : \n");
     gets(miembro->nivel_acceso);
     printf("\n Ingrese un Numero Telefonico: (Ejm. 83728492) \n");
     gets(miembro->telefono);
@@ -734,33 +734,30 @@ void registrarRequerimiento(){
 	}
 
 	do{
-		printf("\n Ingrese el identificador: (Ejm. RQ000) \n ");
+		printf("\n Ingrese el identificador: (Ejm. RQ001) \n");
 		gets(requerimiento->identificador);
 		
 		if(validarIDRequerimiento(requerimiento->identificador)==1){
-			printf("\n ***Este identificador ya ha sido registrado***\n ");
+			printf("\n ***Este identificador ya ha sido registrado***\n");
 		}else{
 			break;
 		}		
 		
 	}while(1);
 	
-	printf("\n Ingrese el tipo: (Ejm. Funcional) \n");
+	printf("\n Ingrese el Tipo: (Ejm. Funcional) \n");
 	gets(requerimiento->tipo);
-	printf("\n Ingrese la descripcion: (Ejm. El sistema debe....) \n");
+	printf("\n Ingrese la Descripcion: (Ejm. El sistema debe....) \n");
 	gets(requerimiento->descripcion);
 	printf("\n Ingrese el riesgo: (Ejm. ....) \n");
 	gets(requerimiento->riesgo);
 	printf("\n Ingrese la dependencia: (Ejm. RQ001) \n ");
 	gets(requerimiento->dependencia);
-	printf("\n Ingrese los recursos: (Ejm. Sistema operativo Windows) \n");
+	printf("\n Ingrese los recursos:\n");
 	gets(requerimiento->recursos);
-	//printf("\n Ingrese el estado: \n");
-	//gets(requerimiento->estado);
 	strcpy(requerimiento->estado, "Por hacer");
 	printf("\n Ingrese el esfuerzo: ( 1...10 ) \n");
 	gets(requerimiento->esfuerzo);
-	printf("\n");
 	requerimiento->siguiente=NULL;
 
 	guardarRequerimiento(requerimiento);
@@ -986,7 +983,7 @@ void registrarAsignacion(){
     printf("\n\n+-------------------------------+\n");
 	printf("      Gestor de Requerimientos       \n");
 	printf("+-------------------------------+\n");
-	printf( "  Crear una nueva asignación\n" );
+	printf( "  Crear una nueva asignacion\n" );
 	printf("+-------------------------------+\n");	
 
 	struct Asignacion *asignacion;
@@ -997,18 +994,18 @@ void registrarAsignacion(){
 	char fecha [50];
 	obtenerFechaActual(fecha);
 	strcpy(asignacion->fechaSolicitud, fecha);
-	printf("\n Ingrese la Hora de Inicio: (Ejm. 14:25) \n ");
+	printf("\n Ingrese la Hora de Inicio: (Ejm. 07:25) \n");
 	gets(asignacion->horaInicio);
-	printf("\n Ingrese el Hora de Fin: (Ejm. 16:25) \n ");
+	printf("\n Ingrese el Hora de Fin: (Ejm. 14:25) \n");
 	gets(asignacion->horaFin);
-	printf("\n Ingrese el Recurso (Opcional): (Ejm. Sistema operativo Windows) \n");
+	printf("\n Ingrese el Recurso (Opcional): \n");
 	gets(asignacion->recurso);
-	printf("\n Ingrese el ID del Requerimiento: (Ejm. 1, 2 , 3, 4...) \n");
+	printf("\n Ingrese el ID del Requerimiento: (Ejm. RQ001) \n");
 	//Mostrar Requerimientos
 	gets(asignacion->identificador);
-	printf("\n Ingrese la Descripcion: (Ejm. El sistema.....) \n");
+	printf("\n Ingrese la Descripcion: \n");
 	gets(asignacion->descripcion);
-	printf("\n Ingrese las Cedulas de los Miembros: (Ejm.208140809) \n ");
+	printf("\n Ingrese las Cedulas de los Miembros: (Ejm. 105450656) \n ");
 	//Mostrar Miembros
 	gets(asignacion->miembros);
 
@@ -1214,13 +1211,13 @@ void registrarIncidentes(){
 		printf("Espacio insuficiente para almacenar los datos.\n");	
 	}
 		
-	printf("\n Ingrese el codigo del Requerimiento: (Ejm. RQ000) \n  ");
+	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ000) \n  ");
 	gets(incidente->codigoRequerimiento);
-	printf("\n Ingrese el codigo de Asignacion: (Ejm. 1, 2, 3, 4....) \n ");
+	printf("\n Ingrese el Codigo de Asignacion: (Ejm. 1, 2, 3, 4....) \n ");
 	gets(incidente->codigoAsignacion);
-	printf("\n Ingrese la descripcion de Incidente: (Ejm. el sistema....) \n");
+	printf("\n Ingrese la Descripcion de Incidente: \n");
 	gets(incidente->descripcionIncidente);
-	printf("\n Ingrese la fecha: (Ejm. 10/3/2020) \n ");
+	printf("\n Ingrese la Fecha del Incidente: (Ejm. 10/3/2020) \n ");
 	gets(incidente->fecha);
 	printf("\n");
 	incidente->siguiente=NULL;
