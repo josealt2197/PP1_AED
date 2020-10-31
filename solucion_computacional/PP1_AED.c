@@ -36,14 +36,14 @@ typedef struct ListaIncidentes ListaIncidentes;
 //Procedimientos para Miembros de Equipo
 void registrarMiembro();
 void guardarMiembro(MiembroEquipo *miembro);
-void cargarMiembros(struct ListaMiembros *L);
+int cargarMiembros(struct ListaMiembros *L);
 void consultarMiembroEquipo();
 void liberarListaMiembros(ListaMiembros *L);
 
 //Procedimientos para Requerimientos
 void registrarRequerimiento();
 void guardarRequerimiento(Requerimiento *requerimiento);
-void cargarRequerimientos(struct ListaRequerimientos *L);
+int cargarRequerimientos(struct ListaRequerimientos *L);
 void consultarRequerimiento();
 int validarIDRequerimiento(const char identificador []);
 void liberarListaRequerimientos(ListaRequerimientos *L);
@@ -51,16 +51,20 @@ void liberarListaRequerimientos(ListaRequerimientos *L);
 //Procedimientos para Asignaciones
 void registrarAsignacion();
 void guardarAsignacion(Asignacion *asignacion);
-void cargarAsignaciones(struct ListaAsignaciones *L);
+int cargarAsignaciones(struct ListaAsignaciones *L);
 void consultarAsignaciones();
 void liberarListaAsignaciones(ListaAsignaciones *L);
 
 //Procedimientos para Incidentes
 void registrarIncidentes();
 void guardarIncidentes(Incidentes *incidente);
-void cargarIncidentes(struct ListaIncidentes *L);
+int cargarIncidentes(struct ListaIncidentes *L);
 void consultarIncidentes();
 void liberarListaIncidentes(ListaIncidentes *L);
+
+//Procedimientos de Apoyo
+int numeroAleatorio();
+void obtenerFechaActual(char *hoy);
 
 struct Requerimiento{
     char identificador[50];
@@ -445,6 +449,21 @@ void obtenerFechaActual(char *hoy){
 }
 
 /*
+	Entradas: Ninguna.
+	Salidas: Un valor entero leatorio entre 1 y 3.
+	Restricciones: Ninguna.
+*/
+int numeroAleatorio(){
+    int numero;
+
+    srand(time(NULL));
+    do{
+        numero =10+rand () %(13+1-10);
+    }while(numero-10==0);
+    return numero-10;
+}
+
+/*
 	Entradas: Una cadena de caacteres.
 	Salidas: La cadena de caracteres recibida, sustituyendo el valor de los campos con un salto de linea (\n) por un caracter nulo.
 	Restricciones: El parametro debe corresponder con el tipo cadena de caracteres.
@@ -528,7 +547,7 @@ void guardarMiembro(MiembroEquipo *miembro){
 			cedula, correo, telefono, nivel de acceso).
 	Restricciones: Ninguna.
 */
-void cargarMiembros(struct ListaMiembros *L){
+int cargarMiembros(struct ListaMiembros *L){
 	
 	struct MiembroEquipo *aux;
 
@@ -537,7 +556,7 @@ void cargarMiembros(struct ListaMiembros *L){
 	ArchMiembros = fopen("Archivos\\MiembroEquipo.txt","r");
 
 	if(ArchMiembros==NULL){
-		printf("\n Error al intentar abrir el archivo.\n");	
+		return 0;
 	}else{
 		while(!feof(ArchMiembros)){
 			fgets(aux->cedula, 12, ArchMiembros); 
@@ -577,11 +596,10 @@ void cargarMiembros(struct ListaMiembros *L){
 				L->final = L->final->siguiente;
 			}		
 		}
-		
+		fclose(ArchMiembros);
 	}	
-	liberarListaMiembros(L);
-	
-	fclose(ArchMiembros);
+	return 1;
+		
 }
 
 /*
@@ -594,7 +612,7 @@ void consultarMiembroEquipo(){
 
 	struct ListaMiembros *L;
 	struct MiembroEquipo *i;
-	int val=3;
+	int val=3, res=0;
 	char id[12];
 	
 	system( "CLS" );
@@ -611,14 +629,10 @@ void consultarMiembroEquipo(){
 	L->inicio = NULL;
 	L->final = NULL;
 
-	cargarMiembros(L);
+	res=cargarMiembros(L);
 
-	if(L->inicio == NULL)
-	{
-		printf("La lista esta vacia...\n");		
-	}
-	else
-	{
+	if(res==1){
+		
 		i = L->inicio;
 		while( i->siguiente!= NULL){
 			val=strcmp(id,i->cedula);
@@ -636,9 +650,12 @@ void consultarMiembroEquipo(){
 		}
 		if(val!=0){
 			printf( "\n***Miembro no encontrado***");
-		}		
+		}
+			
+	}else{		
+		printf( "\n**No se ha registrado ningún Miembro***");
 	}	
-
+	liberarListaMiembros(L);
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
@@ -653,22 +670,18 @@ int validarCedula(const char identificador []){
 
     struct ListaMiembros *L;
     struct MiembroEquipo *i;
-    char id [50];
+    char id [50], res=0;
     int j=0, similitud=0;
 
     L = (struct ListaMiembros *) malloc(sizeof(struct ListaMiembros));
     L->inicio = NULL;
     L->final = NULL;
 
-    cargarMiembros(L);
+    res=cargarMiembros(L);
 
-    if(L->inicio == NULL)
+    if(res==1)
     {
-        printf("La lista esta vacia...\n");
-    }
-    else
-    {
-        i = L->inicio;
+         i = L->inicio;
         while( i->siguiente!= NULL){
             strcpy(id, i->cedula);
 
@@ -687,13 +700,14 @@ int validarCedula(const char identificador []){
                 j++;
             }
             if(similitud==1){
-            	//liberarListaMiembros(L);
+            	liberarListaMiembros(L);
                 return 1;
             }
             i = i->siguiente;
         }
     }
-	//liberarListaMiembros(L);
+
+	liberarListaMiembros(L);
     return 0;
 }
 
@@ -781,7 +795,7 @@ void guardarRequerimiento(Requerimiento *requerimiento){
 			descripcion, riesgo, dependencia, recursos, esfuerzo).
 	Restricciones: Ninguna.
 */
-void cargarRequerimientos(struct ListaRequerimientos *L){
+int cargarRequerimientos(struct ListaRequerimientos *L){
 
 	struct Requerimiento *requerimiento, *aux;
 		
@@ -790,7 +804,7 @@ void cargarRequerimientos(struct ListaRequerimientos *L){
 	ArchRequerimiento = fopen("Archivos\\Requerimientos.txt","r");
 
 	if(ArchRequerimiento==NULL){
-		printf("\n Error al intentar abrir el archivo.\n");	
+		return 0;	
 	}else{
 
 		while(!feof(ArchRequerimiento)){
@@ -844,9 +858,10 @@ void cargarRequerimientos(struct ListaRequerimientos *L){
 			}		
 		}
 		
-		
+		fclose(ArchRequerimiento);	
 	}	
-	fclose(ArchRequerimiento);
+	
+	return 1;
 }
 
 /*
@@ -859,7 +874,7 @@ void consultarRequerimiento(){
 
     struct ListaRequerimientos *L;
     struct Requerimiento *i;
-    int val=3;
+    int val=3, res=0;
     char id[10];
 
     system( "CLS" );
@@ -876,13 +891,9 @@ void consultarRequerimiento(){
     L->inicio = NULL;
     L->final = NULL;
 
-    cargarRequerimientos(L);
+    res = cargarRequerimientos(L);
 
-    if(L->inicio == NULL)
-    {
-        printf("La lista esta vacia...\n");
-    }
-    else
+    if(res==1)
     {
         printf("\n+-------------------------------+");
         i = L->inicio;
@@ -905,7 +916,9 @@ void consultarRequerimiento(){
         if(val!=0){
             printf( "\n**Requerimiento no encontrado***");
         }
-    }
+    }else{		
+		printf("\n**No se ha registrado ningún requerimiento***");
+	}
 	
 	liberarListaRequerimientos(L);
     printf("\n\nPresione una tecla para regresar..." ); 
@@ -922,20 +935,16 @@ int validarIDRequerimiento(const char identificador []){
 
 	struct ListaRequerimientos *L;
 	struct Requerimiento *i;
-	char id [50];
+	char id [50], res=0;
 	int j=0, similitud=0;
 
 	L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
 	L->inicio = NULL;
 	L->final = NULL;
 
-	cargarRequerimientos(L);
+	res=cargarRequerimientos(L);
 
-	if(L->inicio == NULL)
-	{
-		printf("La lista esta vacia...\n");		
-	}
-	else
+	if(res==1)
 	{
 		i = L->inicio;
 		while( i->siguiente!= NULL){
@@ -981,9 +990,7 @@ void registrarAsignacion(){
 	printf("+-------------------------------+\n");	
 
 	struct Asignacion *asignacion;
-	
-//	char prioridad [3][10] = {"ALTA", "MEDIA", "BAJA"};
-//	int aleatorio = (rand() % (2 – 0 + 1));
+	int prioridad=0;
 	
 	asignacion=(struct Asignacion *) malloc (sizeof(struct Asignacion));
 	
@@ -1004,8 +1011,18 @@ void registrarAsignacion(){
 	printf("\n Ingrese las Cedulas de los Miembros: (Ejm.208140809) \n ");
 	//Mostrar Miembros
 	gets(asignacion->miembros);
-	//strcpy(asignacion->prioridad, prioridad[prioridad]);
-	strcpy(asignacion->prioridad, "ALTA");
+
+	prioridad = numeroAleatorio();
+
+	switch(prioridad){
+		case 1:  strcpy(asignacion->prioridad, "ALTA");
+			break;
+		case 2: strcpy(asignacion->prioridad, "MEDIA");
+			break;
+		case 3: strcpy(asignacion->prioridad, "BAJA");
+			break;	
+	}	
+
 	strcpy(asignacion->estado, "En proceso");
 	//Actualizar el Estado del Requerimiento
 	
@@ -1041,7 +1058,7 @@ void guardarAsignacion(Asignacion *asignacion){
 			horaFin, recurso, identificador, descripcion, miembros, prioridad y estado). 
 	Restricciones: Ninguna.
 */
-void cargarAsignaciones(struct ListaAsignaciones *L){
+int cargarAsignaciones(struct ListaAsignaciones *L){
 	
 	struct Asignacion *asignacion, *aux;
 
@@ -1050,7 +1067,7 @@ void cargarAsignaciones(struct ListaAsignaciones *L){
 	ArchAsignaciones = fopen("Archivos\\Asignaciones.txt","r");
 
 	if(ArchAsignaciones==NULL){
-		printf("\n Error al intentar abrir el archivo.\n");	
+		return 0;	
 	}else{
 
 		while(!feof(ArchAsignaciones)){
@@ -1107,9 +1124,9 @@ void cargarAsignaciones(struct ListaAsignaciones *L){
 				L->final = L->final->siguiente;
 			}		
 		}
-		
+		fclose(ArchAsignaciones);
 	}	
-	fclose(ArchAsignaciones);
+	return 1;
 }
 
 /*
@@ -1122,7 +1139,7 @@ void consultarAsignaciones(){
 
 	struct ListaAsignaciones *L;
 	struct Asignacion *i;
-	int val=3;
+	int val=3, res=0;
 	char id[12];
 	
 	system( "CLS" );
@@ -1139,14 +1156,11 @@ void consultarAsignaciones(){
 	L->inicio = NULL;
 	L->final = NULL;
 
-	cargarAsignaciones(L);
+	res=cargarAsignaciones(L);
 
-	if(L->inicio == NULL)
+	if(res=1)
 	{
-		printf("La lista esta vacia...\n");		
-	}
-	else
-	{
+	
 		printf("\n+-------------------------------+\n");
 		i = L->inicio;
 		while( i->siguiente!= NULL){
@@ -1167,11 +1181,13 @@ void consultarAsignaciones(){
 			i = i->siguiente;
 		}
 		if(val!=0){
-			printf( "\n***No se han encontrado Asigaciones***");
+			printf( "\n***No se han encontrado Asignaciones***");
 		}		
+	}else{
+		printf( "\n***No se han registrado Asignaciones***");
 	}	
-	liberarListaAsignaciones(L);
 	
+	liberarListaAsignaciones(L);
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
@@ -1241,7 +1257,7 @@ void guardarIncidentes(Incidentes *incidente){
 			descripcionIncidente, fecha). 
 	Restricciones: Ninguna.
 */
-void cargarIncidentes(struct ListaIncidentes *L){
+int cargarIncidentes(struct ListaIncidentes *L){
 	
 	struct Incidentes *aux;
 
@@ -1250,7 +1266,7 @@ void cargarIncidentes(struct ListaIncidentes *L){
 	ArchIncidentes = fopen("Archivos\\Incidentes.txt","r");
 
 	if(ArchIncidentes==NULL){
-		printf("\n Error al intentar abrir el archivo.\n");	
+		return 0;	
 	}else{
 	
 		while(!feof(ArchIncidentes)){
@@ -1286,9 +1302,9 @@ void cargarIncidentes(struct ListaIncidentes *L){
 				L->final = L->final->siguiente;
 			}		
 		}
-				
+		fclose(ArchIncidentes);		
 	}	
-	fclose(ArchIncidentes);
+	return 1;
 }
 
 /*
@@ -1301,7 +1317,7 @@ void consultarIncidentes(){
 
 	struct ListaIncidentes *L;
 	struct Incidentes *i;
-	int val=3;
+	int val=3, res=0;
 	
 	system( "CLS" );
 	printf("\n\n+-------------------------------------+\n");
@@ -1314,13 +1330,9 @@ void consultarIncidentes(){
 	L->inicio = NULL;
 	L->final = NULL;
 
-	cargarIncidentes(L);
+	res=cargarIncidentes(L);
 
-	if(L->inicio == NULL)
-	{
-		printf("La lista esta vacia...\n");		
-	}
-	else
+	if(res==1)
 	{	
 		i = L->inicio;
 		while( i->siguiente!= NULL){
@@ -1333,6 +1345,8 @@ void consultarIncidentes(){
 	
 			i = i->siguiente;
 		}				
+	}else{
+		printf( "\n***No se han registrado Incidentes***");
 	}	
 	liberarListaIncidentes(L);
 	printf("\n\nPresione una tecla para regresar..." ); 

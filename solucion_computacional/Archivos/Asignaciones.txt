@@ -1,8 +1,16 @@
-29-10-2020
+30-10-2020
 12:30
-14_50
+4:50
 Ninguno
 RQ001
+Ninguna
+BAJA
+En proceso
+30-10-2020
+14:20
+5:40
+Ninguno
+RQ002
 Ninguna
 ALTA
 En proceso
