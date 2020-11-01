@@ -648,8 +648,11 @@ void consultarMiembroEquipo(){
 
     struct ListaRequerimientos *LReque;
     struct Requerimiento *iReque;
+    
+    struct ListaIncidentes *LIncidente;
+    struct Incidentes *iIncidente;
 
-    int val=3, val2=3, res=0, resRequerimiento=0, resAsignacion=0;
+    int val=3, val2=3, val3=3, res=0, resRequerimiento=0, resAsignacion=0,resIncidente=0;
     char id[12];
 
     system( "CLS" );
@@ -673,10 +676,16 @@ void consultarMiembroEquipo(){
     LReque = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
     LReque->inicio = NULL;
     LReque->final = NULL;
+    
+    LIncidente = (struct ListaIncidentes *) malloc(sizeof(struct ListaIncidentes));
+    LIncidente->inicio = NULL;
+    LIncidente->final = NULL;
 
     resAsignacion=cargarAsignaciones(LAsig);
 
     resRequerimiento = cargarRequerimientos(LReque);
+    
+    resIncidente = cargarIncidentes(LIncidente);
 
     res=cargarMiembros(L);
 		if(res==1){
@@ -685,14 +694,14 @@ void consultarMiembroEquipo(){
 	        while( i->siguiente!= NULL){
 	            val=strcmp(id,i->cedula);
 	            if(val==0){
-	                printf("\n+-------------------------------+");
+	                printf("\n+-------------------------------------+");
 	                printf("\nCedula: %s \n", i->cedula);
 	                printf("Nombre: %s \n", i->nombre_completo);
 	                printf("Correo Electronico: %s \n", i->correo);
 	                printf("Nivel de Acceso: %s \n", i->nivel_acceso);
 	                printf("Numero Telefonico: %s \n", i->telefono);
-	                printf("+------------------------------------+\n");
-	                printf( "      Requerimientops asignados   \n" );
+	                printf("+-------------------------------------+\n");
+	                printf( "      Requerimientos Asignados   \n" );
 	                printf("+-------------------------------------+\n");
 					if(resRequerimiento=1)
                 	{
@@ -701,22 +710,42 @@ void consultarMiembroEquipo(){
                     while( iAsig->siguiente!= NULL){
                         if(compararCadenas(iAsig->miembros, i->cedula)==1){
                             val2=0;
+                            printf("\n~~~~Datos de la Asignacion~~~~\n");
                             printf("Asignacion Numero: %s \n", iAsig->identificador);
                             printf("Descripcion: %s \n", iAsig->descripcion);
                             printf("Priodidad: %s \n", iAsig->prioridad ); 
                             printf("Estado: %s \n", iAsig->estado);
+                            printf("+-------------------------------------+\n");
+                            
                             iReque = LReque->inicio;
                             while(iReque->siguiente!= NULL){
                                 if (compararCadenas(iAsig->identificador , iReque->identificador)==1){
-                                    printf("\n Datos del Requerimiento \n");
-                                    printf("\nIdentificador: %s \n", iReque->identificador);
-                                    printf("Descripcion: %s \n", iReque->descripcion);
-                                    printf("Estado: %s \n", iReque->estado);
-                                    printf("+-------------------------------------+\n");
+                                	val3=0;
+                                    printf("\n    ~~~~Datos del Requerimiento~~~~\n");
+                                    printf("    Identificador: %s \n", iReque->identificador);
+                                    printf("    Descripcion: %s \n", iReque->descripcion);
+                                    printf("    Estado: %s \n", iReque->estado);
+                                    printf("    +-------------------------------------+\n");
+									
+									iIncidente = LIncidente->inicio;
+                                    while(iIncidente->siguiente!= NULL){
+	                                    if (compararCadenas(iIncidente->codigoRequerimiento , iReque->identificador)==1){
+	                                    	
+	                                        printf("\n        ~~~~Datos de Incidentes~~~~\n");
+	                                        printf("        Descripcion del incidente: %s \n", iIncidente->descripcionIncidente); 
+	                                        printf("        Fecha de Incidente: %s \n", iIncidente->fecha);
+	                                        printf("        +-------------------------------------+\n");
+	
+	                                    }
+                                    	iIncidente = iIncidente->siguiente;
+                                    }
+								
 								}
                                 iReque = iReque->siguiente;
                             }
-
+                            if(val3!=0){
+                                printf( "\nNo hay incidentes registrados");
+							}
                         }
 
                         iAsig = iAsig->siguiente;
@@ -1042,6 +1071,7 @@ void modificarRequerimiento(){
 	printf("+-------------------------------+\n");
 	
 	struct ListaRequerimientos *L;
+	struct Requerimiento *i;
 	char id[10], respuesta[2], tipo[20], recursos[55], estado [15];
 	int val=3, res=0, resp;
 	
@@ -1146,8 +1176,8 @@ void modificarRequerimiento(){
 }
 
 /*
-	Entradas: Los objetos de tipo, recursos o estado de la estructura Requerimiento.
-	Salidas: Llama a la función guardarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
+	Entradas: 
+	Salidas: 
 	Restricciones: No tiene restricciones.
 */
 void actualizarRequerimientos(struct ListaRequerimientos *L){
@@ -1248,9 +1278,9 @@ void guardarAsignacion(Asignacion *asignacion){
 	if(ArchAsignaciones==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", asignacion->fechaSolicitud, asignacion->horaInicio, asignacion->horaFin, asignacion->recurso, asignacion->identificador, 
-																asignacion->descripcion,  asignacion->prioridad, asignacion->estado);
-//																asignacion->miembros,
+		fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", asignacion->fechaSolicitud, asignacion->horaInicio, asignacion->horaFin, asignacion->recurso, asignacion->identificador, 
+																asignacion->descripcion,  asignacion->miembros, asignacion->prioridad, asignacion->estado);
+//																
 	}
 	fclose(ArchAsignaciones);
 	printf("\n\n ==>Informacion guardada<==\n");
@@ -1289,8 +1319,8 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 			quitaFinLinea(aux->identificador);
 			fgets(aux->descripcion, 100, ArchAsignaciones);
 			quitaFinLinea(aux->descripcion);
-//			fgets(aux->miembros, 15, ArchAsignaciones);
-//			quitaFinLinea(aux->miembros);
+			fgets(aux->miembros, 15, ArchAsignaciones);
+			quitaFinLinea(aux->miembros);
 			fgets(aux->prioridad, 15, ArchAsignaciones);
 			quitaFinLinea(aux->prioridad);
 			fgets(aux->estado, 15, ArchAsignaciones);
@@ -1306,7 +1336,7 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 				strcpy(L->inicio->recurso , aux->recurso); 
 				strcpy(L->inicio->identificador , aux->identificador); 
 				strcpy(L->inicio->descripcion , aux->descripcion);
-//				strcpy(L->inicio->miembros , aux->miembros); 
+				strcpy(L->inicio->miembros , aux->miembros); 
 				strcpy(L->inicio->prioridad , aux->prioridad ); 
 				strcpy(L->inicio->estado , aux->estado); 
 				L->inicio->siguiente = NULL; 
@@ -1322,7 +1352,7 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 				strcpy(L->final->siguiente->identificador , aux->identificador); 
 				strcpy(L->final->siguiente->descripcion , aux->descripcion);
 				strcpy(L->final->siguiente->recurso , aux->recurso);
-//				strcpy(L->final->siguiente->miembros , aux->miembros); 
+				strcpy(L->final->siguiente->miembros , aux->miembros); 
 				strcpy(L->final->siguiente->prioridad , aux->prioridad ); 
 				strcpy(L->final->siguiente->estado , aux->estado); 
 				L->final->siguiente->siguiente = NULL; 
@@ -1378,7 +1408,7 @@ void consultarAsignaciones(){
 				printf("Identificador: %s \n", i->identificador); 
 				printf("Recurso: %s \n", i->recurso); 
 				printf("Descripcion: %s \n", i->descripcion);
-//				printf("Miembros: %s \n", i->miembros); 
+				printf("Miembros: %s \n", i->miembros); 
 				printf("Priodidad: %s \n", i->prioridad ); 
 				printf("Estado: %s \n", i->estado); 
 				printf("+-------------------------------+\n");

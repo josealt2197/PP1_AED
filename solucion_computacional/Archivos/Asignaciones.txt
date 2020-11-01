@@ -1,16 +1,19 @@
-30-10-2020
-12:30
-4:50
+31-10-2020
+8:40
+2:30
 Ninguno
 RQ001
 Ninguna
-BAJA
+305000781
+ALTA
 En proceso
-30-10-2020
-14:20
-5:40
+30-10-2020
+7:20
+12:30
 Ninguno
 RQ002
 Ninguna
+305000781
 ALTA
 En proceso
+
