@@ -48,6 +48,7 @@ void consultarRequerimiento();
 int validarIDRequerimiento(const char identificador []);
 void liberarListaRequerimientos(ListaRequerimientos *L);
 void modificarRequerimiento();
+void actualizarRequerimientos(struct ListaRequerimientos *L);
 
 //Procedimientos para Asignaciones
 void registrarAsignacion();
@@ -69,7 +70,7 @@ void obtenerFechaActual(char *hoy);
 
 struct Requerimiento{
     char identificador[50];
-    char tipo[12];
+    char tipo[20];
     char descripcion[100];
     char riesgo[60];
     char dependencia[100];
@@ -1041,8 +1042,7 @@ void modificarRequerimiento(){
 	printf("+-------------------------------+\n");
 	
 	struct ListaRequerimientos *L;
-    struct Requerimiento *i;
-	char id[10], respuesta[2], tipo[12], recursos[55], estado [15];
+	char id[10], respuesta[2], tipo[20], recursos[55], estado [15];
 	int val=3, res=0, resp;
 	
 	printf("\n Ingrese el identificador: (Ejm. RQ000) \n ");
@@ -1087,8 +1087,8 @@ void modificarRequerimiento(){
                 
                 if(resp==1){
                 	printf("\n Ingrese el Tipo: (Ejm. Funcional) \n");
-					gets(tipo);	
-					strcpy(i->tipo, tipo);
+                	gets(tipo);	
+					strcpy(i->tipo,tipo);
 				}
 				
 				//Modificar los Recursos
@@ -1138,26 +1138,48 @@ void modificarRequerimiento(){
 		printf("\n**No se ha registrado ningún requerimiento***");
 	}
 	
-	i = L->inicio;
-	while( i->siguiente!= NULL){
-		printf("\n+-------------------------------+");
-	    printf("\nIdentificador: %s \n", i->identificador);
-	    printf("Tipo: %s \n", i->tipo);
-	    printf("Descripcion: %s \n", i->descripcion);
-	    printf("Riesgo: %s \n", i->riesgo);
-	    printf("Dependencia: %s \n", i->dependencia);
-	    printf("Recursos: %s \n", i->recursos);
-	    printf("Estado: %s \n", i->estado);
-	    printf("Esfuerzo: %s \n", i->esfuerzo);
-	    printf("+-------------------------------+\n");
-	    i = i->siguiente;
-    }
-	
+	actualizarRequerimientos(L);
 	liberarListaRequerimientos(L);
 		
 	//guardarRequerimiento(requerimiento);
 	getchar();	
 }
+
+/*
+	Entradas: Los objetos de tipo, recursos o estado de la estructura Requerimiento.
+	Salidas: Llama a la función guardarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
+	Restricciones: No tiene restricciones.
+*/
+void actualizarRequerimientos(struct ListaRequerimientos *L){
+	
+	struct Requerimiento *i;
+	
+	 if (remove("Archivos\\Requerimientos.txt") == 0){
+	 	printf("Archivo Borrado"); 
+	 }else{
+	 	printf("Archivo NO Borrado"); 
+	 }
+
+	ArchRequerimiento=fopen("Archivos\\Requerimientos.txt","a+");
+	if(ArchRequerimiento==NULL){
+		printf("\n Error al intentar usar el archivo.\n");	
+	}else{
+		
+		i = L->inicio;
+        while( i->siguiente!= NULL){
+			fprintf(ArchRequerimiento,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", i->identificador, i->tipo, i->descripcion,
+					i->riesgo, i->dependencia, i->recursos, i->estado,  i->esfuerzo);
+            i = i->siguiente;
+        }
+		
+	}
+	fclose(ArchRequerimiento);
+	printf("\n ==>Informacion guardada<==.\n");
+	
+	printf("\n\nPresione una tecla para regresar..." ); 
+
+}
+
 
 /*
 	Entradas: Los diferentes objetos de la estructura Asignacion(fechaSolicitud, horaInicio, horaFin, recurso, identificador 
