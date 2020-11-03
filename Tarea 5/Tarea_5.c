@@ -149,7 +149,45 @@ int findBinarySearch(Lista *L, int dato, int inicio, int fin)
       
     }  
     return -1;   
-}  
+} 
+
+struct Node *RadixSort(Lista *L,  const int base, int rounds){
+    int n = 1, i, j;
+    Nodo *bucket, *siguiente, *temp;
+    // Dyamic bucket array
+    bucket = (Nodo *) malloc(sizeof(Nodo)*base); 
+  
+ 	Nodo *nAux = L->inicio;
+ 
+    for(j = 0; j < rounds ;j++)
+    {        
+        //Place numbers into buckets.        
+        while(nAux != NULL)
+        {    
+            siguiente = nAux->siguiente;            
+            nAux->siguiente = bucket[(nAux->dato/n)%base];
+            bucket[(nAux->dato)%base] = nAux;
+            nAux += nAux->siguiente;
+            nAux = siguiente;
+        }
+        //Rebuild list
+        for(i = 0; i < base; i++)
+        {        
+            while(bucket[i]!=NULL)
+            {
+                temp = bucket[i]->siguiente;
+                bucket[i]->siguiente = nAux;
+                nAux = bucket[i];
+                bucket[i] = bucket[i]->siguiente;
+                bucket[i] = temp;
+            }
+        }
+        n *=10;
+    }
+ 
+ 
+    return list;
+} 
 
 //Generar un numero aleatorio
 int numeroAleatorio(){
