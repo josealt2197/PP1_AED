@@ -512,7 +512,7 @@ int compararCadenas(const char cadena1[], const char cadena2[] ){
 }
 
 /*
-	Entradas: Una cadena de caacteres.
+	Entradas: Una cadena de caracteres.
 	Salidas: La cadena de caracteres recibida, sustituyendo el valor de los campos con un salto de linea (\n) por un caracter nulo.
 	Restricciones: El parametro debe corresponder con el tipo cadena de caracteres.
 */
@@ -523,6 +523,56 @@ void quitaFinLinea(char linea[]){
 			linea[i]='\0';
 			break;
 		}
+	}
+}
+
+/*
+	Entradas: Una cadena de caracteres con formato de fecha (dd/MM/AAAA) y tres punteros a variables de tipo entero.
+	Salidas: Asigna al valor de los punteros los segmentos de cada extracto de la fecha.
+	Restricciones: Ninguna.
+*/
+void separarValores(char fecha[], int *d, int *m, int *a){
+	int cont=0;
+	char delim[] = "/";
+
+	char *ptr = strtok(fecha, delim);
+	*d = atoi(ptr);
+	
+	while (ptr != NULL)
+	{
+		ptr = strtok(NULL, delim);
+		
+		if(cont==0){
+			*m = atoi(ptr);
+		}else if(cont==1){
+			*a = atoi(ptr);
+		}
+		
+		cont++;
+	}
+}
+
+/*
+	Entradas: Dos cadena de caracteres con formato de fecha (dd/MM/AAAA)
+	Salidas: 1 si la primera fecha es menor que la segunda y 2 si la segunda fecha es menor que la primera.
+	Restricciones: Ninguna.
+*/
+int compararFechas(char fecha1[], char fecha2[]){
+	int d1, m1, a1, d2, m2, a2;
+		
+	//Obtener valores fecha 1
+	separarValores(fecha1, &d1, &m1, &a1);
+	//Obtener valores fecha 2
+	separarValores(fecha2, &d2, &m2, &a2);
+		
+	if (a1 < a2) 
+        return 1; 
+    if (a1 == a2 && m1 < m2) 
+        return 1; 
+    if (a1 == a2 && m1 == m2 && d1 < d2){
+    	return 1;
+	}else{
+		return 2;	
 	}
 }
 
@@ -1228,7 +1278,6 @@ void actualizarRequerimientos(struct ListaRequerimientos *L){
 
 }
 
-
 /*
 	Entradas: Los diferentes objetos de la estructura Asignacion(fechaSolicitud, horaInicio, horaFin, recurso, identificador 
 			descripcion, miembros, prioridad y estado). 
@@ -1383,6 +1432,69 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 	return 1;
 }
 
+
+void ordenarAsignaciones(struct ListaAsignaciones *L){
+	
+	struct Asignacion *i, *j, *temp;
+	char fecha1[15], fecha2[15];	
+	int res=0;
+
+	temp=(struct Asignacion *) malloc (sizeof(struct Asignacion));
+	
+	i = L->inicio;
+	while( i->siguiente!= NULL){
+		
+		j = i->siguiente;
+		while( j->siguiente!= NULL){
+			strcpy(fecha1, i->fechaSolicitud);
+			strcpy(fecha2, j->fechaSolicitud);
+				
+			res = compararFechas(fecha1, fecha2);
+
+			if(res==1){
+				
+				//Guardar los valores del nodo i
+				strcpy(temp->fechaSolicitud,i->fechaSolicitud);
+				strcpy(temp->horaInicio, i->horaInicio);
+				strcpy(temp->horaFin, i->horaFin);
+				strcpy(temp->recurso, i->recurso);
+				strcpy(temp->identificador, i->identificador);
+				strcpy(temp->descripcion, i->descripcion);
+				strcpy(temp->miembros, i->miembros);
+				strcpy(temp->prioridad, i->prioridad);
+				strcpy(temp->estado, i->estado);
+				
+				//Asignar los valores del nodo j al nodo i				
+				strcpy(i->fechaSolicitud, j->fechaSolicitud);
+				strcpy(i->horaInicio, j->horaInicio);
+				strcpy(i->horaFin, j->horaFin);
+				strcpy(i->recurso, j->recurso);
+				strcpy(i->identificador, j->identificador);
+				strcpy(i->descripcion, j->descripcion);
+				strcpy(i->miembros, j->miembros);
+				strcpy(i->prioridad, j->prioridad);
+				strcpy(i->estado, j->estado);
+				
+				//Asignar los valores guardados del nodo i al nodo j
+				strcpy(j->fechaSolicitud, temp->fechaSolicitud);
+				strcpy(j->horaInicio, temp->horaInicio);
+				strcpy(j->horaFin, temp->horaFin);
+				strcpy(j->recurso, temp->recurso);
+				strcpy(j->identificador, temp->identificador);
+				strcpy(j->descripcion, temp->descripcion);
+				strcpy(j->miembros, temp->miembros);
+				strcpy(j->prioridad, temp->prioridad);
+				strcpy(j->estado, temp->estado);
+				
+			}
+			
+			j = j->siguiente;
+		}
+		i = i->siguiente;
+	}
+	
+} 
+
 /*
 	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar las Asignaciones
 	Salidas: Los datos relacionado a las Asignaciones del Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
@@ -1414,12 +1526,13 @@ void consultarAsignaciones(){
 
 	if(res=1)
 	{
-	
+		ordenarAsignaciones(L);	
 		printf("\n+-------------------------------+\n");
 		i = L->inicio;
 		while( i->siguiente!= NULL){
 			val=strcmp(id,i->miembros);
 			if(val==0){
+				
 				printf("Fecha de Solicitud: %s \n", i->fechaSolicitud);
 				printf("Hora de Inicio: %s \n", i->horaInicio ); 
 				printf("Hora de Fin: %s \n", i->horaFin); 
@@ -1436,10 +1549,11 @@ void consultarAsignaciones(){
 		}
 		if(val!=0){
 			printf( "\n***No se han encontrado Asignaciones***");
-		}		
+		}
+		
 	}else{
 		printf( "\n***No se han registrado Asignaciones***");
-	}	
+	}
 	
 	liberarListaAsignaciones(L);
 	printf("\n\nPresione una tecla para regresar..." ); 
@@ -1755,59 +1869,7 @@ void liberarListaIncidentes(ListaIncidentes *L){
 }
 
 int main(){ 
-	
-	char fecha1[] = "31/10/2020";
-	char fecha2[] = "01/10/2020";
-	int cont1=0, cont2=0;
-	char delim[] = "/";
-	int d1, m1, a1, d2, m2, a2;
 
-	char *ptrF1 = strtok(fecha1, delim);
-	d1 = atoi(ptrF1);
-
-	while (ptrF1 != NULL)
-	{
-		printf("'%s'\n", ptrF1);
-		ptrF1 = strtok(NULL, delim);
-		
-		if(cont1==0){
-			m1 = atoi(ptrF1);
-		}else if(cont1==1){
-			a1 = atoi(ptrF1);
-		}
-		
-		cont1++;
-	}
-	
-	char *ptrF2 = strtok(fecha2, delim);
-	d2 = atoi(ptrF2);
-
-	while (ptrF2 != NULL)
-	{
-		printf("'%s'\n", ptrF2);
-		ptrF2 = strtok(NULL, delim);
-		
-		if(cont2==0){
-			m2 = atoi(ptrF2);
-		}else if(cont2==1){
-			a2 = atoi(ptrF2);
-		}
-		
-		cont2++;
-	}
-	
-	if (a1 < a2) 
-        printf("Fecha 1 < Fecha 2 - 1\n"); 
-    if (a1 == a2 && m1 < m2) 
-        printf("Fecha 1 < Fecha 2 - 2\n"); 
-    if (a1 == a2 && m1 == m2 && d1 < d2){
-    	printf("Fecha 1 < Fecha 2 - 3\n");
-	} 	
-	else{
-		printf("Fecha 1 > Fecha 2 - 4\n");	
-	}
-	
-	
 	MenuPrincipal();    
 	return 0; 
 }
