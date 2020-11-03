@@ -15,6 +15,7 @@ FILE* ArchMiembros;
 FILE* ArchAsignaciones;
 FILE* ArchIncidentes;
 FILE* ArchCalificaciones;
+FILE* ArchOficinas;
 
 //Procedimientos para Menus de Opciones
 void MenuPrincipal();
@@ -29,12 +30,14 @@ typedef struct MiembroEquipo MiembroEquipo;
 typedef struct Asignacion Asignacion;
 typedef struct Incidentes Incidentes;
 typedef struct Calificacion Calificacion;
+typedef struct Oficina Oficina;
 
 typedef struct ListaMiembros ListaMiembros;
 typedef struct ListaRequerimientos ListaRequerimientos;
 typedef struct ListaAsignaciones ListaAsignaciones;
 typedef struct ListaIncidentes ListaIncidentes;
 typedef struct ListaCalificaciones ListaCalificaciones;
+typedef struct ListaOficinas ListaOficinas;
 
 //Procedimientos para Miembros de Equipo
 void registrarMiembro();
@@ -54,6 +57,8 @@ void modificarRequerimiento();
 void actualizarRequerimientos(struct ListaRequerimientos *L);
 void registrarCalificaciones();
 void guardarCalificacion(Calificacion *calificacion);
+int cargarOficinas(struct ListaOficinas *L);
+void consultarOficinas();
 
 //Procedimientos para Asignaciones
 void registrarAsignacion();
@@ -83,8 +88,10 @@ struct Requerimiento{
     char recursos[55];
     char estado [15];
     char esfuerzo[5];
+    char oficina [15];
     Requerimiento *siguiente;
     Requerimiento *anterior;
+    
 };
 
 struct MiembroEquipo{
@@ -95,6 +102,7 @@ struct MiembroEquipo{
     char telefono[15];
     MiembroEquipo *anterior;
     MiembroEquipo *siguiente;
+    
 };
 
 struct Asignacion{
@@ -109,6 +117,7 @@ struct Asignacion{
     char estado[15];
     Asignacion *anterior;
     Asignacion *siguiente;
+    
 };
 
 struct Incidentes{
@@ -126,6 +135,15 @@ struct Calificacion{
     char calificacion[5];
     Incidentes *anterior;
     Incidentes *siguiente;
+};
+
+struct Oficina{
+    char codigo[50];
+    char dias[30];
+    char horaApertura[15];
+    char horaCierre[15];
+    Oficina *anterior;
+    Oficina *siguiente;
 };
 
 struct ListaCalificaciones {
@@ -151,6 +169,11 @@ struct ListaIncidentes{
 struct ListaAsignaciones{
 	Asignacion *inicio;
 	Asignacion *final;
+};
+
+struct ListaOficinas{
+	Oficina *inicio;
+	Oficina *final;
 };
 
 
@@ -880,6 +903,103 @@ int validarCedula(const char identificador []){
 }
 
 /*
+	Entradas: Una puntero a una lista del tipo ListaOficinas de Oficinas.
+	Salidas: Una lista enlazada con los diferentes objetos de la estructura Asignacion (codgo, dias, horaApertura, horaCierre). 
+	Restricciones: Ninguna.
+*/
+int cargarOficinas(struct ListaOficinas *L){
+	
+	struct Oficina *oficina, *aux;
+
+	aux =(struct Oficina *) malloc (sizeof(struct Oficina));
+
+	ArchOficinas = fopen("Archivos\\Oficinas.txt","r");
+
+	if(ArchOficinas==NULL){
+		return 0;	
+	}else{
+
+		while(!feof(ArchOficinas)){
+			fgets(aux->codigo, 50, ArchOficinas); 
+			quitaFinLinea(aux->codigo);
+			fgets(aux->dias, 30, ArchOficinas);
+			quitaFinLinea(aux->dias);
+			fgets(aux->horaApertura, 15, ArchOficinas); 
+			quitaFinLinea(aux->horaApertura);
+			fgets(aux->horaCierre, 15, ArchOficinas);
+			quitaFinLinea(aux->horaCierre);	
+			
+			if(L->inicio == NULL) 
+			{
+				//Inserta al inicio de la lista
+				L->inicio =(struct Oficina *) malloc (sizeof(struct Oficina));
+				strcpy(L->inicio->codigo , aux->codigo);
+				strcpy(L->inicio->dias , aux->dias); 
+				strcpy(L->inicio->horaApertura , aux->horaApertura ); 
+				strcpy(L->inicio->horaCierre , aux->horaCierre); 
+				L->inicio->siguiente = NULL; 
+				L->inicio->anterior = NULL; 
+				L->final = L->inicio;
+	
+			}else{	
+				//Inserta al final de la lista	
+				L->final->siguiente =(struct Oficina *) malloc (sizeof(struct Oficina));
+				strcpy(L->final->siguiente->codigo , aux->codigo);
+				strcpy(L->final->siguiente->dias , aux->dias); 
+				strcpy(L->final->siguiente->horaApertura , aux->horaApertura ); 
+				strcpy(L->final->siguiente->horaCierre , aux->horaCierre); 
+				L->final->siguiente->siguiente = NULL; 
+				L->final->siguiente->anterior = L->final; 
+				L->final = L->final->siguiente;
+			}		
+		}
+		fclose(ArchAsignaciones);
+	}	
+	return 1;
+}
+
+/*
+	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar las Asignaciones
+	Salidas: Los datos relacionado a las Asignaciones del Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
+			que no se han encontrado.
+	Restricciones: Ninguna
+*/
+void consultarOficinas(){
+
+	struct ListaOficinas *L;
+	struct Oficina *i;
+	int res=0;
+	
+	printf("\n+-------------------------------------------------------------------+\n");
+	printf( "                         Oficinas y Horarios" );
+	printf("\n+-------------------------------------------------------------------+\n");
+	
+	L = (struct ListaOficinas *) malloc(sizeof(struct ListaOficinas));
+	L->inicio = NULL;
+	L->final = NULL;
+	
+	res=cargarOficinas(L);
+
+	if(res=1)
+	{
+        i = L->inicio;
+        int cont=1;
+        	printf(" Codigo        Dias de Trabajo       Hora-Apertura   Hora-Cierre\n" ); 
+        while(i->siguiente!=NULL){
+            printf("\n %s          %s                %s         %s\n" , i->codigo, i->dias, i->horaApertura, i->horaCierre );
+            i = i->siguiente;
+
+        }
+        printf("\n+-------------------------------------------------------------------+\n");		
+		
+	}else{
+		printf( "\n***No se han encontrado Oficinas registradas***");
+	}
+	
+	//liberarListaAsignaciones(L);
+}
+
+/*
 	Entradas: Los diferentes objetos de la estructura Requerimiento(identificador, tipo, descripcion, riesgo, 
 	           dependencia, recursos, esfuerzo). 
 	Salidas: LLama a la función guardarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
@@ -919,13 +1039,16 @@ void registrarRequerimiento(){
 	gets(requerimiento->descripcion);
 	printf("\n Ingrese el riesgo: (Ejm. ....) \n");
 	gets(requerimiento->riesgo);
-	printf("\n Ingrese la dependencia: (Ejm. RQ001) \n ");
+	printf("\n Ingrese la dependencia: (Ejm. RQ001) \n");
 	gets(requerimiento->dependencia);
 	printf("\n Ingrese los recursos:\n");
 	gets(requerimiento->recursos);
 	strcpy(requerimiento->estado, "Por hacer");
 	printf("\n Ingrese el esfuerzo: ( 1...10 ) \n");
 	gets(requerimiento->esfuerzo);
+	consultarOficinas();
+	printf("\n Ingrese el codigo de la oficina para la seleccion del horario: \n");
+	gets(requerimiento->oficina);
 	requerimiento->siguiente=NULL;
 
 	guardarRequerimiento(requerimiento);
@@ -944,8 +1067,8 @@ void guardarRequerimiento(Requerimiento *requerimiento){
 	if(ArchRequerimiento==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		fprintf(ArchRequerimiento,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", requerimiento->identificador, requerimiento->tipo, requerimiento->descripcion,
-						requerimiento->riesgo, requerimiento->dependencia, requerimiento->recursos, requerimiento->estado,  requerimiento->esfuerzo);
+		fprintf(ArchRequerimiento,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", requerimiento->identificador, requerimiento->tipo, requerimiento->descripcion,
+	requerimiento->riesgo, requerimiento->dependencia, requerimiento->recursos, requerimiento->estado,  requerimiento->esfuerzo, requerimiento->oficina);
 	}
 	fclose(ArchRequerimiento);
 	printf("\n ==>Informacion guardada<==.\n");
@@ -989,6 +1112,8 @@ int cargarRequerimientos(struct ListaRequerimientos *L){
 			quitaFinLinea(aux->estado);
 			fgets(aux->esfuerzo, 5, ArchRequerimiento);
 			quitaFinLinea(aux->esfuerzo); 
+			fgets(aux->oficina, 15, ArchRequerimiento);
+			quitaFinLinea(aux->oficina); 
 			
 			if(L->inicio == NULL) 
 			{
@@ -1002,6 +1127,7 @@ int cargarRequerimientos(struct ListaRequerimientos *L){
 				strcpy(L->inicio->recursos , aux->recursos); 
 				strcpy(L->inicio->estado , aux->estado); 
 				strcpy(L->inicio->esfuerzo , aux->esfuerzo);
+				strcpy(L->inicio->oficina , aux->oficina);
 				L->inicio->siguiente = NULL; 
 				L->inicio->anterior = NULL; 
 				L->final = L->inicio;
@@ -1017,6 +1143,7 @@ int cargarRequerimientos(struct ListaRequerimientos *L){
 				strcpy(L->final->siguiente->recursos , aux->recursos); 
 				strcpy(L->final->siguiente->estado , aux->estado); 
 				strcpy(L->final->siguiente->esfuerzo , aux->esfuerzo);
+				strcpy(L->final->siguiente->oficina , aux->oficina);
 				L->final->siguiente->siguiente = NULL; 
 				L->final->siguiente->anterior = L->final; 
 				L->final = L->final->siguiente;
@@ -1073,6 +1200,7 @@ void consultarRequerimiento(){
                 printf("Recursos: %s \n", i->recursos);
                 printf("Estado: %s \n", i->estado);
                 printf("Esfuerzo: %s \n", i->esfuerzo);
+                printf("Oficina: %s \n", i->oficina);
                 printf("+-------------------------------+\n");
 
             }
@@ -1171,6 +1299,7 @@ void modificarRequerimiento(){
                 printf("Recursos: %s \n", i->recursos);
                 printf("Estado: %s \n", i->estado);
                 printf("Esfuerzo: %s \n", i->esfuerzo);
+                printf("Oficina: %s \n", i->oficina);
                 printf("+-------------------------------------+\n");
                 
                 //Modificar el Tipo de Requerimiento
@@ -2000,7 +2129,7 @@ void liberarListaIncidentes(ListaIncidentes *L){
 }
 
 int main(){ 
-
+	
 	MenuPrincipal();    
 	return 0; 
 }

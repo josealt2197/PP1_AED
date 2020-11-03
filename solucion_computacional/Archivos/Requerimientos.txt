@@ -6,6 +6,7 @@ Ninguna
 Aprobado
 Por hacer
 6
+OF001
 RQ002
 Funcional
 Debe cerrar ventana 1
@@ -14,3 +15,13 @@ RQ001
 Ninguno
 Por hacer
 8
+OF002
+RQ003
+Funcional
+Abrir ventanas 2 y 3
+Moderado
+RQ002
+Ninguno
+Por hacer
+7
+OF003
