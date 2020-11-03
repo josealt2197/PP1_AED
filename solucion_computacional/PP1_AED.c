@@ -61,12 +61,13 @@ void guardarAsignacion(Asignacion *asignacion);
 int cargarAsignaciones(struct ListaAsignaciones *L);
 void consultarAsignaciones();
 void liberarListaAsignaciones(ListaAsignaciones *L);
+void cancelarAsignacion();
 
 //Procedimientos para Incidentes
 void registrarIncidentes();
 void guardarIncidentes(Incidentes *incidente);
 int cargarIncidentes(struct ListaIncidentes *L);
-void consultarIncidentes();
+void consultarIncidentes(int tipoConsulta);
 void liberarListaIncidentes(ListaIncidentes *L);
 
 //Procedimientos de Apoyo
@@ -333,7 +334,7 @@ void GestionAsignacion(){
 					break;
 				case '2': consultarAsignaciones();
 					break;
-				case '3': Temporal();
+				case '3': cancelarAsignacion();
 					break;
 				case '4': Temporal();
 					break;
@@ -379,9 +380,9 @@ void GestionIncidentes(){
 			switch(opcion){
 				case '1': registrarIncidentes();
 					break;
-				case '2': consultarIncidentes();
+				case '2': consultarIncidentes(1);
 					break;
-				case '3': consultarIncidentes();
+				case '3': consultarIncidentes(2);
 					break;
 				case '0': MenuPrincipal();
 					break;
@@ -641,7 +642,7 @@ void guardarMiembro(MiembroEquipo *miembro){
 
 /*
 	Entradas: Una puntero a una lista del tipo ListaMiembros de Miembros de equipo.
-	Salidas: Una lista doblemente enlazada con los diferentes objetos de la estructura Miembro de Equipo(nombre, 
+	Salidas: Una lista  enlazada con los diferentes objetos de la estructura Miembro de Equipo(nombre, 
 			cedula, correo, telefono, nivel de acceso).
 	Restricciones: Ninguna.
 */
@@ -955,7 +956,7 @@ void guardarRequerimiento(Requerimiento *requerimiento){
 
 /*
 	Entradas: Una puntero a una lista del tipo ListaRequerimientos de Requerimientos.
-	Salidas: Una lista doblemente enlazada con los diferentes objetos de la estructura Requerimiento(identificador, tipo, 
+	Salidas: Una lista   enlazada con los diferentes objetos de la estructura Requerimiento(identificador, tipo, 
 			descripcion, riesgo, dependencia, recursos, esfuerzo).
 	Restricciones: Ninguna.
 */
@@ -1244,8 +1245,8 @@ void modificarRequerimiento(){
 }
 
 /*
-	Entradas: 
-	Salidas: 
+	Entradas: Una puntero a una lista del tipo ListaRequerimientos de Requerimientos.
+	Salidas: Se sobreescribe el archivo que almacena la lista de requerimietnos con los valores modificados.
 	Restricciones: No tiene restricciones.
 */
 void actualizarRequerimientos(struct ListaRequerimientos *L){
@@ -1357,7 +1358,7 @@ void guardarAsignacion(Asignacion *asignacion){
 
 /*
 	Entradas: Una puntero a una lista del tipo ListaAsiganciones de Asignaciones.
-	Salidas: Una lista doblemente enlazada con los diferentes objetos de la estructura Asignacion (fechaSolicitud, horaInicio, 
+	Salidas: Una lista enlazada con los diferentes objetos de la estructura Asignacion (fechaSolicitud, horaInicio, 
 			horaFin, recurso, identificador, descripcion, miembros, prioridad y estado). 
 	Restricciones: Ninguna.
 */
@@ -1432,7 +1433,11 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 	return 1;
 }
 
-
+/*
+	Entradas: Una puntero a una lista del tipo ListaAsiganciones de Asignaciones.
+	Salidas: Una lista enlazada con los diferentes objetos de la estructura Asignacion, ordenadas por fecha de solicitud. 
+	Restricciones: Ninguna.
+*/
 void ordenarAsignaciones(struct ListaAsignaciones *L){
 	
 	struct Asignacion *i, *j, *temp;
@@ -1562,6 +1567,110 @@ void consultarAsignaciones(){
 }
 
 /*
+    Entradas: Un ID determinado en la tabla que se presenta de Asiganciones. 
+    Salidas: Se cambia el estado de la asignacion escogida por el ID a Cancelada . 
+    Restricciones: No valida.
+*/
+void cancelarAsignacion(){
+    struct ListaAsignaciones *L;
+    struct Asignacion *i;
+    int val=3, res=0;
+    char id[12];
+
+    system( "CLS" );
+    printf("\n\n+-------------------------------------+\n");
+    printf("      Gestor de Requerimientos       \n");
+    printf("+-------------------------------------+\n");
+    printf( "         Cancelar Asignacion        \n" );
+    printf("+-------------------------------------+\n");
+    L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+    L->inicio = NULL;
+    L->final = NULL;
+
+    res=cargarAsignaciones(L);
+    if(res=1)
+    {
+        printf("\n\n+-----------------------Lista de Asignaciones-----------------------+\n");
+        printf("\n+-------------------------------------------------------------------+\n");
+        i = L->inicio;
+        int cont=1;
+        printf(" ID        Miembro             RQ         Estado\n" ); 
+        while(i->siguiente!=NULL){
+            if (compararCadenas( i->estado , "Cancelada")!=1){
+                printf("\n %d        %s        %s        %s\n" , cont , i->miembros , i->identificador, i->estado );
+                cont++;
+            }
+            i = i->siguiente;
+
+        }
+        printf("\n+-------------------------------------------------------------------+\n");
+
+    }else{
+        printf( "\n**No se han registrado Asignaciones***");
+    }
+
+	int eliminar=0;
+	    printf("Ingrese el numero del ID de la asignacion que desea cancelar: ");
+	    scanf("%d", &eliminar);
+	    int e=1;
+	    i = L->inicio;
+	    while(i->siguiente!=NULL){
+	        if (compararCadenas( i->estado , "Cancelada")==1){
+	            eliminar+=1;
+	        }
+	        if (e==eliminar){
+	            strcpy(i->estado,"Cancelada");
+	            break;
+	        }
+	        i = i->siguiente;
+	        e++;
+	    }
+	    printf("\n\n+-----------------------Lista de Asignaciones-----------------------+\n");
+	    printf("\n+-------------------------------------------------------------------+\n");
+	    i = L->inicio;
+	    int cont=1;
+	    printf(" ID        Miembro             RQ         Estado\n" ); 
+	    while(i->siguiente!=NULL){
+	        if (compararCadenas( i->estado , "Cancelada")!=1){
+	            printf("\n %d        %s        %s        %s\n" , cont , i->miembros , i->identificador, i->estado );
+	            cont++;
+	        }
+	        i = i->siguiente;
+	
+	    }
+	    printf("\n+-------------------------------------------------------------------+\n");
+	
+	    printf("\n\nPresione una tecla para regresar..." ); 
+	    getchar();
+	    fflush(stdin);
+	
+	if (remove("Archivos\\Asignaciones.txt") == 0){
+	
+	        ArchAsignaciones=fopen("Archivos\\Asignaciones.txt","a+");
+	        if(ArchAsignaciones==NULL){
+	            printf("\n Error al intentar usar el archivo.\n");
+	        }else{
+	
+	            i=L->inicio;
+	            while(i->siguiente!=NULL){
+	                fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", i->fechaSolicitud, i->horaInicio, i->horaFin, i->recurso, i->identificador, 
+	                                                                        i->descripcion,  i->miembros, i->prioridad, i->estado);
+	                i=i->siguiente;
+	            }
+	        }
+	        fclose(ArchAsignaciones);
+	        printf("\n\n ==>Informacion guardada<==\n");
+	
+	        printf("\n\nPresione una tecla para regresar..." );
+	
+	    }else{
+	        printf("Problema al borrar el archivo de Asignaciones");
+	    }
+	
+	
+}
+
+/*
 	Entradas: Los diferentes objetos de la estructura Incidente(codigoRequerimiento, codigoAsignacion, descripcionIncidente, fecha). 
 	Salidas: LLama a la función guardarIncidente para guardar los datos al registrarlos en un archivo .txt. 
 	Restricciones: No tiene restricciones.
@@ -1621,7 +1730,7 @@ void guardarIncidentes(Incidentes *incidente){
 
 /*
 	Entradas: Una puntero a una lista del tipo ListaIncidentes de Incidentes.
-	Salidas: Una lista doblemente enlazada con los diferentes objetos de la estructura Incidente (codigoRequerimiento, codigoAsignacion, 
+	Salidas: Una lista   enlazada con los diferentes objetos de la estructura Incidente (codigoRequerimiento, codigoAsignacion, 
 			descripcionIncidente, fecha). 
 	Restricciones: Ninguna.
 */
@@ -1681,38 +1790,61 @@ int cargarIncidentes(struct ListaIncidentes *L){
 			que no se han encontrado.
 	Restricciones: Ninguna
 */
-void consultarIncidentes(){
+void consultarIncidentes(int tipoConsulta){
 
 	struct ListaIncidentes *L;
 	struct Incidentes *i;
 	int val=3, res=0;
+	char fechaInicio[15], fechaFin[15], fechaIncidente[15];
 	
 	system( "CLS" );
 	printf("\n\n+-------------------------------------+\n");
 	printf("      Gestor de Requerimientos         \n");
 	printf("+-------------------------------------+\n");
-	printf( "       Consultar Incidentes           \n");
-	printf("+-------------------------------------+\n");
-
+	
 	L = (struct ListaIncidentes *) malloc(sizeof(struct ListaIncidentes));
 	L->inicio = NULL;
 	L->final = NULL;
 
 	res=cargarIncidentes(L);
-
-	if(res==1)
-	{	
-		i = L->inicio;
-		while( i->siguiente!= NULL){
-			printf("\n+-------------------------------+\n");
-			printf("Requerimiento: %s \n", i->codigoRequerimiento);
-			printf("Asignacion: %s \n", i->codigoAsignacion ); 
-			printf("Descripcion: %s \n", i->descripcionIncidente); 
-			printf("Fecha de Incidente: %s \n", i->fecha); 
-			printf("+-------------------------------+\n");
 	
-			i = i->siguiente;
-		}				
+	if(res==1)
+	{
+	
+		switch(tipoConsulta){
+			case 1:
+				printf( "Consultar Incidentes (Rango de Fechas) \n");
+				printf("+-------------------------------------+\n");
+				printf("\n Ingrese la Fecha de Inicio: (Ejm. 01/01/2020) \n ");
+				gets(fechaInicio);
+			 	printf("\n Ingrese la Fecha de Fin: (Ejm. 01/01/2020) \n ");
+				gets(fechaFin);
+				
+				i = L->inicio;
+				while( i->siguiente!= NULL){
+					strcpy(fechaIncidente, i->fecha);
+					
+					if(compararFechas(fechaInicio, fechaIncidente)==1 && compararFechas(fechaFin, fechaIncidente)==2){
+						printf("%d\n", compararFechas(fechaInicio, fechaIncidente));
+						printf("%d\n", compararFechas(fechaFin, fechaIncidente));
+						printf("\n+-------------------------------+\n");
+						printf("Requerimiento: %s \n", i->codigoRequerimiento);
+						printf("Asignacion: %s \n", i->codigoAsignacion ); 
+						printf("Descripcion: %s \n", i->descripcionIncidente); 
+						printf("Fecha de Incidente: %s \n", i->fecha); 
+						printf("+-------------------------------+\n");					
+					}
+					i = i->siguiente;
+				}
+			
+			
+				break;
+	//		case 2: ordenarIncidentesPorRequerimiento();
+	//			break;	
+		}
+
+		
+						
 	}else{
 		printf( "\n***No se han registrado Incidentes***");
 	}	
@@ -1721,7 +1853,6 @@ void consultarIncidentes(){
 	getchar();
 	fflush(stdin);
 }
-
 
 /*
 	Entradas: Los diferentes objetos de la estructura Calificación(codigoRequerimiento, codigoAsignacion, calificacion). 
