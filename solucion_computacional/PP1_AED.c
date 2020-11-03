@@ -14,6 +14,7 @@ FILE* ArchRequerimiento;
 FILE* ArchMiembros;
 FILE* ArchAsignaciones;
 FILE* ArchIncidentes;
+FILE* ArchCalificaciones;
 
 //Procedimientos para Menus de Opciones
 void MenuPrincipal();
@@ -27,11 +28,13 @@ typedef struct Requerimiento Requerimiento;
 typedef struct MiembroEquipo MiembroEquipo;
 typedef struct Asignacion Asignacion;
 typedef struct Incidentes Incidentes;
+typedef struct Calificacion Calificacion;
 
 typedef struct ListaMiembros ListaMiembros;
 typedef struct ListaRequerimientos ListaRequerimientos;
 typedef struct ListaAsignaciones ListaAsignaciones;
 typedef struct ListaIncidentes ListaIncidentes;
+typedef struct ListaCalificaciones ListaCalificaciones;
 
 //Procedimientos para Miembros de Equipo
 void registrarMiembro();
@@ -49,6 +52,8 @@ int validarIDRequerimiento(const char identificador []);
 void liberarListaRequerimientos(ListaRequerimientos *L);
 void modificarRequerimiento();
 void actualizarRequerimientos(struct ListaRequerimientos *L);
+void registrarCalificaciones();
+void guardarCalificacion(Calificacion *calificacion);
 
 //Procedimientos para Asignaciones
 void registrarAsignacion();
@@ -112,6 +117,19 @@ struct Incidentes{
     char fecha[20];
     Incidentes *anterior;
     Incidentes *siguiente;
+};
+
+struct Calificacion{
+    char codigoRequerimiento[15];
+    char codigoAsignacion[15];
+    char calificacion[5];
+    Incidentes *anterior;
+    Incidentes *siguiente;
+};
+
+struct ListaCalificaciones {
+	Calificacion *inicio;
+	Calificacion *final;
 };
 
 struct ListaMiembros {
@@ -265,7 +283,7 @@ void GestionRequerimiento(){
 					break;
 				case '2': modificarRequerimiento();
 					break;
-				case '3': Temporal();
+				case '3': registrarCalificaciones();
 					break;
 				case '4': consultarRequerimiento();
 					break;
@@ -437,7 +455,7 @@ void obtenerFechaActual(char *hoy){
 	time_t t = time(NULL);
 	struct tm tm = *localtime(&t);
 	
-	char dia[3], mes[3], anho[3];
+	char dia[3], mes[3], anho[5];
 	sprintf(dia, "%d", tm.tm_mday);
 	sprintf(mes, "%d", (tm.tm_mon + 1));
 	sprintf(anho, "%d", (tm.tm_year + 1900));
@@ -906,7 +924,7 @@ int cargarRequerimientos(struct ListaRequerimientos *L){
 		while(!feof(ArchRequerimiento)){
 			fgets(aux->identificador, 50, ArchRequerimiento); 
 			quitaFinLinea(aux->identificador);
-			fgets(aux->tipo, 12, ArchRequerimiento); 
+			fgets(aux->tipo, 20, ArchRequerimiento); 
 			quitaFinLinea(aux->tipo);
 			fgets(aux->descripcion, 100, ArchRequerimiento);
 			quitaFinLinea(aux->descripcion);			
@@ -1400,8 +1418,8 @@ void consultarAsignaciones(){
 		printf("\n+-------------------------------+\n");
 		i = L->inicio;
 		while( i->siguiente!= NULL){
-//			val=strcmp(id,i->miembros);
-//			if(val==0){
+			val=strcmp(id,i->miembros);
+			if(val==0){
 				printf("Fecha de Solicitud: %s \n", i->fechaSolicitud);
 				printf("Hora de Inicio: %s \n", i->horaInicio ); 
 				printf("Hora de Fin: %s \n", i->horaFin); 
@@ -1413,7 +1431,7 @@ void consultarAsignaciones(){
 				printf("Estado: %s \n", i->estado); 
 				printf("+-------------------------------+\n");
 			
-//			}
+			}
 			i = i->siguiente;
 		}
 		if(val!=0){
@@ -1590,6 +1608,63 @@ void consultarIncidentes(){
 	fflush(stdin);
 }
 
+
+/*
+	Entradas: Los diferentes objetos de la estructura Calificación(codigoRequerimiento, codigoAsignacion, calificacion). 
+	Salidas: LLama a la función guardarCalificacion para guardar los datos al registrarlos en un archivo .txt. 
+	Restricciones: No tiene restricciones.
+*/
+void registrarCalificaciones(){
+	system( "CLS" );
+	printf("\n\n+-------------------------------+\n");
+	printf("      Gestor de Requerimientos       \n");
+	printf("+-------------------------------+\n");
+	printf( "   Calificar un requerimiento\n" );
+	printf("+-------------------------------+\n");	
+	
+	struct Calificacion *calificacion;
+
+	calificacion = (struct Calificacion *) malloc (sizeof(struct Calificacion));
+	
+	if(calificacion == NULL){
+		printf("Espacio insuficiente para almacenar los datos.\n");	
+	}
+		
+	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ001) \n");
+	gets(calificacion->codigoRequerimiento);
+	printf("\n Ingrese el Codigo de Asignacion: (Ejm. 1, 2, 3, 4....) \n");
+	gets(calificacion->codigoAsignacion);
+	printf("\n Ingrese la Calificacion de Requerimiento (1-100): \n");
+	gets(calificacion->calificacion);
+	printf("\n");
+	calificacion->siguiente=NULL;
+	calificacion->anterior=NULL;
+
+	guardarCalificacion(calificacion);
+	getchar();	
+}
+
+/*
+	Entradas: Una estructura Calificacion. 
+	Salidas: Guardar los datos de la estructura en un archivo .txt. 
+	Restricciones: No tiene restricciones.
+*/
+void guardarCalificacion(Calificacion *calificacion){
+	
+
+	ArchCalificaciones=fopen("Archivos\\Calificaciones.txt","a+");
+	if(ArchCalificaciones==NULL){
+		printf("\n Error al intentar usar el archivo.\n");	
+	}else{
+		fprintf(ArchCalificaciones,"%s\n%s\n%s\n", calificacion->codigoRequerimiento, calificacion->codigoAsignacion, calificacion->calificacion);
+	}
+	fclose(ArchCalificaciones);
+	printf("\n ==>Informacion guardada<==.\n");
+	
+	printf("\nPresione una tecla para regresar..." ); 
+
+}
+
 /*
 	Entradas: Un puntero a una lista de nodos de tipo struct Miembros de Equipo.
 	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
@@ -1680,6 +1755,59 @@ void liberarListaIncidentes(ListaIncidentes *L){
 }
 
 int main(){ 
+	
+	char fecha1[] = "31/10/2020";
+	char fecha2[] = "01/10/2020";
+	int cont1=0, cont2=0;
+	char delim[] = "/";
+	int d1, m1, a1, d2, m2, a2;
+
+	char *ptrF1 = strtok(fecha1, delim);
+	d1 = atoi(ptrF1);
+
+	while (ptrF1 != NULL)
+	{
+		printf("'%s'\n", ptrF1);
+		ptrF1 = strtok(NULL, delim);
+		
+		if(cont1==0){
+			m1 = atoi(ptrF1);
+		}else if(cont1==1){
+			a1 = atoi(ptrF1);
+		}
+		
+		cont1++;
+	}
+	
+	char *ptrF2 = strtok(fecha2, delim);
+	d2 = atoi(ptrF2);
+
+	while (ptrF2 != NULL)
+	{
+		printf("'%s'\n", ptrF2);
+		ptrF2 = strtok(NULL, delim);
+		
+		if(cont2==0){
+			m2 = atoi(ptrF2);
+		}else if(cont2==1){
+			a2 = atoi(ptrF2);
+		}
+		
+		cont2++;
+	}
+	
+	if (a1 < a2) 
+        printf("Fecha 1 < Fecha 2 - 1\n"); 
+    if (a1 == a2 && m1 < m2) 
+        printf("Fecha 1 < Fecha 2 - 2\n"); 
+    if (a1 == a2 && m1 == m2 && d1 < d2){
+    	printf("Fecha 1 < Fecha 2 - 3\n");
+	} 	
+	else{
+		printf("Fecha 1 > Fecha 2 - 4\n");	
+	}
+	
+	
 	MenuPrincipal();    
 	return 0; 
 }
