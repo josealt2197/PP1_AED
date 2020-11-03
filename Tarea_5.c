@@ -180,7 +180,7 @@ void main ()
 	printf("\n****Lista generada****\n");
 	mostrarLista(L);
 	
-	printf("\n****Prueba Busqueda Lineal****\n");	
+	printf("\n****BUSQUEDA LINEAL****\n");	
 	aleatorio=numeroAleatorio();
 	printf("\n-->Valor a consultar: %d \n", aleatorio);
 	resultado = findLinealSearch(L, aleatorio);
@@ -201,7 +201,7 @@ void main ()
 	else	
 		printf("\n-->El dato no esta en lista\n");
 	
-	printf("\n****Prueba Busqueda Binaria****\n");
+	printf("\n****BUSQUEDA BINARIA****\n");
 	
 	resultado=obtenerTamano(L);
 	printf("\n-->Tamano de la lista: %d\n", resultado);
