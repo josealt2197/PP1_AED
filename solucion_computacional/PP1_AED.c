@@ -45,6 +45,7 @@ void guardarMiembro(MiembroEquipo *miembro);
 int cargarMiembros(struct ListaMiembros *L);
 void consultarMiembroEquipo();
 void liberarListaMiembros(ListaMiembros *L);
+int validarNivelMiembro(const char identificador []);
 
 //Procedimientos para Requerimientos
 void registrarRequerimiento();
@@ -903,6 +904,86 @@ int validarCedula(const char identificador []){
 }
 
 /*
+    Entradas: 
+    Salidas: 
+    Restricciones:
+*/
+int validarNivelMiembro(const char identificador []){
+
+    struct ListaMiembros *L;
+    struct MiembroEquipo *i;
+    char id [50], res=0;
+    int similitud=0;
+
+    L = (struct ListaMiembros *) malloc(sizeof(struct ListaMiembros));
+    L->inicio = NULL;
+    L->final = NULL;
+
+    res=cargarMiembros(L);
+
+    if(res==1)
+    {
+         i = L->inicio;
+        while( i->siguiente!= NULL){
+            strcpy(id, i->cedula);
+			similitud = compararCadenas(id, identificador);
+            if(similitud==1){   
+				if(atoi(i->nivel_acceso)<=3){   		       	
+	            	return -1;
+	            }   	
+            	return 1;
+            }
+            i = i->siguiente;
+        }
+    }
+	liberarListaMiembros(L);
+}
+
+/*
+    Entradas: 
+    Salidas: 
+    Restricciones: 
+*/
+int validarIncidentes(const char identificador[]){
+
+   	struct ListaIncidentes *L;
+	struct Incidentes *i;
+	int val=3, res=0, similitud=0, contIncidentes=0;
+	char id [50];
+
+	L = (struct ListaIncidentes *) malloc(sizeof(struct ListaIncidentes));
+	L->inicio = NULL;
+	L->final = NULL;
+
+	res=cargarIncidentes(L);
+	
+	if(res==1)
+	{
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+			strcpy(id, i->codigoRequerimiento);		
+			similitud = compararCadenas(id, identificador);
+            if(similitud==1){   
+				contIncidentes++;
+            }
+			i = i->siguiente;
+		}
+		
+		if(contIncidentes>=3){   		       	
+        	return -1;
+        }   	
+    	return 1;
+				
+	}else{
+		return 1;
+	}	
+	liberarListaIncidentes(L);
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);
+}
+
+/*
 	Entradas: Una puntero a una lista del tipo ListaOficinas de Oficinas.
 	Salidas: Una lista enlazada con los diferentes objetos de la estructura Asignacion (codgo, dias, horaApertura, horaCierre). 
 	Restricciones: Ninguna.
@@ -1166,7 +1247,11 @@ void consultarRequerimiento(){
 
     struct ListaRequerimientos *L;
     struct Requerimiento *i;
-    int val=3, res=0;
+    
+    struct ListaOficinas *LOf;
+    struct Oficina *iOf;
+    
+    int val=3, res=0, res2=0;
     char id[10];
 
     system( "CLS" );
@@ -1182,8 +1267,13 @@ void consultarRequerimiento(){
     L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
     L->inicio = NULL;
     L->final = NULL;
+    
+    LOf = (struct ListaOficinas *) malloc(sizeof(struct ListaOficinas));
+    LOf->inicio = NULL;
+    LOf->final = NULL;
 
-    res = cargarRequerimientos(L);
+    res = cargarRequerimientos(L);  
+    res2 = cargarOficinas(LOf);
 
     if(res==1)
     {
@@ -1193,14 +1283,28 @@ void consultarRequerimiento(){
             if(val==0){
             	printf("\n+-------------------------------+");
                 printf("\nIdentificador: %s \n", i->identificador);
-                printf("Tipo: %s \n", i->tipo);
-                printf("Descripcion: %s \n", i->descripcion);
-                printf("Riesgo: %s \n", i->riesgo);
-                printf("Dependencia: %s \n", i->dependencia);
-                printf("Recursos: %s \n", i->recursos);
-                printf("Estado: %s \n", i->estado);
-                printf("Esfuerzo: %s \n", i->esfuerzo);
-                printf("Oficina: %s \n", i->oficina);
+                printf(" Tipo: %s \n", i->tipo);
+                printf(" Descripcion: %s \n", i->descripcion);
+                printf(" Riesgo: %s \n", i->riesgo);
+                printf(" Dependencia: %s \n", i->dependencia);
+                printf(" Recursos: %s \n", i->recursos);
+                printf(" Estado: %s \n", i->estado);
+                printf(" Esfuerzo: %s \n", i->esfuerzo);
+                printf(" Oficina: %s \n", i->oficina);
+                
+                iOf = LOf->inicio;
+                while(iOf->siguiente!= NULL){
+                    if (compararCadenas(iOf->codigo , i->oficina)==1){
+                    	
+                        printf(" Horarios de Operacion\n");
+                        printf("  - Dias de trabajo: %s \n", iOf->dias); 
+                        printf("  - Hora de Apertura: %s \n", iOf->horaApertura);
+                        printf("  - Hora de Cierre: %s \n", iOf->horaCierre);
+
+                    }
+                	iOf = iOf->siguiente;
+                }
+                
                 printf("+-------------------------------+\n");
 
             }
@@ -1423,43 +1527,69 @@ void registrarAsignacion(){
 	printf("+-------------------------------+\n");	
 
 	struct Asignacion *asignacion;
-	int prioridad=0;
+	int prioridad=0, val1=0, val2=0, val3=0;
 	
 	asignacion=(struct Asignacion *) malloc (sizeof(struct Asignacion));
 	
 	char fecha [50];
+	
 	obtenerFechaActual(fecha);
 	strcpy(asignacion->fechaSolicitud, fecha);
+	printf("\n Ingrese las Cedula del Miembro: (Ejm. 105450656) \n ");
+	gets(asignacion->miembros);
+	
+	val1=validarNivelMiembro(asignacion->miembros);
+	if(val1==-1){//Validar el nivel de acceso para el miembro consultado.
+		printf("\n***No es posible completar la asignacion, el nivel de acceso\n del miembro consultado debe ser mayor a 3***");
+		return;
+	}
+	
 	printf("\n Ingrese la Hora de Inicio: (Ejm. 07:25) \n");
 	gets(asignacion->horaInicio);
 	printf("\n Ingrese el Hora de Fin: (Ejm. 14:25) \n");
 	gets(asignacion->horaFin);
-	printf("\n Ingrese el Recurso (Opcional): \n");
-	gets(asignacion->recurso);
-	printf("\n Ingrese el ID del Requerimiento: (Ejm. RQ001) \n");
-	//Mostrar Requerimientos
-	gets(asignacion->identificador);
-	printf("\n Ingrese la Descripcion: \n");
-	gets(asignacion->descripcion);
-	printf("\n Ingrese las Cedulas de los Miembros: (Ejm. 105450656) \n ");
-	//Mostrar Miembros
-	gets(asignacion->miembros);
-
-	prioridad = numeroAleatorio();
-
-	switch(prioridad){
-		case 1:  strcpy(asignacion->prioridad, "ALTA");
-			break;
-		case 2: strcpy(asignacion->prioridad, "MEDIA");
-			break;
-		case 3: strcpy(asignacion->prioridad, "BAJA");
-			break;	
-	}	
-
-	strcpy(asignacion->estado, "En proceso");
-	//Actualizar el Estado del Requerimiento
 	
-	guardarAsignacion(asignacion);
+	printf("\n Ingrese el ID del Requerimiento: (Ejm. RQ001) \n");
+		//Mostrar Requerimientos
+	gets(asignacion->identificador);
+	
+	val2=validarIncidentes(asignacion->identificador);
+	if(val2==-1){ //Validar el numero de Incidentes para el requerimiento seleccionado.
+		printf("\n***No es posible completar la asignacion, el requerimiento \n seleccionado posee 3 o más incidentes***");
+		return;
+	}
+	
+	if(val3==-1){ //Validar el numero de Asignaciones para el requerimiento seleccionado.
+		printf("\n***No es posible completar la asignacion, el numero de \n participantes es mayor a 3***");
+		return;
+	}
+	
+	if(val1==1 && val2==1 && val3==1){
+		
+		printf("\n Ingrese el Recurso (Opcional): \n");
+		gets(asignacion->recurso);
+		
+		printf("\n Ingrese la Descripcion: \n");
+		gets(asignacion->descripcion);
+			
+		prioridad = numeroAleatorio();
+	
+		switch(prioridad){
+			case 1:  strcpy(asignacion->prioridad, "ALTA");
+				break;
+			case 2: strcpy(asignacion->prioridad, "MEDIA");
+				break;
+			case 3: strcpy(asignacion->prioridad, "BAJA");
+				break;	
+		strcpy(asignacion->estado, "En proceso");
+		
+		//Actualizar el Estado del Requerimiento
+			
+		}		
+	
+		guardarAsignacion(asignacion);
+	}	
+	
 	free(asignacion);
 	getchar();	
 }
@@ -1820,13 +1950,14 @@ void registrarIncidentes(){
 		printf("Espacio insuficiente para almacenar los datos.\n");	
 	}
 		
-	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ000) \n  ");
+	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ000) \n ");
 	gets(incidente->codigoRequerimiento);
-	printf("\n Ingrese el Codigo de Asignacion: (Ejm. 1, 2, 3, 4....) \n ");
+	printf("\n Ingrese el Codigo de Asignacion: (Ejm. 1, 2, 3, 4....) \n");
 	gets(incidente->codigoAsignacion);
 	printf("\n Ingrese la Descripcion de Incidente: \n");
+	printf(" (Ejm. Requerimiento no terminado, con errores, o incompleto)\n");
 	gets(incidente->descripcionIncidente);
-	printf("\n Ingrese la Fecha del Incidente: (Ejm. 10/3/2020) \n ");
+	printf("\n Ingrese la Fecha del Incidente: (Ejm. 10/3/2020) \n");
 	gets(incidente->fecha);
 	printf("\n");
 	incidente->siguiente=NULL;

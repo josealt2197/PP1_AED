@@ -25,3 +25,12 @@ Ninguno
 Por hacer
 7
 OF003
+RQ007
+Funcional
+ABC
+DEF
+RQ002
+Ninguno
+Por hacer
+10
+OF005
