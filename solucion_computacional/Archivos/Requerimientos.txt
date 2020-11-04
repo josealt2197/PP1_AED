@@ -1,36 +1,18 @@
 RQ001
-No Funcional
-Debe abrir ventana 1
+Funcional
+Debe abrir venta 1
 Moderado
 Ninguna
-Aprobado
-Por hacer
-6
+Ninguno
+Activo
+10
 OF001
 RQ002
-Funcional
-Debe cerrar ventana 1
+No funcional
+Debe abrir ventana 2
 Moderado
 RQ001
-Ninguno
-Por hacer
-8
-OF002
-RQ003
-Funcional
-Abrir ventanas 2 y 3
-Moderado
-RQ002
-Ninguno
+Nignuno
 Por hacer
 7
-OF003
-RQ007
-Funcional
-ABC
-DEF
-RQ002
-Ninguno
-Por hacer
-10
 OF005

@@ -1,9 +1,5 @@
+IN001
 RQ001
-1
-Problema
-27/08/2020
-RQ002
-2
-ASBD 
-20/04/2020
- 
+AS001
+Requerimiento no terminado
+11/05/2020

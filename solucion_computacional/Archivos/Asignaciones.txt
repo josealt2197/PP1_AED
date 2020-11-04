@@ -1,46 +1,9 @@
-01/08/2020
-8:40
-2:30
-Ninguno
-RQ001
-Ninguna
-305000781
-ALTA
-En proceso
-25/06/2020
-8:40
-2:30
-Ninguno
-RQ001
-Ninguna
-305000781
-ALTA
-En proceso
-17/12/2020
-8:40
-2:30
-Ninguno
-RQ001
-Ninguna
-305000781
-ALTA
-En proceso
-31/10/2020
-8:40
-2:30
-Ninguno
-RQ001
-Ninguna
-305000781
-ALTA
-En proceso
-03/10/2020
-7:20
-12:30
-Ninguno
-RQ002
-Ninguna
-305000781
-ALTA
-En proceso
+4/11/2020
+8:00
+12:00
 
+RQ001
+Ninguno
+305000781
+BAJA
+En proceso
