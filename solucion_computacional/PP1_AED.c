@@ -107,6 +107,7 @@ struct MiembroEquipo{
 };
 
 struct Asignacion{
+	char codigoAsignacion[15];
     char fechaSolicitud[50];
     char horaInicio[15];
     char horaFin[15];
@@ -1723,6 +1724,9 @@ void registrarAsignacion(){
     LOf->inicio = NULL;
     LOf->final = NULL;
 	
+	printf("\n Ingrese el Codigo de la Asignacion: (Ejm. AS-001) \n");
+	gets(asignacion->codigoAsignacion);
+	
 	obtenerFechaActual(fecha);
 	strcpy(asignacion->fechaSolicitud, fecha);
 	
@@ -1834,9 +1838,9 @@ void guardarAsignacion(Asignacion *asignacion){
 	if(ArchAsignaciones==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", asignacion->fechaSolicitud, asignacion->horaInicio, asignacion->horaFin, asignacion->recurso, asignacion->identificador, 
+		fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", asignacion->codigoAsignacion, asignacion->fechaSolicitud, asignacion->horaInicio, asignacion->horaFin, asignacion->recurso, asignacion->identificador, 
 																asignacion->descripcion,  asignacion->miembros, asignacion->prioridad, asignacion->estado);
-//																
+					
 	}
 	fclose(ArchAsignaciones);
 
@@ -1861,6 +1865,8 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 	}else{
 
 		while(!feof(ArchAsignaciones)){
+			fgets(aux->codigoAsignacion, 15, ArchAsignaciones); 
+			quitaFinLinea(aux->codigoAsignacion);
 			fgets(aux->fechaSolicitud, 50, ArchAsignaciones); 
 			quitaFinLinea(aux->fechaSolicitud);
 			fgets(aux->horaInicio, 15, ArchAsignaciones); 
@@ -1884,6 +1890,7 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 			{
 				//Inserta al inicio de la lista
 				L->inicio =(struct Asignacion *) malloc (sizeof(struct Asignacion));
+				strcpy(L->inicio->codigoAsignacion , aux->codigoAsignacion);
 				strcpy(L->inicio->fechaSolicitud , aux->fechaSolicitud);
 				strcpy(L->inicio->horaInicio , aux->horaInicio ); 
 				strcpy(L->inicio->horaFin , aux->horaFin); 
@@ -1900,6 +1907,7 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 			}else{	
 				//Inserta al final de la lista	
 				L->final->siguiente =(struct Asignacion *) malloc (sizeof(struct Asignacion));
+				strcpy(L->final->siguiente->codigoAsignacion , aux->codigoAsignacion);
 				strcpy(L->final->siguiente->fechaSolicitud , aux->fechaSolicitud);
 				strcpy(L->final->siguiente->horaInicio , aux->horaInicio ); 
 				strcpy(L->final->siguiente->horaFin , aux->horaFin); 
@@ -1945,6 +1953,7 @@ void ordenarAsignaciones(struct ListaAsignaciones *L){
 			if(res==1){
 				
 				//Guardar los valores del nodo i
+				strcpy(temp->codigoAsignacion,i->codigoAsignacion);
 				strcpy(temp->fechaSolicitud,i->fechaSolicitud);
 				strcpy(temp->horaInicio, i->horaInicio);
 				strcpy(temp->horaFin, i->horaFin);
@@ -1955,7 +1964,8 @@ void ordenarAsignaciones(struct ListaAsignaciones *L){
 				strcpy(temp->prioridad, i->prioridad);
 				strcpy(temp->estado, i->estado);
 				
-				//Asignar los valores del nodo j al nodo i				
+				//Asignar los valores del nodo j al nodo i
+				strcpy(i->codigoAsignacion, j->codigoAsignacion);				
 				strcpy(i->fechaSolicitud, j->fechaSolicitud);
 				strcpy(i->horaInicio, j->horaInicio);
 				strcpy(i->horaFin, j->horaFin);
@@ -1967,6 +1977,7 @@ void ordenarAsignaciones(struct ListaAsignaciones *L){
 				strcpy(i->estado, j->estado);
 				
 				//Asignar los valores guardados del nodo i al nodo j
+				strcpy(j->codigoAsignacion, temp->codigoAsignacion);
 				strcpy(j->fechaSolicitud, temp->fechaSolicitud);
 				strcpy(j->horaInicio, temp->horaInicio);
 				strcpy(j->horaFin, temp->horaFin);
@@ -2023,7 +2034,7 @@ void consultarAsignaciones(){
 		while( i->siguiente!= NULL){
 			val=strcmp(id,i->miembros);
 			if(val==0){
-				
+				printf("ID de la Asignacion: %s \n", i->codigoAsignacion);
 				printf("Fecha de Solicitud: %s \n", i->fechaSolicitud);
 				printf("Hora de Inicio: %s \n", i->horaInicio ); 
 				printf("Hora de Fin: %s \n", i->horaFin); 
@@ -2321,7 +2332,11 @@ void consultarIncidentes(int tipoConsulta){
 
 	struct ListaIncidentes *L;
 	struct Incidentes *i;
-	int val=3, res=0;
+	
+	struct ListaAsignaciones *LAs;
+	struct Asignacion *iAs;
+	
+	int val=3, res=0, res2=0;
 	char fechaInicio[15], fechaFin[15], fechaIncidente[15], idRQ[15], idIN[15];
 	
 	system( "CLS" );
@@ -2383,19 +2398,32 @@ void consultarIncidentes(int tipoConsulta){
 	printf("\n Ingrese el ID del Incidente para ver el detalle: (Ejm. IN-001) \n ");
 	gets(idIN);
 	
+	LAs = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+	LAs->inicio = NULL;
+	LAs->final = NULL;
+
+	res2=cargarAsignaciones(LAs);
+	
 	i = L->inicio;
 	while( i->siguiente!= NULL){
 		if(strcmp(idIN, i->codigoIncidente)==0){
-			printf("\n+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +\n");
-			printf("\n 				Detalle del Incidente\n");
-			printf("\n+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +\n");
-			printf(" ID Incidente    ID Requerimiento   Fecha de Incidente\n" ); 
-			printf("\n %s              %s                  %s\n",i->codigoIncidente, i->codigoRequerimiento, i->fecha);
-			printf("\n+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +\n");	
-			printf("\n Ansignacion->    %s   \n", i->codigoAsignacion);
-			printf("\n Descripcion->    %s   \n", i->descripcionIncidente);
-			printf("\n+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +\n");	
-						
+			
+			iAs = LAs->inicio;
+			while( iAs->siguiente!= NULL){
+				if(strcmp(i->codigoAsignacion,iAs->codigoAsignacion)){
+					printf("\n+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +");
+					printf("\n              Detalle del Incidente\n");
+					printf("+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +\n");
+					printf(" ID Incidente    ID Requerimiento   Fecha de Incidente" ); 
+					printf("\n %s              %s                  %s\n",i->codigoIncidente, i->codigoRequerimiento, i->fecha);
+					printf("+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +");	
+					printf("\n Ansignacion->         %s   \n", i->codigoAsignacion);
+					printf("\n Miembro asignado->    %s   \n", iAs->miembros);
+					printf("\n Descripcion->         %s   \n", i->descripcionIncidente);
+					printf("+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +\n");
+				}
+				iAs = iAs->siguiente;
+			}
 		}
 		i = i->siguiente;
 	}
@@ -2464,6 +2492,58 @@ void guardarCalificacion(Calificacion *calificacion){
 	
 	printf("\nPresione una tecla para regresar..." ); 
 
+}
+
+/*
+	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar las Asignaciones
+	Salidas: Los datos relacionado a las Asignaciones del Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
+			que no se han encontrado.
+	Restricciones: Ninguna
+*/
+void analisisDeDatos(int tipoAnalisis){
+
+	system( "CLS" );
+	printf("\n\n+--------------------------------------+\n");
+	printf("        Gestor de Requerimientos       \n");
+	printf("+--------------------------------------+\n");
+	printf( "	     Analisis de Datos\n" );
+	printf("+--------------------------------------+\n");
+	
+	switch(tipoAnalisis){
+			case 1:
+				printf( "Requerimientos con mas Asignaciones \n");
+				printf("+--------------------------------------+\n");				
+			
+				//consultarTopAsignaciones();
+				
+				break;
+			case 2:
+				printf(      "Horarios mas Utilizados \n");
+				printf("+--------------------------------------+\n");				
+			
+				//consultarTopHorarios();
+				
+				break;
+			case 3:
+				printf( "Miembros de Equipo con mas Asignaciones \n");
+				printf("+--------------------------------------+\n");				
+			
+				//consultarTopMiembros();
+				
+				break;
+			case 4:
+				printf( "  Requerimientos con mayor esfuerzo \n");
+				printf("+-------------------------------------+\n");				
+			
+				//consultarTopEsfuerzo();
+				
+				break;
+		}
+	
+	 
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);
 }
 
 /*

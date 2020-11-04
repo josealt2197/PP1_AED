@@ -1,9 +1,10 @@
+AS-001
 4/11/2020
 8:00
-12:00
-
+10:00
+No
 RQ001
-Ninguno
+No
 305000781
 BAJA
 En proceso
