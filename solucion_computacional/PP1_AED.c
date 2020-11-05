@@ -32,19 +32,19 @@ typedef struct Incidentes Incidentes;
 typedef struct Calificacion Calificacion;
 typedef struct Oficina Oficina;
 
-typedef struct ListaMiembros ListaMiembros;
+typedef struct ColaMiembros ColaMiembros;
 typedef struct ListaRequerimientos ListaRequerimientos;
 typedef struct ListaAsignaciones ListaAsignaciones;
-typedef struct ListaIncidentes ListaIncidentes;
+typedef struct ColaIncidentes ColaIncidentes;
 typedef struct ListaCalificaciones ListaCalificaciones;
 typedef struct ListaOficinas ListaOficinas;
 
 //Procedimientos para Miembros de Equipo
 void registrarMiembro();
 void guardarMiembro(MiembroEquipo *miembro);
-int cargarMiembros(struct ListaMiembros *L);
+int cargarMiembros(struct ColaMiembros *C);
 void consultarMiembroEquipo();
-void liberarListaMiembros(ListaMiembros *L);
+void liberarColaMiembros(ColaMiembros *C);
 int validarNivelMiembro(const char identificador []);
 
 //Procedimientos para Requerimientos
@@ -72,9 +72,9 @@ void cancelarAsignacion();
 //Procedimientos para Incidentes
 void registrarIncidentes();
 void guardarIncidentes(Incidentes *incidente);
-int cargarIncidentes(struct ListaIncidentes *L);
+int cargarIncidentes(struct ColaIncidentes *C);
 void consultarIncidentes(int tipoConsulta);
-void liberarListaIncidentes(ListaIncidentes *L);
+void liberarColaIncidentes(ColaIncidentes *C);
 
 //Procedimientos de Apoyo
 int numeroAleatorio();
@@ -154,7 +154,7 @@ struct ListaCalificaciones {
 	Calificacion *final;
 };
 
-struct ListaMiembros {
+struct ColaMiembros {
 	MiembroEquipo *inicio;
 	MiembroEquipo *final;
 };
@@ -164,7 +164,7 @@ struct ListaRequerimientos{
 	Requerimiento *final;
 };
 
-struct ListaIncidentes{
+struct ColaIncidentes{
 	Incidentes *inicio;
 	Incidentes *final;
 };
@@ -744,12 +744,12 @@ void guardarMiembro(MiembroEquipo *miembro){
 }
 
 /*
-	Entradas: Una puntero a una lista del tipo ListaMiembros de Miembros de equipo.
+	Entradas: Una puntero a una lista del tipo ColaMiembros de Miembros de equipo.
 	Salidas: Una lista  enlazada con los diferentes objetos de la estructura Miembro de Equipo(nombre, 
 			cedula, correo, telefono, nivel de acceso).
 	Restricciones: Ninguna.
 */
-int cargarMiembros(struct ListaMiembros *L){
+int cargarMiembros(struct ColaMiembros *C){
 	
 	struct MiembroEquipo *aux;
 
@@ -772,30 +772,30 @@ int cargarMiembros(struct ListaMiembros *L){
 			fgets(aux->telefono, 15, ArchMiembros);
 			quitaFinLinea(aux->telefono);
 			
-			if(L->inicio == NULL) 
+			if(C->inicio == NULL) 
 			{
 				//Inserta al inicio de la lista
-				L->inicio = (struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
-				strcpy(L->inicio->cedula , aux->cedula);
-				strcpy(L->inicio->nombre_completo , aux->nombre_completo); 
-				strcpy(L->inicio->correo , aux->correo ); 
-				strcpy(L->inicio->nivel_acceso , aux->nivel_acceso); 
-				strcpy(L->inicio->telefono , aux->telefono); 
-				L->inicio->siguiente = NULL; 
-				L->inicio->anterior = NULL; 
-				L->final = L->inicio;
+				C->inicio = (struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
+				strcpy(C->inicio->cedula , aux->cedula);
+				strcpy(C->inicio->nombre_completo , aux->nombre_completo); 
+				strcpy(C->inicio->correo , aux->correo ); 
+				strcpy(C->inicio->nivel_acceso , aux->nivel_acceso); 
+				strcpy(C->inicio->telefono , aux->telefono); 
+				C->inicio->siguiente = NULL; 
+				C->inicio->anterior = NULL; 
+				C->final = C->inicio;
 	
 			}else{	
 				//Inserta al final de la lista	
-				L->final->siguiente = (struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
-				strcpy(L->final->siguiente->cedula , aux->cedula);
-				strcpy(L->final->siguiente->nombre_completo , aux->nombre_completo); 
-				strcpy(L->final->siguiente->correo , aux->correo ); 
-				strcpy(L->final->siguiente->nivel_acceso , aux->nivel_acceso); 
-				strcpy(L->final->siguiente->telefono , aux->telefono); 
-				L->final->siguiente->siguiente = NULL; 
-				L->final->siguiente->anterior = L->final; 
-				L->final = L->final->siguiente;
+				C->final->siguiente = (struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
+				strcpy(C->final->siguiente->cedula , aux->cedula);
+				strcpy(C->final->siguiente->nombre_completo , aux->nombre_completo); 
+				strcpy(C->final->siguiente->correo , aux->correo ); 
+				strcpy(C->final->siguiente->nivel_acceso , aux->nivel_acceso); 
+				strcpy(C->final->siguiente->telefono , aux->telefono); 
+				C->final->siguiente->siguiente = NULL; 
+				C->final->siguiente->anterior = C->final; 
+				C->final = C->final->siguiente;
 			}		
 		}
 		fclose(ArchMiembros);
@@ -812,7 +812,7 @@ int cargarMiembros(struct ListaMiembros *L){
 */
 void consultarMiembroEquipo(){
 
-    struct ListaMiembros *L;
+    struct ColaMiembros *C;
     struct MiembroEquipo *i;
 
     struct ListaAsignaciones *LAsig;
@@ -821,7 +821,7 @@ void consultarMiembroEquipo(){
     struct ListaRequerimientos *LReque;
     struct Requerimiento *iReque;
     
-    struct ListaIncidentes *LIncidente;
+    struct ColaIncidentes *CIncidente;
     struct Incidentes *iIncidente;
 
     int val=3, val2=3, val3=3, res=0, resRequerimiento=0, resAsignacion=0,resIncidente=0;
@@ -837,9 +837,9 @@ void consultarMiembroEquipo(){
     printf("\n Ingrese la cedula: (Ejm.208140809) \n ");
     gets(id);
 
-    L = (struct ListaMiembros *) malloc(sizeof(struct ListaMiembros));
-    L->inicio = NULL;
-    L->final = NULL;
+    C = (struct ColaMiembros *) malloc(sizeof(struct ColaMiembros));
+    C->inicio = NULL;
+    C->final = NULL;
 
     LAsig = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
     LAsig->inicio = NULL;
@@ -849,20 +849,21 @@ void consultarMiembroEquipo(){
     LReque->inicio = NULL;
     LReque->final = NULL;
     
-    LIncidente = (struct ListaIncidentes *) malloc(sizeof(struct ListaIncidentes));
-    LIncidente->inicio = NULL;
-    LIncidente->final = NULL;
+    CIncidente = (struct ColaIncidentes *) malloc(sizeof(struct ColaIncidentes));
+    CIncidente->inicio = NULL;
+    CIncidente->final = NULL;
 
     resAsignacion=cargarAsignaciones(LAsig);
 
     resRequerimiento = cargarRequerimientos(LReque);
     
-    resIncidente = cargarIncidentes(LIncidente);
+    resIncidente = cargarIncidentes(CIncidente);
 
-    res=cargarMiembros(L);
+    res=cargarMiembros(C);
+    
 		if(res==1){
 
-	        i = L->inicio;
+	        i = C->inicio;
 	        while( i->siguiente!= NULL){
 	            val=strcmp(id,i->cedula);
 	            if(val==0){
@@ -899,7 +900,7 @@ void consultarMiembroEquipo(){
                                     printf("    Estado: %s \n", iReque->estado);
                                     printf("    +-------------------------------------+\n");
 									
-									iIncidente = LIncidente->inicio;
+									iIncidente = CIncidente->inicio;
                                     while(iIncidente->siguiente!= NULL){
 	                                    if (compararCadenas(iIncidente->codigoRequerimiento , iReque->identificador)==1){
 	                                    	
@@ -940,7 +941,7 @@ void consultarMiembroEquipo(){
     }else{
         printf( "\nNo se ha registrado ningún Miembro*");
     }
-    liberarListaMiembros(L);
+    liberarColaMiembros(C);
     printf("\n\nPresione una tecla para regresar..." ); 
     getchar();
     fflush(stdin);
@@ -953,32 +954,32 @@ void consultarMiembroEquipo(){
 */
 int validarCedula(const char identificador []){
 
-    struct ListaMiembros *L;
+    struct ColaMiembros *C;
     struct MiembroEquipo *i;
     char id [50], res=0;
     int similitud=0;
 
-    L = (struct ListaMiembros *) malloc(sizeof(struct ListaMiembros));
-    L->inicio = NULL;
-    L->final = NULL;
+    C = (struct ColaMiembros *) malloc(sizeof(struct ColaMiembros));
+    C->inicio = NULL;
+    C->final = NULL;
 
-    res=cargarMiembros(L);
+    res=cargarMiembros(C);
 
     if(res==1)
     {
-         i = L->inicio;
+         i = C->inicio;
         while( i->siguiente!= NULL){
             strcpy(id, i->cedula);
 			similitud = compararCadenas(id, identificador);
             if(similitud==1){
-            	liberarListaMiembros(L);
+            	liberarColaMiembros(C);
                 return 1;
             }
             i = i->siguiente;
         }
     }
 
-	liberarListaMiembros(L);
+	liberarColaMiembros(C);
     return 0;
 }
 
@@ -989,20 +990,20 @@ int validarCedula(const char identificador []){
 */
 int validarNivelMiembro(const char identificador []){
 
-    struct ListaMiembros *L;
+    struct ColaMiembros *C;
     struct MiembroEquipo *i;
     char id [50], res=0;
     int similitud=0;
 
-    L = (struct ListaMiembros *) malloc(sizeof(struct ListaMiembros));
-    L->inicio = NULL;
-    L->final = NULL;
+    C = (struct ColaMiembros *) malloc(sizeof(struct ColaMiembros));
+    C->inicio = NULL;
+    C->final = NULL;
 
-    res=cargarMiembros(L);
+    res=cargarMiembros(C);
 
     if(res==1)
     {
-         i = L->inicio;
+         i = C->inicio;
         while( i->siguiente!= NULL){
             strcpy(id, i->cedula);
 			similitud = compararCadenas(id, identificador);
@@ -1015,7 +1016,7 @@ int validarNivelMiembro(const char identificador []){
             i = i->siguiente;
         }
     }
-	liberarListaMiembros(L);
+	liberarColaMiembros(C);
 }
 
 /*
@@ -1025,20 +1026,20 @@ int validarNivelMiembro(const char identificador []){
 */
 int validarIncidentes(const char identificador[]){
 
-   	struct ListaIncidentes *L;
+   	struct ColaIncidentes *C;
 	struct Incidentes *i;
 	int val=3, res=0, similitud=0, contIncidentes=0;
 	char id [50];
 
-	L = (struct ListaIncidentes *) malloc(sizeof(struct ListaIncidentes));
-	L->inicio = NULL;
-	L->final = NULL;
+	C = (struct ColaIncidentes *) malloc(sizeof(struct ColaIncidentes));
+	C->inicio = NULL;
+	C->final = NULL;
 
-	res=cargarIncidentes(L);
+	res=cargarIncidentes(C);
 	
 	if(res==1)
 	{
-		i = L->inicio;
+		i = C->inicio;
 		while( i->siguiente!= NULL){
 			strcpy(id, i->codigoRequerimiento);		
 			similitud = compararCadenas(id, identificador);
@@ -1056,7 +1057,7 @@ int validarIncidentes(const char identificador[]){
 	}else{
 		return 1;
 	}	
-	liberarListaIncidentes(L);
+	liberarColaIncidentes(C);
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
@@ -1226,7 +1227,7 @@ void registrarRequerimiento(){
 	}
 
 	do{
-		printf("\n Ingrese el identificador: (Ejm. RQ001) \n");
+		printf("\n Ingrese el identificador: (Ejm. RQ-001) \n");
 		gets(requerimiento->identificador);
 		
 		if(validarIDRequerimiento(requerimiento->identificador)==1){
@@ -1243,7 +1244,7 @@ void registrarRequerimiento(){
 	gets(requerimiento->descripcion);
 	printf("\n Ingrese el riesgo: (Ejm. ....) \n");
 	gets(requerimiento->riesgo);
-	printf("\n Ingrese la dependencia: (Ejm. RQ001) \n");
+	printf("\n Ingrese la dependencia: (Ejm. RQ-001) \n");
 	gets(requerimiento->dependencia);
 	printf("\n Ingrese los recursos:\n");
 	gets(requerimiento->recursos);
@@ -1384,7 +1385,7 @@ void consultarRequerimiento(){
     printf( "  Consultar un Requerimiento\n" );
     printf("+-------------------------------+\n");
 
-    printf("\n Ingrese el identificador: (Ejm. RQ000) \n ");
+    printf("\n Ingrese el identificador: (Ejm. RQ-000) \n ");
     gets(id);
 
     L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
@@ -1433,7 +1434,8 @@ void consultarRequerimiento(){
             }
             i = i->siguiente;
         }
-        if(val!=0){
+
+        if(val == 1){
             printf( "\n**Requerimiento no encontrado***");
         }
     }else{		
@@ -1499,7 +1501,7 @@ void modificarRequerimiento(){
 	char id[10], respuesta[2], tipo[20], recursos[55], estado [15];
 	int val=3, res=0, resp;
 	
-	printf("\n Ingrese el identificador: (Ejm. RQ000) \n ");
+	printf("\n Ingrese el identificador: (Ejm. RQ-000) \n ");
     gets(id);
 
     L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
@@ -2225,7 +2227,7 @@ void registrarIncidentes(){
 	
 	printf("\n Ingrese el Codigo del Incidente: (Ejm. IN001) \n");
 	gets(incidente->codigoIncidente);	
-	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ000) \n");
+	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ-000) \n");
 	gets(incidente->codigoRequerimiento);
 	printf("\n Ingrese el Codigo de Asignacion: (Ejm. 1, 2, 3, 4....) \n");
 	gets(incidente->codigoAsignacion);
@@ -2268,7 +2270,7 @@ void guardarIncidentes(Incidentes *incidente){
 			descripcionIncidente, fecha). 
 	Restricciones: Ninguna.
 */
-int cargarIncidentes(struct ListaIncidentes *L){
+int cargarIncidentes(struct ColaIncidentes *C){
 	
 	struct Incidentes *aux;
 
@@ -2292,29 +2294,29 @@ int cargarIncidentes(struct ListaIncidentes *L){
 			fgets(aux->fecha, 20, ArchIncidentes);
 			quitaFinLinea(aux->fecha);		
 						
-			if(L->inicio == NULL){
+			if(C->inicio == NULL){
 				//Inserta al inicio de la lista
-				L->inicio = (struct Incidentes *) malloc (sizeof(struct Incidentes));
-				strcpy(L->inicio->codigoIncidente , aux->codigoIncidente);
-				strcpy(L->inicio->codigoRequerimiento , aux->codigoRequerimiento);
-				strcpy(L->inicio->codigoAsignacion , aux->codigoAsignacion ); 
-				strcpy(L->inicio->descripcionIncidente , aux->descripcionIncidente); 
-				strcpy(L->inicio->fecha , aux->fecha); 
-				L->inicio->siguiente = NULL; 
-				L->inicio->anterior = NULL; 
-				L->final = L->inicio;
+				C->inicio = (struct Incidentes *) malloc (sizeof(struct Incidentes));
+				strcpy(C->inicio->codigoIncidente , aux->codigoIncidente);
+				strcpy(C->inicio->codigoRequerimiento , aux->codigoRequerimiento);
+				strcpy(C->inicio->codigoAsignacion , aux->codigoAsignacion ); 
+				strcpy(C->inicio->descripcionIncidente , aux->descripcionIncidente); 
+				strcpy(C->inicio->fecha , aux->fecha); 
+				C->inicio->siguiente = NULL; 
+				C->inicio->anterior = NULL; 
+				C->final = C->inicio;
 	
 			}else{
 				//Inserta al final de la lista	
-				L->final->siguiente =(struct Incidentes *) malloc (sizeof(struct Incidentes));
-				strcpy(L->final->siguiente->codigoIncidente , aux->codigoIncidente);
-				strcpy(L->final->siguiente->codigoRequerimiento , aux->codigoRequerimiento);
-				strcpy(L->final->siguiente->codigoAsignacion , aux->codigoAsignacion ); 
-				strcpy(L->final->siguiente->descripcionIncidente , aux->descripcionIncidente); 
-				strcpy(L->final->siguiente->fecha , aux->fecha); 
-				L->final->siguiente->siguiente = NULL; 
-				L->final->siguiente->anterior = L->final; 
-				L->final = L->final->siguiente;
+				C->final->siguiente =(struct Incidentes *) malloc (sizeof(struct Incidentes));
+				strcpy(C->final->siguiente->codigoIncidente , aux->codigoIncidente);
+				strcpy(C->final->siguiente->codigoRequerimiento , aux->codigoRequerimiento);
+				strcpy(C->final->siguiente->codigoAsignacion , aux->codigoAsignacion ); 
+				strcpy(C->final->siguiente->descripcionIncidente , aux->descripcionIncidente); 
+				strcpy(C->final->siguiente->fecha , aux->fecha); 
+				C->final->siguiente->siguiente = NULL; 
+				C->final->siguiente->anterior = C->final; 
+				C->final = C->final->siguiente;
 			}		
 		}
 		fclose(ArchIncidentes);		
@@ -2330,7 +2332,7 @@ int cargarIncidentes(struct ListaIncidentes *L){
 */
 void consultarIncidentes(int tipoConsulta){
 
-	struct ListaIncidentes *L;
+	struct ColaIncidentes *C;
 	struct Incidentes *i;
 	
 	struct ListaAsignaciones *LAs;
@@ -2344,11 +2346,11 @@ void consultarIncidentes(int tipoConsulta){
 	printf("      Gestor de Requerimientos         \n");
 	printf("+-------------------------------------+\n");
 	
-	L = (struct ListaIncidentes *) malloc(sizeof(struct ListaIncidentes));
-	L->inicio = NULL;
-	L->final = NULL;
+	C = (struct ColaIncidentes *) malloc(sizeof(struct ColaIncidentes));
+	C->inicio = NULL;
+	C->final = NULL;
 
-	res=cargarIncidentes(L);
+	res=cargarIncidentes(C);
 	
 	if(res==1)
 	{
@@ -2362,7 +2364,7 @@ void consultarIncidentes(int tipoConsulta){
 			 	printf("\n Ingrese la Fecha de Fin: (Ejm. 01/01/2020) \n ");
 				gets(fechaFin);
 				
-				i = L->inicio;
+				i = C->inicio;
 				printf("\n+--------------------------------------------------------+\n");
 				printf(" ID Incidente    ID Requerimiento   Fecha de Incidente\n" ); 
 				while( i->siguiente!= NULL){
@@ -2382,7 +2384,7 @@ void consultarIncidentes(int tipoConsulta){
 				printf("\n Ingrese el ID del requerimiento: (Ejm. RQ-001) \n ");
 				gets(idRQ);
 				
-				i = L->inicio;
+				i = C->inicio;
 				printf("\n+--------------------------------------------------------+\n");
 				printf(" ID Incidente    ID Requerimiento   Fecha de Incidente\n" ); 
 				while( i->siguiente!= NULL){
@@ -2404,7 +2406,7 @@ void consultarIncidentes(int tipoConsulta){
 
 	res2=cargarAsignaciones(LAs);
 	
-	i = L->inicio;
+	i = C->inicio;
 	while( i->siguiente!= NULL){
 		if(strcmp(idIN, i->codigoIncidente)==0){
 			
@@ -2432,7 +2434,7 @@ void consultarIncidentes(int tipoConsulta){
 	}else{
 		printf( "\n***No se han registrado Incidentes***");
 	}	
-	liberarListaIncidentes(L);
+	liberarColaIncidentes(C);
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
@@ -2459,7 +2461,7 @@ void registrarCalificaciones(){
 		printf("Espacio insuficiente para almacenar los datos.\n");	
 	}
 		
-	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ001) \n");
+	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ-001) \n");
 	gets(calificacion->codigoRequerimiento);
 	printf("\n Ingrese el Codigo de Asignacion: (Ejm. 1, 2, 3, 4....) \n");
 	gets(calificacion->codigoAsignacion);
@@ -2551,13 +2553,13 @@ void analisisDeDatos(int tipoAnalisis){
 	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
 	Restricciones: Ninguna
 */
-void liberarListaMiembros(ListaMiembros *L){
+void liberarColaMiembros(ColaMiembros *C){
 	struct MiembroEquipo *n, *aux;
-	if(L->inicio == NULL)
+	if(C->inicio == NULL)
 		return;
-	if(L->inicio->siguiente == NULL)
+	if(C->inicio->siguiente == NULL)
 		return;		
-	n = L->inicio;
+	n = C->inicio;
 	
 	while(n != NULL)
 	{
@@ -2617,14 +2619,14 @@ void liberarListaRequerimientos(ListaRequerimientos *L){
 	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
 	Restricciones: Ninguna
 */
-void liberarListaIncidentes(ListaIncidentes *L){
+void liberarColaIncidentes(ColaIncidentes *C){
 		
 	struct Incidentes *n, *aux;
-	if(L->inicio == NULL)
+	if(C->inicio == NULL)
 		return;
-	if(L->inicio->siguiente == NULL)
+	if(C->inicio->siguiente == NULL)
 		return;		
-	n = L->inicio;
+	n = C->inicio;
 	
 	while(n != NULL)
 	{
