@@ -17,14 +17,6 @@ FILE* ArchIncidentes;
 FILE* ArchCalificaciones;
 FILE* ArchOficinas;
 
-//Procedimientos para Menus de Opciones
-void MenuPrincipal();
-void GestionEquipo();
-void GestionAsignacion();
-void GestionRequerimiento();
-void GestionIncidentes();
-void AnalisisDeDatos();
-
 typedef struct Requerimiento Requerimiento;
 typedef struct MiembroEquipo MiembroEquipo;
 typedef struct Asignacion Asignacion;
@@ -38,6 +30,14 @@ typedef struct ListaAsignaciones ListaAsignaciones;
 typedef struct ColaIncidentes ColaIncidentes;
 typedef struct ListaCalificaciones ListaCalificaciones;
 typedef struct ListaOficinas ListaOficinas;
+
+//Procedimientos para Menus de Opciones
+void MenuPrincipal();
+void GestionEquipo();
+void GestionAsignacion();
+void GestionRequerimiento();
+void GestionIncidentes();
+void AnalisisDeDatos();
 
 //Procedimientos para Miembros de Equipo
 void registrarMiembro();
@@ -79,6 +79,8 @@ void liberarColaIncidentes(ColaIncidentes *C);
 //Procedimientos de Apoyo
 int numeroAleatorio();
 void obtenerFechaActual(char *hoy);
+
+void analisisDeDatos(int tipoAnalisis);
 
 struct Requerimiento{
     char identificador[50];
@@ -179,6 +181,65 @@ struct ListaOficinas{
 	Oficina *final;
 };
 
+
+typedef struct ListaTopAsignaciones ListaTopAsignaciones;
+typedef struct NodoTopAsignacion NodoTopAsignacion;
+
+struct NodoTopAsignacion{
+	char identificador[15];
+	int cantidad;
+	NodoTopAsignacion *siguiente;
+};
+
+struct ListaTopAsignaciones{
+	NodoTopAsignacion *inicio;
+	NodoTopAsignacion *final;
+};
+
+typedef struct ListaTopHorarios ListaTopHorarios;
+typedef struct NodoTopHorario NodoTopHorario;
+
+struct NodoTopHorario{
+	char identificador[15];
+	int cantidad;
+	NodoTopHorario *siguiente;
+};
+
+struct ListaTopHorarios
+{
+	NodoTopHorario *inicio;
+	NodoTopHorario *final;
+};
+
+typedef struct ListaTopMiembros ListaTopMiembros;
+typedef struct NodoTopMiembro NodoTopMiembro;
+
+struct NodoTopMiembro{
+	char identificador[15];
+	int cantidad;
+	NodoTopMiembro *siguiente;
+};
+
+struct ListaTopMiembros
+{
+	NodoTopMiembro *inicio;
+	NodoTopMiembro *final;
+};
+
+typedef struct ListaTopEsfuerzo ListaTopEsfuerzo;
+typedef struct NodoTopEsfuerzo NodoTopEsfuerzo;
+
+struct NodoTopEsfuerzo{
+	char identificador[15];
+	int cantidad;
+	NodoTopEsfuerzo *siguiente;
+};
+
+struct ListaTopEsfuerzo
+{
+	NodoTopEsfuerzo *inicio;
+	NodoTopEsfuerzo *final;
+};
 
 void Temporal(){
 	getchar();
@@ -452,13 +513,13 @@ void AnalisisDeDatos(){
 		
 		while((ch = getchar()) != EOF && ch != '\n');
 			switch(opcion){
-				case '1': Temporal();
+				case '1': analisisDeDatos(1);
 					break;
-				case '2': Temporal();
+				case '2': analisisDeDatos(2);
 					break;
-				case '3': Temporal();
+				case '3': analisisDeDatos(3);
 					break;
-				case '4': Temporal();
+				case '4': analisisDeDatos(4);
 					break;
 				case '0': MenuPrincipal();
 					break;
@@ -2423,6 +2484,7 @@ void consultarIncidentes(int tipoConsulta){
 					printf("\n Miembro asignado->    %s   \n", iAs->miembros);
 					printf("\n Descripcion->         %s   \n", i->descripcionIncidente);
 					printf("+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +\n");
+					break;
 				}
 				iAs = iAs->siguiente;
 			}
@@ -2496,6 +2558,583 @@ void guardarCalificacion(Calificacion *calificacion){
 
 }
 
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: 
+*/
+NodoTopAsignacion* crearNodoAsignacion(char identificador[], int cantidad){
+	NodoTopAsignacion *nuevo;
+	nuevo = (NodoTopAsignacion *) malloc(sizeof(NodoTopAsignacion));
+	nuevo->siguiente = NULL;
+	strcpy(nuevo->identificador, identificador);
+	nuevo->cantidad = cantidad;	
+	
+	return nuevo;
+}
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: Ninguna.
+*/
+void ordenarTopAsignaciones(struct ListaTopAsignaciones *LT){
+
+	struct NodoTopAsignacion *i, *j, *temp;
+
+	temp=(struct NodoTopAsignacion *) malloc (sizeof(struct NodoTopAsignacion));
+	
+	i = LT->inicio;
+	while( i->siguiente!= NULL){
+		
+		j = i->siguiente;
+		while( j!= NULL){
+
+			if(i->cantidad < j->cantidad){
+				
+				//Guardar los valores del nodo i
+				temp->cantidad = i->cantidad;
+				strcpy(temp->identificador,i->identificador);
+				
+				//Asignar los valores del nodo j al nodo i
+				i->cantidad = j->cantidad;			
+				strcpy(i->identificador, j->identificador);
+				
+				//Asignar los valores guardados del nodo i al nodo j
+				j->cantidad = temp->cantidad;
+				strcpy(j->identificador, temp->identificador);
+				
+			}			
+			j = j->siguiente;
+		}
+		i = i->siguiente;
+	}
+	
+} 
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: 
+*/
+void consultarTopAsignaciones(){
+	struct ListaAsignaciones *L;
+	struct Asignacion *i, *j;
+	struct ListaTopAsignaciones *LT;
+	struct NodoTopAsignacion *nA;
+	int  res=0, contAsignaciones=0, contado=0;
+	char id[12];
+	
+	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+	L->inicio = NULL;
+	L->final = NULL;
+	
+	LT = (struct ListaTopAsignaciones *) malloc(sizeof(struct ListaTopAsignaciones));
+	LT->inicio = NULL;
+	LT->final = NULL;
+
+	res=cargarAsignaciones(L);
+
+	if(res=1)
+	{
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+			
+			j = L->inicio;
+			contAsignaciones=0;
+
+			while( j->siguiente!= NULL){
+					if(strcmp(i->identificador,j->identificador)==0){
+						contAsignaciones++;	
+					}
+				j = j->siguiente;
+			}
+			
+			//Agregar los datos a la listas del top de asignaciones
+			for(nA = LT->inicio; nA!= NULL; nA = nA->siguiente){
+				if(strcmp(i->identificador,nA->identificador)==0){
+					contado=1;
+					break;
+				}
+			}
+
+			if(contado==0){
+				if(LT->inicio == NULL) 
+				{
+					//Inserta al inicio de la cola
+					LT->inicio = crearNodoAsignacion(i->identificador, contAsignaciones);
+					LT->final = LT->inicio;
+				}else{
+					LT->final->siguiente = crearNodoAsignacion(i->identificador, contAsignaciones);
+					LT->final = LT->final->siguiente;
+				}	
+				
+			}
+			contado=0;	
+			
+			i = i->siguiente;
+		}
+		
+	}else{
+		printf( "\n***No se han registrado Asignaciones***");
+	}
+	
+	ordenarTopAsignaciones(LT);
+	
+	int top=0;
+	nA = LT->inicio;
+	printf("\n Identificador    Cantidad de Asignaciones \n");
+	while(nA!= NULL && top!=5){
+		printf("\n   %s                     %d", nA->identificador, nA->cantidad); 
+		nA = nA->siguiente;
+		top++;
+	}
+	
+	//Liberar la cola
+	liberarListaAsignaciones(L);
+
+	fflush(stdin);
+}
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: 
+*/
+NodoTopHorario* crearNodoHorario(char identificador[], int cantidad){
+	NodoTopHorario *nuevo;
+	nuevo = (NodoTopHorario *) malloc(sizeof(NodoTopHorario));
+	nuevo->siguiente = NULL;
+	strcpy(nuevo->identificador, identificador);
+	nuevo->cantidad = cantidad;	
+	
+	return nuevo;
+}
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: Ninguna.
+*/
+void ordenarTopHorarios(struct ListaTopHorarios *LT){
+
+	struct NodoTopHorario *i, *j, *temp;
+
+	temp=(struct NodoTopHorario *) malloc (sizeof(struct NodoTopHorario));
+	
+	i = LT->inicio;
+	while( i->siguiente!= NULL){
+		
+		j = i->siguiente;
+		while( j!= NULL){
+
+			if(i->cantidad < j->cantidad){
+				
+				//Guardar los valores del nodo i
+				temp->cantidad = i->cantidad;
+				strcpy(temp->identificador,i->identificador);
+				
+				//Asignar los valores del nodo j al nodo i
+				i->cantidad = j->cantidad;			
+				strcpy(i->identificador, j->identificador);
+				
+				//Asignar los valores guardados del nodo i al nodo j
+				j->cantidad = temp->cantidad;
+				strcpy(j->identificador, temp->identificador);
+				
+			}			
+			j = j->siguiente;
+		}
+		i = i->siguiente;
+	}
+	
+} 
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: 
+*/
+void consultarTopHorarios(){
+	struct ListaRequerimientos *L;
+	struct Requerimiento *i, *j;
+	
+	struct ListaTopHorarios *LT;
+	struct NodoTopHorario *nA;
+	
+	struct ListaOficinas *LOf;
+    struct Oficina *iOf;
+    
+	int  res=0, res2=0, contOficina=0, contado=0;
+	char id[12];
+	
+	L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
+	L->inicio = NULL;
+	L->final = NULL;
+	
+	LT = (struct ListaTopHorarios *) malloc(sizeof(struct ListaTopHorarios));
+	LT->inicio = NULL;
+	LT->final = NULL;
+	
+	LOf = (struct ListaOficinas *) malloc(sizeof(struct ListaOficinas));
+    LOf->inicio = NULL;
+    LOf->final = NULL;
+
+	res=cargarRequerimientos(L);
+
+	if(res=1)
+	{
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+			
+			j = L->inicio;
+			contOficina=0;
+
+			while( j->siguiente!= NULL){
+					if(strcmp(i->oficina,j->oficina)==0){
+						contOficina++;	
+					}
+				j = j->siguiente;
+			}
+			
+			//Agregar los datos a la listas del top de asignaciones
+			for(nA = LT->inicio; nA!= NULL; nA = nA->siguiente){
+				if(strcmp(i->oficina,nA->identificador)==0){
+					contado=1;
+					break;
+				}
+			}
+
+			if(contado==0){
+				if(LT->inicio == NULL) 
+				{
+					//Inserta al inicio de la cola
+					LT->inicio = crearNodoHorario(i->oficina, contOficina);
+					LT->final = LT->inicio;
+				}else{
+					LT->final->siguiente = crearNodoHorario(i->oficina, contOficina);
+					LT->final = LT->final->siguiente;
+				}	
+				
+			}
+			contado=0;	
+			
+			i = i->siguiente;
+		}
+		
+	}else{
+		printf( "\n***No se han registrado Asignaciones***");
+	}
+	
+	ordenarTopHorarios(LT);
+	
+	res2 = cargarOficinas(LOf);
+			
+	int top=0;
+	nA = LT->inicio;
+	printf("\n Oficina   Cantidad de Requerimientos \n");
+	while(nA!= NULL && top!=5){
+		printf("\n   %s                     %d\n", nA->identificador, nA->cantidad); 
+		
+		iOf = LOf->inicio;
+        while(iOf->siguiente!= NULL){
+            if (strcmp(iOf->codigo , nA->identificador)==1){
+            	
+                printf("\n   Horario de Operacion\n");
+                printf("       - Dias de trabajo: %s \n", iOf->dias); 
+                printf("       - Hora de Apertura: %s \n", iOf->horaApertura);
+                printf("       - Hora de Cierre: %s \n", iOf->horaCierre);
+				break;
+            }
+        	iOf = iOf->siguiente;
+        }
+        
+        printf("+-------------------------------+\n");
+				
+		nA = nA->siguiente;
+		top++;
+	}
+	
+	//Liberar la cola
+	liberarListaRequerimientos(L);
+
+	fflush(stdin);
+}
+
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: 
+*/
+NodoTopMiembro* crearNodoMiembro(char identificador[], int cantidad){
+	NodoTopMiembro *nuevo;
+	nuevo = (NodoTopMiembro *) malloc(sizeof(NodoTopMiembro));
+	nuevo->siguiente = NULL;
+	strcpy(nuevo->identificador, identificador);
+	nuevo->cantidad = cantidad;	
+	
+	return nuevo;
+}
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: Ninguna.
+*/
+void ordenarTopMiembros(struct ListaTopMiembros *LT){
+
+	struct NodoTopMiembro *i, *j, *temp;
+
+	temp=(struct NodoTopMiembro *) malloc (sizeof(struct NodoTopMiembro));
+	
+	i = LT->inicio;
+	while( i->siguiente!= NULL){
+		
+		j = i->siguiente;
+		while( j!= NULL){
+
+			if(i->cantidad < j->cantidad){
+				
+				//Guardar los valores del nodo i
+				temp->cantidad = i->cantidad;
+				strcpy(temp->identificador,i->identificador);
+				
+				//Asignar los valores del nodo j al nodo i
+				i->cantidad = j->cantidad;			
+				strcpy(i->identificador, j->identificador);
+				
+				//Asignar los valores guardados del nodo i al nodo j
+				j->cantidad = temp->cantidad;
+				strcpy(j->identificador, temp->identificador);
+				
+			}			
+			j = j->siguiente;
+		}
+		i = i->siguiente;
+	}
+	
+} 
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: 
+*/
+void consultarTopMiembros(){
+	struct ListaAsignaciones *L;
+	struct Asignacion *i, *j;
+	struct ListaTopMiembros *LT;
+	struct NodoTopMiembro *nA;
+	int  res=0, contMiembros=0, contado=0;
+	char id[12];
+	
+	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+	L->inicio = NULL;
+	L->final = NULL;
+	
+	LT = (struct ListaTopMiembros *) malloc(sizeof(struct ListaTopMiembros));
+	LT->inicio = NULL;
+	LT->final = NULL;
+
+	res=cargarAsignaciones(L);
+
+	if(res=1)
+	{
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+			
+			j = L->inicio;
+			contMiembros=0;
+
+			while( j->siguiente!= NULL){
+					if(strcmp(i->miembros,j->miembros)==0){
+						contMiembros++;	
+					}
+				j = j->siguiente;
+			}
+			
+			//Agregar los datos a la listas del top de asignaciones
+			for(nA = LT->inicio; nA!= NULL; nA = nA->siguiente){
+				if(strcmp(i->miembros,nA->identificador)==0){
+					contado=1;
+					break;
+				}
+			}
+
+			if(contado==0){
+				if(LT->inicio == NULL) 
+				{
+					//Inserta al inicio de la cola
+					LT->inicio = crearNodoMiembro(i->miembros, contMiembros);
+					LT->final = LT->inicio;
+				}else{
+					LT->final->siguiente = crearNodoMiembro(i->miembros, contMiembros);
+					LT->final = LT->final->siguiente;
+				}	
+				
+			}
+			contado=0;	
+			
+			i = i->siguiente;
+		}
+		
+	}else{
+		printf( "\n***No se han registrado Asignaciones***");
+	}
+	
+	ordenarTopMiembros(LT);
+	
+	int top=0;
+	nA = LT->inicio;
+	printf("\n Cedula del Miembro    Cantidad de Asignaciones \n");
+	while(nA!= NULL && top!=5){
+		printf("\n   %s                     %d", nA->identificador, nA->cantidad); 
+		nA = nA->siguiente;
+		top++;
+	}
+	
+	//Liberar la cola
+	liberarListaAsignaciones(L);
+
+	fflush(stdin);
+}
+
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: 
+*/
+NodoTopEsfuerzo* crearNodoEsfuerzo(char identificador[], int cantidad){
+	NodoTopEsfuerzo *nuevo;
+	nuevo = (NodoTopEsfuerzo *) malloc(sizeof(NodoTopEsfuerzo));
+	nuevo->siguiente = NULL;
+	strcpy(nuevo->identificador, identificador);
+	nuevo->cantidad = cantidad;	
+	
+	return nuevo;
+}
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: Ninguna.
+*/
+void ordenarTopEsfuerzo(struct ListaTopEsfuerzo *LT){
+
+	struct NodoTopEsfuerzo *i, *j, *temp;
+
+	temp=(struct NodoTopEsfuerzo *) malloc (sizeof(struct NodoTopEsfuerzo));
+	
+	i = LT->inicio;
+	while( i->siguiente!= NULL){
+		
+		j = i->siguiente;
+		while( j!= NULL){
+
+			if(i->cantidad < j->cantidad){
+				
+				//Guardar los valores del nodo i
+				temp->cantidad = i->cantidad;
+				strcpy(temp->identificador,i->identificador);
+				
+				//Asignar los valores del nodo j al nodo i
+				i->cantidad = j->cantidad;			
+				strcpy(i->identificador, j->identificador);
+				
+				//Asignar los valores guardados del nodo i al nodo j
+				j->cantidad = temp->cantidad;
+				strcpy(j->identificador, temp->identificador);
+				
+			}			
+			j = j->siguiente;
+		}
+		i = i->siguiente;
+	}
+	
+} 
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: 
+*/
+void consultarTopEsfuerzo(){
+	struct ListaRequerimientos *L;
+	struct Requerimiento *i, *j;
+	
+	struct ListaTopEsfuerzo *LT;
+	struct NodoTopEsfuerzo *nA;
+	
+	int  res=0, esfuerzo=0, contOficina=0, contado=0;
+	char id[12];
+	
+	L = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
+	L->inicio = NULL;
+	L->final = NULL;
+	
+	LT = (struct ListaTopEsfuerzo *) malloc(sizeof(struct ListaTopEsfuerzo));
+	LT->inicio = NULL;
+	LT->final = NULL;
+
+	res=cargarRequerimientos(L);
+
+	if(res=1)
+	{
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+					
+			esfuerzo = atoi(i->esfuerzo);
+			
+			//Agregar los datos a la listas del top de asignaciones
+			for(nA = LT->inicio; nA!= NULL; nA = nA->siguiente){
+				if(strcmp(i->identificador,nA->identificador)==0){
+					contado=1;
+					break;
+				}
+			}
+
+			if(contado==0){
+				if(LT->inicio == NULL) 
+				{
+					//Inserta al inicio de la cola
+					LT->inicio = crearNodoEsfuerzo(i->identificador, esfuerzo);
+					LT->final = LT->inicio;
+				}else{
+					LT->final->siguiente = crearNodoEsfuerzo(i->identificador, esfuerzo);
+					LT->final = LT->final->siguiente;
+				}	
+				
+			}
+			contado=0;	
+			
+			i = i->siguiente;
+		}
+		
+	}else{
+		printf( "\n***No se han registrado Asignaciones***");
+	}
+	
+	ordenarTopEsfuerzo(LT);
+	
+	int top=0;
+	nA = LT->inicio;
+	printf("\n Identificador       Esfuerzo \n");
+	while(nA!= NULL && top!=5){
+		printf("\n   %s                %d\n", nA->identificador, nA->cantidad); 
+				
+		nA = nA->siguiente;
+		top++;
+	}
+	
+	//Liberar la cola
+	liberarListaRequerimientos(L);
+
+	fflush(stdin);
+}
+
 /*
 	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar las Asignaciones
 	Salidas: Los datos relacionado a las Asignaciones del Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
@@ -2516,28 +3155,28 @@ void analisisDeDatos(int tipoAnalisis){
 				printf( "Requerimientos con mas Asignaciones \n");
 				printf("+--------------------------------------+\n");				
 			
-				//consultarTopAsignaciones();
+				consultarTopAsignaciones();
 				
 				break;
 			case 2:
 				printf(      "Horarios mas Utilizados \n");
 				printf("+--------------------------------------+\n");				
 			
-				//consultarTopHorarios();
+				consultarTopHorarios();
 				
 				break;
 			case 3:
 				printf( "Miembros de Equipo con mas Asignaciones \n");
 				printf("+--------------------------------------+\n");				
 			
-				//consultarTopMiembros();
+				consultarTopMiembros();
 				
 				break;
 			case 4:
 				printf( "  Requerimientos con mayor esfuerzo \n");
 				printf("+-------------------------------------+\n");				
 			
-				//consultarTopEsfuerzo();
+				consultarTopEsfuerzo();
 				
 				break;
 		}
