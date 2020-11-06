@@ -2,7 +2,7 @@
 #include<stdio.h> 
 #include <stdlib.h>
 
-#define CANTIDAD 10
+#define CANTIDAD 50
 
 typedef struct Lista Lista;
 typedef struct Nodo Nodo;
@@ -103,14 +103,14 @@ int obtenerValorMayor(Lista *L)
 }
 
 // Radix Sort
-void radixSort(Lista *L, int tamano){
+void radixSort(Lista *L){
 	
 	// Se utiliza la base 10
 	int i;
 	Nodo *j;
 
-	int semiOrdenados[tamano];
-	int arreglo[tamano];
+	int semiOrdenados[CANTIDAD];
+	int arreglo[CANTIDAD];
 	int digitoSignificativo = 1;
 	int mayorNumero = obtenerValorMayor(L);
 	
@@ -126,10 +126,10 @@ void radixSort(Lista *L, int tamano){
 			i++;	
 		}
 		
-		int bucket[10] = { 0 };	
+		int bucket[CANTIDAD] = { 0 };	
 		
 		// Cuenta el número de "claves" o dígitos que entrarán en cada depósito (bucket).
-		for (i = 0; i < tamano; i++)
+		for (i = 0; i < CANTIDAD; i++)
 			bucket[(arreglo[i] / digitoSignificativo) % 10]++;
 		
 		/**
@@ -137,11 +137,11 @@ void radixSort(Lista *L, int tamano){
 		* Adquiere los índices después del final de cada ubicación de depósito en el arreglo 
 		* Funciona de manera similar al algoritmo de clasificación de recuento
 		**/
-		for (i = 1; i < 10; i++)
+		for (i = 1; i < CANTIDAD; i++)
 			bucket[i] += bucket[i - 1];
 		
 		// Usa el depósito para llenar el arreglo "semiOrdenados"
-		for (i = tamano - 1; i >= 0; i--)
+		for (i = CANTIDAD - 1; i >= 0; i--)
 			semiOrdenados[--bucket[(arreglo[i] / digitoSignificativo) % 10]] = arreglo[i]; 
 		
 		i=0;
@@ -190,7 +190,7 @@ int main(){
 	
 	printf("-->Mayor numero en la lista: %d \n", obtenerValorMayor(L));
 	
-	radixSort(L, resultado);
+	radixSort(L);
 	
 	printf("-->La lista ordenada es: ");
 	mostrarLista(L);

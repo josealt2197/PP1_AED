@@ -6,26 +6,24 @@
 
 #include<stdio.h> 
 #include <stdlib.h>
+#include <time.h> 
 
 #define CANTIDAD 500
 
 typedef struct Lista Lista;
 typedef struct Nodo Nodo;
 
-struct Nodo
-{
+struct Nodo{
 	int dato;
 	Nodo *siguiente;
 };
 
-struct Lista
-{
+struct Lista{
 	int tamano;
 	Nodo *inicio;
 };
 
-Lista *listaNueva(void)
-{
+Lista *listaNueva(void){
 	Lista *L;
 	L = (Lista *) malloc(sizeof(Lista));
 	L->inicio = NULL;
@@ -34,8 +32,7 @@ Lista *listaNueva(void)
 }
 
 //Insertar el primer dato o un dato al final de la lista creada
-void insertarDato(Lista *L, int dato)
-{
+void insertarDato(Lista *L, int dato){
 	Nodo *n, *aux;
 	L->tamano=L->tamano+1;
 	
@@ -62,8 +59,7 @@ void insertarDato(Lista *L, int dato)
 }
 
 //Mostrar los valores contenids en los nodos de la lista
-void mostrarLista(const Lista *L)
-{
+void mostrarLista(const Lista *L){
 	Nodo *i;
 	printf("-->La lista es: ");
 	for(i = L->inicio; i!= NULL; i = i->siguiente)
@@ -72,14 +68,12 @@ void mostrarLista(const Lista *L)
 }
 
 //Retorna el tamano de la lista
-int obtenerTamano(const Lista *L)
-{
+int obtenerTamano(const Lista *L){
 	return L->tamano;
 }
 
 //Liberar el espacio en memoria ocupado por los nodos de la lista creada
-void liberarLista(Lista *L)
-{
+void liberarLista(Lista *L){
 	Nodo *n, *aux;
 	if(L->inicio == NULL)
 		return;
@@ -114,8 +108,7 @@ int findLinealSearch(Lista *L, int dato){
 }
   
 //Buscar un dato dentro de la lista generada con el algoritmo de busqueda binaria
-int findBinarySearch(Lista *L, int dato, int inicio, int fin)  
-{  
+int findBinarySearch(Lista *L, int dato, int inicio, int fin){  
     int centro, valorCentral, posicion=0;
     Nodo *nAux = L->inicio;
 
@@ -151,43 +144,71 @@ int findBinarySearch(Lista *L, int dato, int inicio, int fin)
     return -1;   
 } 
 
-struct Node *RadixSort(Lista *L,  const int base, int rounds){
-    int n = 1, i, j;
-    Nodo *bucket, *siguiente, *temp;
-    // Dyamic bucket array
-    bucket = (Nodo *) malloc(sizeof(Nodo)*base); 
-  
- 	Nodo *nAux = L->inicio;
- 
-    for(j = 0; j < rounds ;j++)
-    {        
-        //Place numbers into buckets.        
-        while(nAux != NULL)
-        {    
-            siguiente = nAux->siguiente;            
-            nAux->siguiente = bucket[(nAux->dato/n)%base];
-            bucket[(nAux->dato)%base] = nAux;
-            nAux += nAux->siguiente;
-            nAux = siguiente;
-        }
-        //Rebuild list
-        for(i = 0; i < base; i++)
-        {        
-            while(bucket[i]!=NULL)
-            {
-                temp = bucket[i]->siguiente;
-                bucket[i]->siguiente = nAux;
-                nAux = bucket[i];
-                bucket[i] = bucket[i]->siguiente;
-                bucket[i] = temp;
-            }
-        }
-        n *=10;
-    }
- 
- 
-    return list;
-} 
+//Obtener el valor mayor de la lista
+int obtenerValorMayor(Lista *L){
+	Nodo *i;
+	int mayorNumero = -1;
+	for(i = L->inicio; i!= NULL; i = i->siguiente){
+		if(i->dato > mayorNumero) 
+      		mayorNumero = i->dato ;
+	}
+	
+	return mayorNumero;	
+}
+
+// Radix Sort
+void radixSort(Lista *L){
+	
+	// Se utiliza la base 10
+	int i;
+	Nodo *j;
+
+	int semiOrdenados[CANTIDAD];
+	int arreglo[CANTIDAD];
+	int digitoSignificativo = 1;
+	int mayorNumero = obtenerValorMayor(L);
+	
+	// Bucle hasta llegar al dígito significativo más grande
+	while (mayorNumero / digitoSignificativo > 0){
+	
+		i=0;
+		for(j = L->inicio; j!= NULL; j = j->siguiente){
+			arreglo[i] = j->dato;
+			i++;	
+		}
+		
+		int bucket[CANTIDAD] = { 0 };	
+		
+		// Cuenta el número de "claves" o dígitos que entrarán en cada depósito (bucket).
+		for (i = 0; i < CANTIDAD; i++)
+			bucket[(arreglo[i] / digitoSignificativo) % 10]++;
+		
+		/**
+		* Agregue el recuento de los depósitos anteriores, 
+		* Adquiere los índices después del final de cada ubicación de depósito en el arreglo 
+		* Funciona de manera similar al algoritmo de clasificación de recuento
+		**/
+		for (i = 1; i < CANTIDAD; i++)
+			bucket[i] += bucket[i - 1];
+		
+		// Usa el depósito para llenar el arreglo "semiOrdenados"
+		for (i = CANTIDAD - 1; i >= 0; i--)
+			semiOrdenados[--bucket[(arreglo[i] / digitoSignificativo) % 10]] = arreglo[i]; 
+		
+		i=0;
+		for(j= L->inicio; j!= NULL; j = j->siguiente){
+			j->dato = semiOrdenados[i];	
+			i++;
+		}
+		
+//		for (i = 0; i < tamano; i++)
+//			arreglo[i] = semiOrdenados[i];
+//		
+		// Move to next significant digit
+		digitoSignificativo *= 10;
+				
+	}
+}
 
 //Generar un numero aleatorio
 int numeroAleatorio(){
@@ -198,15 +219,13 @@ int numeroAleatorio(){
     return numero;
 }
 
-
 //Invocar a las funciones creadas
 void main ()  
 {  
-	Lista *L, *L2;
+	Lista *L;
 	int resultado, aleatorio, i;
 	
 	L = listaNueva();
-	L2 = listaNueva();
 	
 	srand(time(0)); 
 	for (i = 0; i< CANTIDAD; i++)  
@@ -215,55 +234,35 @@ void main ()
         insertarDato(L,aleatorio);
     } 
 
-	printf("\n****Lista generada****\n");
-	mostrarLista(L);
-	
-	printf("\n****BUSQUEDA LINEAL****\n");	
-	aleatorio=numeroAleatorio();
-	printf("\n-->Valor a consultar: %d \n", aleatorio);
-	resultado = findLinealSearch(L, aleatorio);
-	
-	if(resultado >= 0)
-		printf("\n-->El dato se encuentra en la posicion %d\n", resultado);	
-	else	
-		printf("\n-->El dato no esta en lista\n");
-	
-	int consulta;
-	printf("\n-->Consultar otro valor \n", aleatorio);
-	printf("\n<--Digite el valor para consultar: ");
-	scanf("%d", &consulta);
-	resultado = findLinealSearch(L, consulta);
-	
-	if(resultado >= 0)
-		printf("\n-->El dato se encuentra en la posicion %d\n", resultado);	
-	else	
-		printf("\n-->El dato no esta en lista\n");
-	
+	/*****************************************************************************************/
+
+//	printf("\n****BUSQUEDA LINEAL****\n");	
+//	printf("\n-->Valor a consultar: %d \n", aleatorio);
+//			
+//    resultado = findLinealSearch(L, aleatorio);
+//	
+//	if(resultado >= 0)
+//		printf("\n-->El dato se encuentra en la posicion %d\n", resultado);	
+//	else	
+//		printf("\n-->El dato no esta en lista\n");
+  
+  	/*****************************************************************************************/
+  	
+  	radixSort(L);
+
 	printf("\n****BUSQUEDA BINARIA****\n");
-	
+	printf("\n-->Valor a consultar: %d \n", aleatorio);
 	resultado=obtenerTamano(L);
-	printf("\n-->Tamano de la lista: %d\n", resultado);
-	
-	int par=2;
-	for (i = 0; i< CANTIDAD; i++)  
-    { 
-        insertarDato(L2,par);
-        par=par+2;
-    } 
-    
-    printf("\n****Lista generada****\n");
-	mostrarLista(L2);
-    
-    printf("\n<--Digite el valor para consultar: ");
-	scanf("%d", &consulta);
-	resultado = findBinarySearch(L2, consulta, 0, resultado);
+
+    resultado = findBinarySearch(L, aleatorio, 0, resultado); 
 	
 	if(resultado >= 0)
 		printf("\n-->El dato se encuentra en la posicion %d\n", resultado);	
 	else	
 		printf("\n-->El dato no esta en lista\n");
 			
+	/*****************************************************************************************/
+	
 	liberarLista(L);
-	liberarLista(L2);
 }
 

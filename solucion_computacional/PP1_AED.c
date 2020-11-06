@@ -58,6 +58,7 @@ void modificarRequerimiento();
 void actualizarRequerimientos(struct ListaRequerimientos *L);
 void registrarCalificaciones();
 void guardarCalificacion(Calificacion *calificacion);
+void actualizarCalificacion(struct ListaCalificaciones *L);
 int cargarOficinas(struct ListaOficinas *L);
 void consultarOficinas();
 
@@ -81,6 +82,8 @@ int numeroAleatorio();
 void obtenerFechaActual(char *hoy);
 
 void analisisDeDatos(int tipoAnalisis);
+
+
 
 struct Requerimiento{
     char identificador[50];
@@ -137,9 +140,10 @@ struct Incidentes{
 struct Calificacion{
     char codigoRequerimiento[15];
     char codigoAsignacion[15];
+    char miembro[30];
     char calificacion[5];
-    Incidentes *anterior;
-    Incidentes *siguiente;
+    Calificacion *anterior;
+    Calificacion *siguiente;
 };
 
 struct Oficina{
@@ -681,6 +685,7 @@ void obtenerHoraActual(char *horaActual, char *minutoActual){
     strcpy(horaActual, hora);
     strcpy(minutoActual, minuto);
 }
+
 /*
     Entradas: .
     Salidas: .
@@ -2131,22 +2136,75 @@ void consultarAsignaciones(){
     Salidas: 
     Restricciones: 
 */
-void modificarNivelMiembro(struct ListaRequerimientos *L, const char identificador[]){
-//	struct  *i;
-//	char id[15];
-//	int val;
-//
-//    i = L->inicio;
-//    while( i->siguiente!= NULL){
-//        if(strcmp(i->identificador, identificador)==0){
-//			strcpy(i->estado, "Activo");		
-//		}
-//        i = i->siguiente;
-//    }
-//
-//	actualizarRequerimientos(L);
-//	liberarListaRequerimientos(L);	
+int validarAsignacion(struct ListaAsignaciones *L, char idAsignacion[], char idRQ[], char idMiembro[]){
+	struct  Asignacion *i;
+
+    i = L->inicio;
+    while( i->siguiente!= NULL){
+        if(strcmp(i->codigoAsignacion, idAsignacion)==0){
+        	strcpy(idRQ,i->identificador);
+        	strcpy(idMiembro,i->miembros);
+			return 1;		
+		}
+        i = i->siguiente;
+    }
+	
+	return 0;
 }
+
+/*
+    Entradas:  
+    Salidas: 
+    Restricciones: 
+*/
+void modificarCalificacion(struct ListaCalificaciones *L,  char idMiembro[]){
+	struct Calificacion *i;
+	int calificacionInt;
+	char calificacionChar [5];
+
+    i = L->inicio;
+    while( i->siguiente!= NULL){
+        if(strcmp(i->miembro, idMiembro)==0){
+			calificacionInt = atoi(i->calificacion);
+			calificacionInt = calificacionInt - 1;
+			sprintf(calificacionChar, "%d", calificacionInt);
+			strcpy(i->calificacion, calificacionChar);		
+		}
+        i = i->siguiente;
+    }
+	
+	actualizarCalificacion(L);
+}
+
+
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: 
+*/
+void actualizarCalificacion(struct ListaCalificaciones *L){
+	
+	struct Calificacion *i;
+	
+	 if (remove("Archivos\\Calificaciones.txt") != 0)
+	 	return;
+	 	
+	ArchRequerimiento=fopen("Archivos\\Calificaciones.txt","a+");
+	if(ArchRequerimiento==NULL){
+		printf("\n Error al intentar usar el archivo.\n");	
+	}else{
+		
+		i = L->inicio;
+        while( i->siguiente!= NULL){
+			fprintf(ArchCalificaciones,"%s\n%s\n%s\n%s\n", i->codigoRequerimiento, i->miembro, i->codigoAsignacion, i->calificacion);
+            i = i->siguiente;
+        }
+		
+	}
+	fclose(ArchRequerimiento);
+
+}
+
 
 /*
     Entradas: Un ID determinado en la tabla que se presenta de Asiganciones. 
@@ -2155,9 +2213,10 @@ void modificarNivelMiembro(struct ListaRequerimientos *L, const char identificad
 */
 void cancelarAsignacion(){
     struct ListaAsignaciones *L;
+    struct ListaCalificaciones *LC;
     struct Asignacion *i;
-    int val=3, res=0;
-    char id[12];
+    int val=3, res=0, res2=0;
+    char idMiembro[50], seleccion[10];
 
     system( "CLS" );
     printf("\n\n+-------------------------------------+\n");
@@ -2169,19 +2228,19 @@ void cancelarAsignacion(){
     L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
     L->inicio = NULL;
     L->final = NULL;
-
-    res=cargarAsignaciones(L);
-
+    
+	res=cargarAsignaciones(L);
+    
     if(res=1)
     {
         printf("\n\n+-----------------------Lista de Asignaciones-----------------------+\n");
         printf("\n+-------------------------------------------------------------------+\n");
         i = L->inicio;
         int cont=1;
-        printf(" ID        Miembro             RQ         Estado    Hora inicio\n" ); 
+        printf(" ID          Miembro             RQ         Estado    Hora inicio\n" ); 
         while(i->siguiente!=NULL){
             if (compararCadenas( i->estado , "Cancelada")!=1){
-                printf("\n %d        %s        %s        %s        %s\n" , cont , i->miembros , i->identificador, i->estado, i->horaInicio );
+                printf("\n %s        %s        %s        %s        %s\n" , i->codigoAsignacion, i->miembros , i->identificador, i->estado, i->horaInicio );
                 cont++;
             }
             i = i->siguiente;
@@ -2194,18 +2253,15 @@ void cancelarAsignacion(){
     }
 	int eliminar=0;
     printf("Ingrese el numero del ID de la asignacion que desea cancelar: ");
-    char seleccion[10];
     gets(seleccion);
-    eliminar = atoi(seleccion);
-    int e=1;
+    
     i = L->inicio;
     while(i->siguiente!=NULL){
-        if (compararCadenas( i->estado , "Cancelada")==1){
-            eliminar+=1;
-        }
-        if (e==eliminar){
+        if (strcmp( i->codigoAsignacion , seleccion)==0){
             if(compararHoras( i->horaInicio,  i->horaFin)==1){
                 strcpy(i->estado,"Cancelada");
+                strcpy(idMiembro, i->miembros);
+                break;
             }else{
                 printf("\n+----------------------------------------------------------------------------------+\n");
                 printf("  La asignacion no puede cancelarse si se tiene menos de una para su hora de inicio");
@@ -2218,9 +2274,8 @@ void cancelarAsignacion(){
             break;
         }
         i = i->siguiente;
-        e++;
-    }
-    
+     }
+           
 	if (remove("Archivos\\Asignaciones.txt") == 0){
 
         ArchAsignaciones=fopen("Archivos\\Asignaciones.txt","a+");
@@ -2230,8 +2285,8 @@ void cancelarAsignacion(){
 
             i=L->inicio;
             while(i->siguiente!=NULL){
-                fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", i->fechaSolicitud, i->horaInicio, i->horaFin, i->recurso, i->identificador, 
-                                                                        i->descripcion,  i->miembros, i->prioridad, i->estado);
+                fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", i->codigoAsignacion, i->fechaSolicitud, i->horaInicio, i->horaFin, i->recurso, i->identificador, 
+                                                                        			 i->descripcion,  i->miembros, i->prioridad, i->estado);
                 i=i->siguiente;
             }
         }
@@ -2241,25 +2296,15 @@ void cancelarAsignacion(){
     }else{
        printf("Problema al borrar el archivo de Asignaciones");
     }
+    
+    //Actualizar la calificaion del miembro, según la asignacion cancelada
+	LC = (struct ListaCalificaciones *) malloc(sizeof(struct ListaCalificaciones));
+    LC->inicio = NULL;
+    LC->final = NULL;
+    
+	res2=cargarCalificaciones(LC);
+	modificarCalificacion(LC, idMiembro);
 	
-	printf("\n\n+-----------------------Lista de Asignaciones-----------------------+\n");
-    printf("\n+-------------------------------------------------------------------+\n");
-    i = L->inicio;
-    int cont=1;
-    printf(" ID        Miembro             RQ         Estado    Hora inicio\n" ); 
-    while(i->siguiente!=NULL){
-        if (compararCadenas( i->estado , "Cancelada")!=1){
-            printf("\n %d        %s        %s        %s        %s\n" , cont , i->miembros , i->identificador, i->estado, i->horaInicio );
-            cont++;
-        }
-        i = i->siguiente;
-
-    }
-    printf("\n+-------------------------------------------------------------------+\n");
-
-	
-
-
     printf("\n\nPresione una tecla para regresar..." ); 
     getchar();
     fflush(stdin);
@@ -2516,17 +2561,42 @@ void registrarCalificaciones(){
 	printf("+-------------------------------+\n");	
 	
 	struct Calificacion *calificacion;
+	char idRQ [15], miembro[15];
+	int res=0;
 
 	calificacion = (struct Calificacion *) malloc (sizeof(struct Calificacion));
+	
+	struct ListaAsignaciones *L;
+	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+	L->inicio = NULL;
+	L->final = NULL;
+
+	res=cargarAsignaciones(L);
 	
 	if(calificacion == NULL){
 		printf("Espacio insuficiente para almacenar los datos.\n");	
 	}
+	
+	if(res == 0){
+		printf("No ha resgistrado ninguna asignación\n");
+		getchar();	
+		return;	
+	}
 		
-	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ-001) \n");
-	gets(calificacion->codigoRequerimiento);
-	printf("\n Ingrese el Codigo de Asignacion: (Ejm. 1, 2, 3, 4....) \n");
-	gets(calificacion->codigoAsignacion);
+	do{
+        printf("\n Ingrese el Codigo de Asignacion: (Ejm. AS-001) \n");
+		gets(calificacion->codigoAsignacion);
+
+        if(validarAsignacion(L, calificacion->codigoAsignacion, idRQ, miembro)==1){
+            strcpy(calificacion->codigoRequerimiento, idRQ);
+            strcpy(calificacion->miembro, miembro);
+            break;
+        }else{
+            printf("\n **El ID no corresponde con ninguna Asignacion registrada**\n ");
+        }
+    }while(1);
+	
+	
 	printf("\n Ingrese la Calificacion de Requerimiento (1-100): \n");
 	gets(calificacion->calificacion);
 	printf("\n");
@@ -2549,7 +2619,7 @@ void guardarCalificacion(Calificacion *calificacion){
 	if(ArchCalificaciones==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		fprintf(ArchCalificaciones,"%s\n%s\n%s\n", calificacion->codigoRequerimiento, calificacion->codigoAsignacion, calificacion->calificacion);
+		fprintf(ArchCalificaciones,"%s\n%s\n%s\n%s\n", calificacion->codigoRequerimiento, calificacion->miembro, calificacion->codigoAsignacion, calificacion->calificacion);
 	}
 	fclose(ArchCalificaciones);
 	printf("\n ==>Informacion guardada<==.\n");
@@ -2558,6 +2628,60 @@ void guardarCalificacion(Calificacion *calificacion){
 
 }
 
+/*
+	Entradas: 
+	Salidas: 
+	Restricciones: 
+*/
+int cargarCalificaciones(struct ListaCalificaciones *L){
+	
+	struct Calificacion *aux;
+
+	aux = (struct Calificacion *) malloc (sizeof(struct Calificacion));
+
+	ArchCalificaciones = fopen("Archivos\\Calificaciones.txt","r");
+
+	if(ArchCalificaciones==NULL){
+		return 0;	
+	}else{
+	
+		while(!feof(ArchCalificaciones)){
+			fgets(aux->codigoAsignacion, 15, ArchCalificaciones);
+			quitaFinLinea(aux->codigoAsignacion);
+			fgets(aux->codigoRequerimiento, 15, ArchCalificaciones); 
+			quitaFinLinea(aux->codigoRequerimiento);
+			fgets(aux->miembro, 50, ArchCalificaciones); 
+			quitaFinLinea(aux->miembro);
+			fgets(aux->calificacion, 50, ArchCalificaciones);
+			quitaFinLinea(aux->calificacion);		
+						
+			if(L->inicio == NULL){
+				//Inserta al inicio de la lista
+				L->inicio = (struct Calificacion *) malloc (sizeof(struct Calificacion));
+				strcpy(L->inicio->codigoAsignacion , aux->codigoAsignacion);
+				strcpy(L->inicio->codigoRequerimiento , aux->codigoRequerimiento);
+				strcpy(L->inicio->miembro , aux->miembro ); 
+				strcpy(L->inicio->calificacion , aux->calificacion); 
+				L->inicio->siguiente = NULL; 
+				L->inicio->anterior = NULL; 
+				L->final = L->inicio;
+	
+			}else{
+				//Inserta al final de la lista	
+				L->final->siguiente =(struct Calificacion *) malloc (sizeof(struct Calificacion));
+				strcpy(L->final->siguiente->codigoAsignacion , aux->codigoAsignacion);
+				strcpy(L->final->siguiente->codigoRequerimiento , aux->codigoRequerimiento);
+				strcpy(L->final->siguiente->miembro , aux->miembro ); 
+				strcpy(L->final->siguiente->calificacion , aux->calificacion); 
+				L->final->siguiente->siguiente = NULL; 
+				L->final->siguiente->anterior = L->final; 
+				L->final = L->final->siguiente;
+			}		
+		}
+		fclose(ArchCalificaciones);		
+	}	
+	return 1;
+}
 
 /*
 	Entradas: 
@@ -2861,7 +2985,6 @@ void consultarTopHorarios(){
 
 	fflush(stdin);
 }
-
 
 /*
 	Entradas: 
