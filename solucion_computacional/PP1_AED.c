@@ -141,7 +141,7 @@ struct Calificacion{
     char codigoRequerimiento[15];
     char codigoAsignacion[15];
     char miembro[30];
-    char calificacion[5];
+    char calificacion[10];
     Calificacion *anterior;
     Calificacion *siguiente;
 };
@@ -209,8 +209,7 @@ struct NodoTopHorario{
 	NodoTopHorario *siguiente;
 };
 
-struct ListaTopHorarios
-{
+struct ListaTopHorarios{
 	NodoTopHorario *inicio;
 	NodoTopHorario *final;
 };
@@ -224,8 +223,7 @@ struct NodoTopMiembro{
 	NodoTopMiembro *siguiente;
 };
 
-struct ListaTopMiembros
-{
+struct ListaTopMiembros{
 	NodoTopMiembro *inicio;
 	NodoTopMiembro *final;
 };
@@ -239,8 +237,7 @@ struct NodoTopEsfuerzo{
 	NodoTopEsfuerzo *siguiente;
 };
 
-struct ListaTopEsfuerzo
-{
+struct ListaTopEsfuerzo{
 	NodoTopEsfuerzo *inicio;
 	NodoTopEsfuerzo *final;
 };
@@ -2157,18 +2154,19 @@ int validarAsignacion(struct ListaAsignaciones *L, char idAsignacion[], char idR
     Salidas: 
     Restricciones: 
 */
-void modificarCalificacion(struct ListaCalificaciones *L,  char idMiembro[]){
+void modificarCalificacion(struct ListaCalificaciones *L,  char idAsignacion[]){
 	struct Calificacion *i;
 	int calificacionInt;
-	char calificacionChar [5];
+	char calificacionChar [20];
 
     i = L->inicio;
     while( i->siguiente!= NULL){
-        if(strcmp(i->miembro, idMiembro)==0){
+        if(strcmp(idAsignacion, i->codigoAsignacion)==0){
 			calificacionInt = atoi(i->calificacion);
 			calificacionInt = calificacionInt - 1;
 			sprintf(calificacionChar, "%d", calificacionInt);
-			strcpy(i->calificacion, calificacionChar);		
+			strcpy(i->calificacion, calificacionChar);	
+			printf("%s", i->calificacion);	
 		}
         i = i->siguiente;
     }
@@ -2196,7 +2194,7 @@ void actualizarCalificacion(struct ListaCalificaciones *L){
 		
 		i = L->inicio;
         while( i->siguiente!= NULL){
-			fprintf(ArchCalificaciones,"%s\n%s\n%s\n%s\n", i->codigoRequerimiento, i->miembro, i->codigoAsignacion, i->calificacion);
+			fprintf(ArchCalificaciones,"%s\n%s\n%s\n%s\n", i->codigoAsignacion, i->codigoRequerimiento, i->miembro,  i->calificacion);
             i = i->siguiente;
         }
 		
@@ -2204,7 +2202,6 @@ void actualizarCalificacion(struct ListaCalificaciones *L){
 	fclose(ArchRequerimiento);
 
 }
-
 
 /*
     Entradas: Un ID determinado en la tabla que se presenta de Asiganciones. 
@@ -2216,7 +2213,7 @@ void cancelarAsignacion(){
     struct ListaCalificaciones *LC;
     struct Asignacion *i;
     int val=3, res=0, res2=0;
-    char idMiembro[50], seleccion[10];
+    char idAsignacion[50], seleccion[10];
 
     system( "CLS" );
     printf("\n\n+-------------------------------------+\n");
@@ -2260,7 +2257,6 @@ void cancelarAsignacion(){
         if (strcmp( i->codigoAsignacion , seleccion)==0){
             if(compararHoras( i->horaInicio,  i->horaFin)==1){
                 strcpy(i->estado,"Cancelada");
-                strcpy(idMiembro, i->miembros);
                 break;
             }else{
                 printf("\n+----------------------------------------------------------------------------------+\n");
@@ -2302,8 +2298,10 @@ void cancelarAsignacion(){
     LC->inicio = NULL;
     LC->final = NULL;
     
+    
 	res2=cargarCalificaciones(LC);
-	modificarCalificacion(LC, idMiembro);
+	modificarCalificacion(LC, seleccion);
+	
 	
     printf("\n\nPresione una tecla para regresar..." ); 
     getchar();
@@ -2560,9 +2558,9 @@ void registrarCalificaciones(){
 	printf( "   Calificar un requerimiento\n" );
 	printf("+-------------------------------+\n");	
 	
-	struct Calificacion *calificacion;
+	struct Calificacion *calificacion, *i;
 	char idRQ [15], miembro[15];
-	int res=0;
+	int res=0, res2=0, actualizar=0;
 
 	calificacion = (struct Calificacion *) malloc (sizeof(struct Calificacion));
 	
@@ -2572,6 +2570,13 @@ void registrarCalificaciones(){
 	L->final = NULL;
 
 	res=cargarAsignaciones(L);
+	
+	struct ListaCalificaciones *LC;
+	LC = (struct ListaCalificaciones *) malloc(sizeof(struct ListaCalificaciones));
+    LC->inicio = NULL;
+    LC->final = NULL;
+        
+	res2=cargarCalificaciones(LC);
 	
 	if(calificacion == NULL){
 		printf("Espacio insuficiente para almacenar los datos.\n");	
@@ -2602,9 +2607,28 @@ void registrarCalificaciones(){
 	printf("\n");
 	calificacion->siguiente=NULL;
 	calificacion->anterior=NULL;
-
-	guardarCalificacion(calificacion);
-	getchar();	
+	
+    i = LC->inicio;
+    while( i->siguiente!= NULL){
+        if(strcmp(calificacion->codigoAsignacion, i->codigoAsignacion)==0){
+			strcpy(i->codigoAsignacion, calificacion->codigoAsignacion);
+			strcpy(i->codigoRequerimiento, calificacion->codigoRequerimiento);
+            strcpy(i->miembro,calificacion->miembro);
+            strcpy(i->calificacion,calificacion->calificacion);
+            actualizar=1;
+            break;
+		}
+        i = i->siguiente;
+    }
+	
+	if(actualizar=1){
+		actualizarCalificacion(LC);
+	}else{
+		guardarCalificacion(calificacion);
+	}
+		
+	printf("\n\nPresione una tecla para regresar..." ); 
+    getchar();	
 }
 
 /*
@@ -2619,13 +2643,11 @@ void guardarCalificacion(Calificacion *calificacion){
 	if(ArchCalificaciones==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		fprintf(ArchCalificaciones,"%s\n%s\n%s\n%s\n", calificacion->codigoRequerimiento, calificacion->miembro, calificacion->codigoAsignacion, calificacion->calificacion);
+		fprintf(ArchCalificaciones,"%s\n%s\n%s\n%s\n", calificacion->codigoAsignacion, calificacion->codigoRequerimiento, calificacion->miembro,  calificacion->calificacion);
 	}
 	fclose(ArchCalificaciones);
 	printf("\n ==>Informacion guardada<==.\n");
 	
-	printf("\nPresione una tecla para regresar..." ); 
-
 }
 
 /*
@@ -3123,7 +3145,6 @@ void consultarTopMiembros(){
 
 	fflush(stdin);
 }
-
 
 /*
 	Entradas: 
