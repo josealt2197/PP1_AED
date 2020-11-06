@@ -67,6 +67,7 @@ void registrarAsignacion();
 void guardarAsignacion(Asignacion *asignacion);
 int cargarAsignaciones(struct ListaAsignaciones *L);
 void consultarAsignaciones();
+void atencionAsignaciones();
 void liberarListaAsignaciones(ListaAsignaciones *L);
 void cancelarAsignacion();
 
@@ -424,7 +425,7 @@ void GestionAsignacion(){
 					break;
 				case '3': cancelarAsignacion();
 					break;
-				case '4': Temporal();
+				case '4': atencionAsignaciones();
 					break;
 				case '0': MenuPrincipal();
 					break;
@@ -2149,6 +2150,86 @@ int validarAsignacion(struct ListaAsignaciones *L, char idAsignacion[], char idR
 	return 0;
 }
 
+
+/*
+	Entradas: .
+	Salidas: .
+	Restricciones: .
+*/
+void atencionAsignaciones(){
+
+	struct ListaAsignaciones *L;
+	struct Asignacion *i;
+	int val=3, res=0;
+	char opcion[3];
+	
+	system( "CLS" );
+	printf("\n\n+-------------------------------------+\n");
+	printf("      Gestor de Requerimientos       \n");
+	printf("+-------------------------------------+\n");
+	printf( "         Atencion Asignaciones\n" );
+	printf("+-------------------------------------+\n");
+
+	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+	L->inicio = NULL;
+	L->final = NULL;
+
+	res=cargarAsignaciones(L);
+	printf("res: %d", res);
+	if(res==1)
+	{		
+		
+			remove("Archivos\\Asignaciones.txt");	
+			i = L->inicio;
+			while( i->siguiente!= NULL){
+				printf("dentro del while\n");
+				printf("estado: %s\n", i->estado);
+				if (strcmp( i->estado , "Aprobada" )==1){
+					printf("dentro del if\n");
+					printf("\n+-------------------------------+\n");
+					printf("ID de la Asignacion: %s \n", i->codigoAsignacion);
+					printf("Fecha de Solicitud: %s \n", i->fechaSolicitud);
+					printf("Hora de Inicio: %s \n", i->horaInicio ); 
+					printf("Hora de Fin: %s \n", i->horaFin); 
+					printf("Identificador: %s \n", i->identificador); 
+					printf("Recurso: %s \n", i->recurso); 
+					printf("Descripcion: %s \n", i->descripcion);
+					printf("Miembros: %s \n", i->miembros); 
+					printf("Priodidad: %s \n", i->prioridad ); 
+					printf("Estado: %s \n", i->estado); 
+					printf("+-------------------------------+\n");
+					printf("\n Desea atender esta asignacion \n");
+					printf("\n  Digite 1 para SI, 0 para NO \n");
+					printf("+-------------------------------+\n");
+					printf("--> ");
+
+					gets(opcion);
+					
+
+					if ( strcmp(opcion ,"1")==0){
+						strcpy(i->estado, "Aprobada");
+						guardarAsignacion(i);
+						printf("\nLa asignacion %s fue atendida\n", i->codigoAsignacion);	
+						
+					}									
+				}
+				
+				i=i->siguiente;	
+			}
+
+	}else{
+		printf( "\n***No se han registrado Asignaciones***");
+	}
+	
+
+	
+	liberarListaAsignaciones(L);
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);	
+}
+
+
 /*
     Entradas:  
     Salidas: 
@@ -3421,6 +3502,8 @@ void liberarColaIncidentes(ColaIncidentes *C){
 }
 
 int main(){ 
+
+
 
 	MenuPrincipal();    
 	return 0; 
