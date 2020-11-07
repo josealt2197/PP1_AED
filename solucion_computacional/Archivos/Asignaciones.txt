@@ -1,10 +1,10 @@
 AS-001
-4/11/2020
-24:40
+5/11/2020
+8:00
 10:00
-No
+Ninguno
 RQ001
-No
+Ninguna
 305000781
 BAJA
-Cancelada
+En proceso

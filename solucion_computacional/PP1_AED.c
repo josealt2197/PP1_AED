@@ -266,7 +266,7 @@ void MenuPrincipal(){
 	    printf( "\n 2 - Gestion de Requerimientos" );
 	    printf( "\n 3 - Gestion de Asignaciones" );
 	    printf( "\n 4 - Gestion de Incidentes" );
-		printf( "\n 5 - Analisis de Datos" );   
+		printf( "\n 5 - Reportes de la Aplicacion" );   
 	    printf( "\n 6 - Salir" );
 	    printf("\n");
 	    printf("\n\n Elija una opcion : ");
@@ -501,11 +501,11 @@ void AnalisisDeDatos(){
         printf("\n\n+-------------------------------+\n");
 		printf("      Gestor de Requerimientos          \n");
 		printf("+-------------------------------+\n");
-		printf( "\t  Analisis de Datos\n" );
+		printf( "    Reportes de la Aplicacion\n" );
 		printf("+-------------------------------+\n");
 		printf("\n 0. Volver al Menu Principal.");
-		printf("\n 1. Mostrar requerimientos con más asignaciones.");
-		printf("\n 2. Mostrar horarios más utilizados.");
+		printf("\n 1. Mostrar requerimientos con mas asignaciones.");
+		printf("\n 2. Mostrar horarios mas utilizados.");
 		printf("\n 3. Mostrar personas que son mas asignadas.");
 		printf("\n 4. Mostrar requerimientos con mayor esfuerzo.");
 		printf("\n");
