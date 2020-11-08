@@ -13,6 +13,20 @@
 typedef struct Lista Lista;
 typedef struct Nodo Nodo;
 
+typedef struct ListaD ListaD;
+typedef struct NodoD NodoD;
+
+struct NodoD{
+	int dato;
+	NodoD *siguiente;
+	NodoD *anterior; 
+};
+
+struct ListaD{
+	NodoD *inicio;
+	NodoD *final;
+};
+
 struct Nodo{
 	int dato;
 	Nodo *siguiente;
@@ -23,7 +37,7 @@ struct Lista{
 	Nodo *inicio;
 };
 
-Lista *listaNueva(void){
+Lista *listaSimple(void){
 	Lista *L;
 	L = (Lista *) malloc(sizeof(Lista));
 	L->inicio = NULL;
@@ -31,7 +45,24 @@ Lista *listaNueva(void){
 	return L;
 }
 
-//Insertar el primer dato o un dato al final de la lista creada
+ListaD *listaDoble(void){
+	ListaD *L;
+	L = (ListaD *) malloc(sizeof(ListaD));
+	L->inicio = NULL;
+	L->final = NULL;
+	return L;
+}
+
+NodoD* crearNodoDoble(int dato){
+	NodoD *nuevo;
+	nuevo = (NodoD *) malloc(sizeof(NodoD));
+	nuevo->anterior = NULL;
+	nuevo->siguiente = NULL;
+	nuevo->dato = dato;	
+	
+	return nuevo;
+}
+
 void insertarDato(Lista *L, int dato){
 	Nodo *n, *aux;
 	L->tamano=L->tamano+1;
@@ -58,7 +89,21 @@ void insertarDato(Lista *L, int dato){
 
 }
 
-//Mostrar los valores contenids en los nodos de la lista
+void insertarDato_NodoD(ListaD *L, int dato){
+	if(L->inicio == NULL) //Valida si la lista est? vac?a
+	{
+		//Inserta al inicio de la lista
+		L->inicio = crearNodoDoble(dato);
+		L->final = L->inicio;
+		return;
+	}
+	
+	//Inserta el dato al final de la lista, no necesita un ciclo porque tiene el puntero final
+	L->final->siguiente = crearNodoDoble(dato);
+	L->final->siguiente->anterior = L->final;
+	L->final = L->final->siguiente;
+}
+
 void mostrarLista(const Lista *L){
 	Nodo *i;
 	printf("-->La lista es: ");
@@ -67,14 +112,29 @@ void mostrarLista(const Lista *L){
 	printf("|\n");
 }
 
-//Retorna el tamano de la lista
 int obtenerTamano(const Lista *L){
 	return L->tamano;
 }
 
-//Liberar el espacio en memoria ocupado por los nodos de la lista creada
 void liberarLista(Lista *L){
 	Nodo *n, *aux;
+	if(L->inicio == NULL) //La lista está vacía
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)//El n se va desplazado por la lista y el aux va a ir liberando los espacios
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
+
+void liberarListaDoble(ListaD *L){
+	NodoD *n, *aux;
 	if(L->inicio == NULL)
 		return;
 	if(L->inicio->siguiente == NULL)
@@ -106,7 +166,7 @@ int findLinealSearch(Lista *L, int dato){
 	return -1;//Si no se halla el valor, se retorna -1
 	
 }
-  
+
 //Buscar un dato dentro de la lista generada con el algoritmo de busqueda binaria
 int findBinarySearch(Lista *L, int dato, int inicio, int fin){  
     int centro, valorCentral, posicion=0;
@@ -156,55 +216,74 @@ int obtenerValorMayor(Lista *L){
 	return mayorNumero;	
 }
 
-// Radix Sort
+// Ordena una lista mediante el algoritmo de Radix Sort
 void radixSort(Lista *L){
-	
-	// Se utiliza la base 10
-	int i;
-	Nodo *j;
 
-	int semiOrdenados[CANTIDAD];
-	int arreglo[CANTIDAD];
+	int i;
+	Nodo *j, *k;
+	NodoD *nd;
+	
+	Lista *semiOrdenados;
+	semiOrdenados = listaSimple();
+
 	int digitoSignificativo = 1;
 	int mayorNumero = obtenerValorMayor(L);
 	
 	// Bucle hasta llegar al dígito significativo más grande
 	while (mayorNumero / digitoSignificativo > 0){
-	
-		i=0;
-		for(j = L->inicio; j!= NULL; j = j->siguiente){
-			arreglo[i] = j->dato;
-			i++;	
-		}
 		
-		int bucket[CANTIDAD] = { 0 };	
-		
+		ListaD *bucket;
+		bucket = listaDoble();
+
 		// Cuenta el número de "claves" o dígitos que entrarán en cada depósito (bucket).
-		for (i = 0; i < CANTIDAD; i++)
-			bucket[(arreglo[i] / digitoSignificativo) % 10]++;
-		
+		nd = bucket->inicio;
+		for(j = L->inicio; j!= NULL; j = j->siguiente){
+			insertarDato_NodoD(bucket, ((j->dato / digitoSignificativo) % 10));
+			nd = nd->siguiente;
+		}
+			
 		/**
 		* Agregue el recuento de los depósitos anteriores, 
 		* Adquiere los índices después del final de cada ubicación de depósito en el arreglo 
 		* Funciona de manera similar al algoritmo de clasificación de recuento
 		**/
-		for (i = 1; i < CANTIDAD; i++)
-			bucket[i] += bucket[i - 1];
-		
-		// Usa el depósito para llenar el arreglo "semiOrdenados"
-		for (i = CANTIDAD - 1; i >= 0; i--)
-			semiOrdenados[--bucket[(arreglo[i] / digitoSignificativo) % 10]] = arreglo[i]; 
-		
-		i=0;
-		for(j= L->inicio; j!= NULL; j = j->siguiente){
-			j->dato = semiOrdenados[i];	
-			i++;
+		for(nd = bucket->inicio->siguiente; nd!= NULL; nd = nd->siguiente){
+			nd->dato = nd->dato + nd->anterior->dato;
 		}
-			
+
+
+		// Usa el depósito para llenar el arreglo "semiOrdenados"
+		for(nd = bucket->inicio->siguiente; nd!= NULL; nd = nd->siguiente){
+			nd->dato = nd->dato + nd->anterior->dato;
+		}
+		
+				
+		for(j = semiOrdenados->inicio; j!= NULL; j = j->siguiente){
+			j->dato = j->dato + j->siguiente->dato;
+
+		}
+		
+		
+		
+//		for (i = CANTIDAD - 1; i >= 0; i--)
+//			semiOrdenados[--bucket[(arreglo[i] / digitoSignificativo) % 10]] = arreglo[i]; 
+//			
+//			semiOrdenados[bucket[ (arreglo[i]/digitoSignificativo)%10 ] - 1] = arreglo[i];
+//            bucket[ (arreglo[i]/digitoSignificativo)%10 ]--;
+
+		k=semiOrdenados->inicio;
+		for(j= L->inicio; j!= NULL; j = j->siguiente){
+			j->dato = k->dato;	
+			k = k->siguiente;
+		}
+		
+		liberarListaDoble(bucket);
+		
 		// Move to next significant digit
 		digitoSignificativo *= 10;
 				
 	}
+	liberarLista(semiOrdenados);
 }
 
 //Generar un numero aleatorio
@@ -222,7 +301,7 @@ void main ()
 	Lista *L;
 	int resultado, aleatorio, i;
 	
-	L = listaNueva();
+	L = listaSimple();
 	
 	srand(time(0)); 
 	for (i = 0; i< CANTIDAD; i++)  
@@ -233,15 +312,15 @@ void main ()
 
 	/*****************************************************************************************/
 
-	printf("\n****BUSQUEDA LINEAL****\n");	
-	printf("\n-->Valor a consultar: %d \n", aleatorio);
-			
-    resultado = findLinealSearch(L, aleatorio);
-	
-	if(resultado >= 0)
-		printf("\n-->El dato se encuentra en la posicion %d\n", resultado);	
-	else	
-		printf("\n-->El dato no esta en lista\n");
+//	printf("\n****BUSQUEDA LINEAL****\n");	
+//	printf("\n-->Valor a consultar: %d \n", aleatorio);
+//			
+//    resultado = findLinealSearch(L, aleatorio);
+//	
+//	if(resultado >= 0)
+//		printf("\n-->El dato se encuentra en la posicion %d\n", resultado);	
+//	else	
+//		printf("\n-->El dato no esta en lista\n");
   
   	/*****************************************************************************************/
   	
