@@ -17,19 +17,29 @@ FILE* ArchIncidentes;
 FILE* ArchCalificaciones;
 FILE* ArchOficinas;
 
+//Tipos para la gestion de los datos de cada elemento
 typedef struct Requerimiento Requerimiento;
 typedef struct MiembroEquipo MiembroEquipo;
 typedef struct Asignacion Asignacion;
 typedef struct Incidentes Incidentes;
 typedef struct Calificacion Calificacion;
 typedef struct Oficina Oficina;
+typedef struct NodoTopAsignacion NodoTopAsignacion;
+typedef struct NodoTopHorario NodoTopHorario;
+typedef struct NodoTopMiembro NodoTopMiembro;
+typedef struct NodoTopEsfuerzo NodoTopEsfuerzo;
 
+//Tipos para la construccion de las estructuras de datos
 typedef struct ColaMiembros ColaMiembros;
 typedef struct ListaRequerimientos ListaRequerimientos;
 typedef struct ListaAsignaciones ListaAsignaciones;
 typedef struct ColaIncidentes ColaIncidentes;
 typedef struct ListaCalificaciones ListaCalificaciones;
 typedef struct ListaOficinas ListaOficinas;
+typedef struct ListaTopAsignaciones ListaTopAsignaciones;
+typedef struct ListaTopHorarios ListaTopHorarios;
+typedef struct ListaTopEsfuerzo ListaTopEsfuerzo;
+typedef struct ListaTopMiembros ListaTopMiembros;
 
 //Procedimientos para Menus de Opciones
 void MenuPrincipal();
@@ -44,7 +54,8 @@ void registrarMiembro();
 void guardarMiembro(MiembroEquipo *miembro);
 int cargarMiembros(struct ColaMiembros *C);
 void consultarMiembroEquipo();
-void liberarColaMiembros(ColaMiembros *C);
+int validarNivelMiembro(const char identificador []);
+int validarCedula(const char identificador []);
 int validarNivelMiembro(const char identificador []);
 
 //Procedimientos para Requerimientos
@@ -53,12 +64,9 @@ void guardarRequerimiento(Requerimiento *requerimiento);
 int cargarRequerimientos(struct ListaRequerimientos *L);
 void consultarRequerimiento();
 int validarIDRequerimiento(const char identificador []);
-void liberarListaRequerimientos(ListaRequerimientos *L);
 void modificarRequerimiento();
 void actualizarRequerimientos(struct ListaRequerimientos *L);
-void registrarCalificaciones();
-void guardarCalificacion(Calificacion *calificacion);
-void actualizarCalificacion(struct ListaCalificaciones *L);
+void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[]);
 int cargarOficinas(struct ListaOficinas *L);
 void consultarOficinas();
 
@@ -67,23 +75,64 @@ void registrarAsignacion();
 void guardarAsignacion(Asignacion *asignacion);
 int cargarAsignaciones(struct ListaAsignaciones *L);
 void consultarAsignaciones();
-void liberarListaAsignaciones(ListaAsignaciones *L);
 void cancelarAsignacion();
+void atencionAsignaciones();
+int validarAsignaciones(const char identificador[]);
+void ordenarAsignaciones(struct ListaAsignaciones *L);
+int validarAsignacion(struct ListaAsignaciones *L, char idAsignacion[], char idRQ[], char idMiembro[]);
 
 //Procedimientos para Incidentes
 void registrarIncidentes();
 void guardarIncidentes(Incidentes *incidente);
 int cargarIncidentes(struct ColaIncidentes *C);
 void consultarIncidentes(int tipoConsulta);
-void liberarColaIncidentes(ColaIncidentes *C);
+int validarIncidentes(const char identificador[]);
+
+//Procedimientos para Calificaciones
+void registrarCalificaciones();
+void guardarCalificacion(Calificacion *calificacion);
+void actualizarCalificacion(struct ListaCalificaciones *L);
+void modificarCalificacion(struct ListaCalificaciones *L,  char idAsignacion[]);
+void actualizarCalificacion(struct ListaCalificaciones *L);
+
+//Procedimientos para Análisis de Datos
+void analisisDeDatos(int tipoAnalisis);
+NodoTopAsignacion* crearNodoAsignacion(char identificador[], int cantidad);
+void ordenarTopAsignaciones(struct ListaTopAsignaciones *LT);
+void consultarTopAsignaciones();
+NodoTopHorario* crearNodoHorario(char identificador[], int cantidad);
+void ordenarTopHorarios(struct ListaTopHorarios *LT);
+void consultarTopHorarios();
+NodoTopMiembro* crearNodoMiembro(char identificador[], int cantidad);
+void ordenarTopMiembros(struct ListaTopMiembros *LT);
+void consultarTopMiembros();
+NodoTopEsfuerzo* crearNodoEsfuerzo(char identificador[], int cantidad);
+void ordenarTopEsfuerzo(struct ListaTopEsfuerzo *LT);
+void consultarTopEsfuerzo();
 
 //Procedimientos de Apoyo
 int numeroAleatorio();
 void obtenerFechaActual(char *hoy);
+int compararCadenas(const char cadena1[], const char cadena2[]);
+void quitaFinLinea(char linea[]);
+void separarValoresFecha(char fecha[], int *d, int *m, int *a);
+int compararFechas(char fecha1[], char fecha2[]);
+void obtenerHoraActual(char *horaActual, char *minutoActual);
+void separarHoras(char hora[], int *h, int *min );
+int compararHoras(char hora1[], char hora2[]);
+int validarHoras(char horaRQ[], char horaAS[]);
 
-void analisisDeDatos(int tipoAnalisis);
-
-
+//Procedimientos para liberar estructuras de datos
+void liberarColaMiembros(ColaMiembros *C);
+void liberarListaRequerimientos(ListaRequerimientos *L);
+void liberarListaAsignaciones(ListaAsignaciones *L);
+void liberarColaIncidentes(ColaIncidentes *C);
+void liberarTopMiembros(ListaTopMiembros *L);
+void liberarTopEsfuerzo(ListaTopEsfuerzo *L);
+void liberarTopHorarios(ListaTopHorarios *L);
+void liberarTopAsignaciones(ListaTopAsignaciones *L);
+void liberarListaOficinas(ListaOficinas *L);
+void liberarListaCalificaciones(ListaCalificaciones *L);
 
 struct Requerimiento{
     char identificador[50];
@@ -185,10 +234,6 @@ struct ListaOficinas{
 	Oficina *final;
 };
 
-
-typedef struct ListaTopAsignaciones ListaTopAsignaciones;
-typedef struct NodoTopAsignacion NodoTopAsignacion;
-
 struct NodoTopAsignacion{
 	char identificador[15];
 	int cantidad;
@@ -199,9 +244,6 @@ struct ListaTopAsignaciones{
 	NodoTopAsignacion *inicio;
 	NodoTopAsignacion *final;
 };
-
-typedef struct ListaTopHorarios ListaTopHorarios;
-typedef struct NodoTopHorario NodoTopHorario;
 
 struct NodoTopHorario{
 	char identificador[15];
@@ -214,9 +256,6 @@ struct ListaTopHorarios{
 	NodoTopHorario *final;
 };
 
-typedef struct ListaTopMiembros ListaTopMiembros;
-typedef struct NodoTopMiembro NodoTopMiembro;
-
 struct NodoTopMiembro{
 	char identificador[15];
 	int cantidad;
@@ -227,9 +266,6 @@ struct ListaTopMiembros{
 	NodoTopMiembro *inicio;
 	NodoTopMiembro *final;
 };
-
-typedef struct ListaTopEsfuerzo ListaTopEsfuerzo;
-typedef struct NodoTopEsfuerzo NodoTopEsfuerzo;
 
 struct NodoTopEsfuerzo{
 	char identificador[15];
@@ -242,9 +278,7 @@ struct ListaTopEsfuerzo{
 	NodoTopEsfuerzo *final;
 };
 
-void Temporal(){
-	getchar();
-}
+/****************************************************************Menús de Opciones***********************************************************************************************/
 
 /*
 	Entradas: Un número (tipo char) en un rango de 0 a 6 para escoger una de las opciones disponibles en el menú. 
@@ -299,7 +333,7 @@ void MenuPrincipal(){
 /*
 	Entradas: Un número (tipo char) en un rango de 0 a 2 para escoger una de las opciones disponibles en el menú. 
 	Salidas: en caso de que el número ingresado sea 0 se devuelve al menú principal, si el número es 1 se a llama la funcion registrarMiembro(), 
-	         Si el número ingresado es 2 se llama a la función ** .
+	         Si el número ingresado es 2 se llama a la función consultarMiembroEquipo().
 	Restricciones: Solo se deben ingresar números en un rango de 0 a 2.
 */
 void GestionEquipo(){
@@ -342,8 +376,8 @@ void GestionEquipo(){
 /*
 	Entradas: Un número (tipo char) en un rango de 0 a 4 para escoger una de las opciones disponibles en el menú. 
 	Salidas: en caso de que el número ingresado sea 0 se devuelve al menú principal, si el número es 1 se a llama la funcion registrarRequerimiento(), 
-	         Si el número ingresado es 2 se llama a la función **, Si el número ingresado es 3 se llama a la función **,
-	         Si el número ingresado es 4 se llama a la función ***.
+	         Si el número ingresado es 2 se llama a la función modificarRequerimiento(), Si el número ingresado es 3 se llama a la función registrarCalificaciones(),
+	         Si el número ingresado es 4 se llama a la función consultarRequerimiento().
 	Restricciones: Solo se deben ingresar números en un rango de 0 a 4.
 */
 void GestionRequerimiento(){
@@ -392,8 +426,8 @@ void GestionRequerimiento(){
 /*
 	Entradas: Un número (tipo char) en un rango de 0 a 4 para escoger una de las opciones disponibles en el menú. 
 	Salidas: en caso de que el número ingresado sea 0 se devuelve al menú principal, si el número es 1 se a llama la funcion registrarAsignacion(), 
-	         Si el número ingresado es 2 se llama a la función **, Si el número ingresado es 3 se llama a la función **,
-	         Si el número ingresado es 4 se llama a la función ***.
+	         Si el número ingresado es 2 se llama a la función consultarAsignaciones(), Si el número ingresado es 3 se llama a la función cancelarAsignacion(),
+	         Si el número ingresado es 4 se llama a la función atencionAsignaciones().
 	Restricciones: Solo se deben ingresar números en un rango de 0 a 4.
 */
 void GestionAsignacion(){
@@ -424,7 +458,7 @@ void GestionAsignacion(){
 					break;
 				case '3': cancelarAsignacion();
 					break;
-				case '4': Temporal();
+				case '4': atencionAsignaciones();
 					break;
 				case '0': MenuPrincipal();
 					break;
@@ -442,7 +476,7 @@ void GestionAsignacion(){
 /*
 	Entradas: Un número (tipo char) en un rango de 0 a 2 para escoger una de las opciones disponibles en el menú. 
 	Salidas: en caso de que el número ingresado sea 0 se devuelve al menú principal, si el número es 1 se a llama la funcion registrarIncidentes(), 
-	         Si el número ingresado es 2 se llama a la función **, Si el número ingresado es 3 se llama a la función **
+	         Si el número ingresado es 2  o 3 se llama a la función consultarIncidentes, con los parámetros respectivos.
 	Restricciones: Solo se deben ingresar números en un rango de 0 a 2.
 */
 void GestionIncidentes(){
@@ -487,9 +521,8 @@ void GestionIncidentes(){
 
 /*
 	Entradas: Un número (tipo char) en un rango de 0 a 4 para escoger una de las opciones disponibles en el menú. 
-	Salidas: en caso de que el número ingresado sea 0 se devuelve al menú principal, si el número es 1 se a llama la funcion registrarIncidentes(), 
-	         Si el número ingresado es 2 se llama a la función **, Si el número ingresado es 3 se llama a la función **,
-	         Si el número ingresado es 4 se llama a la función ***.
+	Salidas: en caso de que el número ingresado sea 0 se devuelve al menú principal, si el número es un valor entre 1 y 4 se llama a la función analisisDeDatos()
+			con el parámetro que indique la opcion seleccionada.
 	Restricciones: Solo se deben ingresar números en un rango de 0 a 4.
 */
 void AnalisisDeDatos(){
@@ -535,8 +568,25 @@ void AnalisisDeDatos(){
 	getchar();
 }
 
+/****************************************************************Procedimientos de Apoyo***********************************************************************************************/
+
 /*
-	Entradas: Una puntero a una cadena de caacteres.
+	Entradas: Ninguna.
+	Salidas: Un valor entero aleatorio entre 1 y 3.
+	Restricciones: Ninguna.
+*/
+int numeroAleatorio(){
+    int numero;
+
+    srand(time(NULL));
+    do{
+        numero =10+rand () %(13+1-10);
+    }while(numero-10==0);
+    return numero-10;
+}
+
+/*
+	Entradas: Un puntero a una cadena de caracteres.
 	Salidas: La cadena de caracteres recibida, con el valor de la fecha actual, siguiendo el formato dd/MM/AAAA.
 	Restricciones: Ninguna.
 */
@@ -555,21 +605,6 @@ void obtenerFechaActual(char *hoy){
 	strcat(hoy, "/");
 	strcat(hoy, anho);
  	
-}
-
-/*
-	Entradas: Ninguna.
-	Salidas: Un valor entero leatorio entre 1 y 3.
-	Restricciones: Ninguna.
-*/
-int numeroAleatorio(){
-    int numero;
-
-    srand(time(NULL));
-    do{
-        numero =10+rand () %(13+1-10);
-    }while(numero-10==0);
-    return numero-10;
 }
 
 /*
@@ -620,7 +655,7 @@ void quitaFinLinea(char linea[]){
 	Salidas: Asigna al valor de los punteros los segmentos de cada extracto de la fecha.
 	Restricciones: Ninguna.
 */
-void separarValores(char fecha[], int *d, int *m, int *a){
+void separarValoresFecha(char fecha[], int *d, int *m, int *a){
 	int cont=0;
 	char delim[] = "/";
 
@@ -650,9 +685,9 @@ int compararFechas(char fecha1[], char fecha2[]){
 	int d1, m1, a1, d2, m2, a2;
 		
 	//Obtener valores fecha 1
-	separarValores(fecha1, &d1, &m1, &a1);
+	separarValoresFecha(fecha1, &d1, &m1, &a1);
 	//Obtener valores fecha 2
-	separarValores(fecha2, &d2, &m2, &a2);
+	separarValoresFecha(fecha2, &d2, &m2, &a2);
 		
 	if (a1 < a2) 
         return 1; 
@@ -666,7 +701,7 @@ int compararFechas(char fecha1[], char fecha2[]){
 }
 
 /*
-    Entradas: Una puntero a una cadena de caacteres.
+    Entradas: Un puntero a una cadena de caracteres.
     Salidas: La cadena de caracteres recibida, con el valor de la hora actual.
     Restricciones: Ninguna.
 */
@@ -684,8 +719,8 @@ void obtenerHoraActual(char *horaActual, char *minutoActual){
 }
 
 /*
-    Entradas: .
-    Salidas: .
+    Entradas: Un puntero a una cadena de caracteres y dos punteros a enteros.
+    Salidas: los valores de horaas y minutos extraidos de la cadena recibida, se asignan a los dos punteros recidos por parámetro.
     Restricciones: Ninguna.
 */
 void separarHoras(char hora[], int *h, int *min ){
@@ -702,8 +737,8 @@ void separarHoras(char hora[], int *h, int *min ){
 }
 
 /*
-    Entradas: .
-    Salidas: .
+    Entradas: Dos cadenas de caracteres con formato de hora (hh:mm).
+    Salidas: 1 si la hora1 es mayor que la hora2, y -1 si la hora1 es menor que la hora2.
     Restricciones: Ninguna.
 */
 int compararHoras(char hora1[], char hora2[]){
@@ -744,9 +779,45 @@ int compararHoras(char hora1[], char hora2[]){
 }
 
 /*
+	Entradas: Dos cadenas de caracteres con los valores de dos horas con el formato hh:mm
+	Salidas: 1 indica que la hora del del requerimiento es mayor que la de la asignacion
+			 2 indica que la hora del del requerimiento es menor que la de la asignacion
+			 0 indica que ambas horas son iguales
+	Restricciones: No tiene restricciones.
+*/
+int validarHoras(char horaRQ[], char horaAS[]){
+    
+    int hRQ, mRQ, hAS, mAS;
+		
+	//Obtener valores hora 1
+	separarHoras(horaRQ, &hRQ, &mRQ);
+	//Obtener valores hora 2
+	separarHoras(horaAS, &hAS, &mAS);
+
+    if(hRQ==hAS){
+        if(mRQ==mAS){
+        	return 0;
+		}else if (mRQ>mAS){
+            return 1;
+        }else{
+			return 2;
+        }
+    }
+    
+    if(hRQ > hAS){
+        return 1;
+    }else{
+		return 2;
+    }
+
+}
+
+/****************************************************************Procedimientos para Miembros de Equipo*********************************************************************************/
+
+/*
 	Entradas: Los diferentes objetos de la estructura Miembro de Equipo(nombre, cedula, correo, telefono, nivel  
 	          de acceso). 
-	Salidas: LLama a la función guardarMiembro para guardar los datos al registrarlos en un archivo .txt. 
+	Salidas: Llama a la función guardarMiembro para guardar los datos al registrarlos en un archivo .txt. 
 	Restricciones: No tiene restricciones.
 */
 void registrarMiembro(){
@@ -807,7 +878,7 @@ void guardarMiembro(MiembroEquipo *miembro){
 }
 
 /*
-	Entradas: Una puntero a una lista del tipo ColaMiembros de Miembros de equipo.
+	Entradas: Un puntero a una lista del tipo ColaMiembros de Miembros de equipo.
 	Salidas: Una lista  enlazada con los diferentes objetos de la estructura Miembro de Equipo(nombre, 
 			cedula, correo, telefono, nivel de acceso).
 	Restricciones: Ninguna.
@@ -868,7 +939,7 @@ int cargarMiembros(struct ColaMiembros *C){
 }
 
 /*
-	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar
+	Entradas: Ninguna.
 	Salidas: Los datos relacionado al Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
 			que no se ha encontrado.
 	Restricciones: Ninguna
@@ -1011,7 +1082,7 @@ void consultarMiembroEquipo(){
 }
 
 /*
-    Entradas: Un dato que indique la cedula del Miembro de Equipo
+    Entradas: Una cadena de caracteres que indique la cedula del Miembro de Equipo
     Salidas: Retorna 1 en caso de que el valor recibido coindicida con una cedula ya registrado, caso contrario retorna un 0.
     Restricciones: Ninguna
 */
@@ -1047,9 +1118,9 @@ int validarCedula(const char identificador []){
 }
 
 /*
-    Entradas: 
-    Salidas: 
-    Restricciones:
+    Entradas: Una cadena de caracteres que indique la cedula del Miembro de Equipo
+    Salidas: -1 si el nivel del miembro es menor o igual que 3, 1 si es mayor que 3.
+    Restricciones: Ninguna.
 */
 int validarNivelMiembro(const char identificador []){
 
@@ -1082,195 +1153,12 @@ int validarNivelMiembro(const char identificador []){
 	liberarColaMiembros(C);
 }
 
-/*
-    Entradas: 
-    Salidas: 
-    Restricciones: 
-*/
-int validarIncidentes(const char identificador[]){
-
-   	struct ColaIncidentes *C;
-	struct Incidentes *i;
-	int val=3, res=0, similitud=0, contIncidentes=0;
-	char id [50];
-
-	C = (struct ColaIncidentes *) malloc(sizeof(struct ColaIncidentes));
-	C->inicio = NULL;
-	C->final = NULL;
-
-	res=cargarIncidentes(C);
-	
-	if(res==1)
-	{
-		i = C->inicio;
-		while( i->siguiente!= NULL){
-			strcpy(id, i->codigoRequerimiento);		
-			similitud = compararCadenas(id, identificador);
-            if(similitud==1){   
-				contIncidentes++;
-            }
-			i = i->siguiente;
-		}
-		
-		if(contIncidentes>=3){   		       	
-        	return -1;
-        }   	
-    	return 1;
-				
-	}else{
-		return 1;
-	}	
-	liberarColaIncidentes(C);
-	printf("\n\nPresione una tecla para regresar..." ); 
-	getchar();
-	fflush(stdin);
-}
-
-/*
-    Entradas: 
-    Salidas: 
-    Restricciones: 
-*/
-int validarAsignaciones(const char identificador[]){
-
-   	struct ListaAsignaciones *L;
-	struct Asignacion *i;
-	int val=3, res=0, similitud=0, contAsignaciones=0;
-	char id [50];
-
-	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
-	L->inicio = NULL;
-	L->final = NULL;
-
-	res=cargarAsignaciones(L);
-	
-	if(res==1)
-	{
-		i = L->inicio;
-		while( i->siguiente!= NULL){
-			strcpy(id, i->identificador);		
-			similitud = compararCadenas(id, identificador);
-            if(similitud==1){   
-				contAsignaciones++;
-            }
-			i = i->siguiente;
-		}
-		
-		if(contAsignaciones>=3){   		       	
-        	return -1;
-        }   	
-    	return 1;
-				
-	}else{
-		return 1;
-	}	
-	liberarListaAsignaciones(L);
-	printf("\n\nPresione una tecla para regresar..." ); 
-	getchar();
-	fflush(stdin);
-}
-
-/*
-	Entradas: Una puntero a una lista del tipo ListaOficinas de Oficinas.
-	Salidas: Una lista enlazada con los diferentes objetos de la estructura Asignacion (codgo, dias, horaApertura, horaCierre). 
-	Restricciones: Ninguna.
-*/
-int cargarOficinas(struct ListaOficinas *L){
-	
-	struct Oficina *oficina, *aux;
-
-	aux =(struct Oficina *) malloc (sizeof(struct Oficina));
-
-	ArchOficinas = fopen("Archivos\\Oficinas.txt","r");
-
-	if(ArchOficinas==NULL){
-		return 0;	
-	}else{
-
-		while(!feof(ArchOficinas)){
-			fgets(aux->codigo, 50, ArchOficinas); 
-			quitaFinLinea(aux->codigo);
-			fgets(aux->dias, 30, ArchOficinas);
-			quitaFinLinea(aux->dias);
-			fgets(aux->horaApertura, 15, ArchOficinas); 
-			quitaFinLinea(aux->horaApertura);
-			fgets(aux->horaCierre, 15, ArchOficinas);
-			quitaFinLinea(aux->horaCierre);	
-			
-			if(L->inicio == NULL) 
-			{
-				//Inserta al inicio de la lista
-				L->inicio =(struct Oficina *) malloc (sizeof(struct Oficina));
-				strcpy(L->inicio->codigo , aux->codigo);
-				strcpy(L->inicio->dias , aux->dias); 
-				strcpy(L->inicio->horaApertura , aux->horaApertura ); 
-				strcpy(L->inicio->horaCierre , aux->horaCierre); 
-				L->inicio->siguiente = NULL; 
-				L->inicio->anterior = NULL; 
-				L->final = L->inicio;
-	
-			}else{	
-				//Inserta al final de la lista	
-				L->final->siguiente =(struct Oficina *) malloc (sizeof(struct Oficina));
-				strcpy(L->final->siguiente->codigo , aux->codigo);
-				strcpy(L->final->siguiente->dias , aux->dias); 
-				strcpy(L->final->siguiente->horaApertura , aux->horaApertura ); 
-				strcpy(L->final->siguiente->horaCierre , aux->horaCierre); 
-				L->final->siguiente->siguiente = NULL; 
-				L->final->siguiente->anterior = L->final; 
-				L->final = L->final->siguiente;
-			}		
-		}
-		fclose(ArchAsignaciones);
-	}	
-	return 1;
-}
-
-/*
-	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar las Asignaciones
-	Salidas: Los datos relacionado a las Asignaciones del Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
-			que no se han encontrado.
-	Restricciones: Ninguna
-*/
-void consultarOficinas(){
-
-	struct ListaOficinas *L;
-	struct Oficina *i;
-	int res=0;
-	
-	printf("\n+-------------------------------------------------------------------+\n");
-	printf( "                         Oficinas y Horarios" );
-	printf("\n+-------------------------------------------------------------------+\n");
-	
-	L = (struct ListaOficinas *) malloc(sizeof(struct ListaOficinas));
-	L->inicio = NULL;
-	L->final = NULL;
-	
-	res=cargarOficinas(L);
-
-	if(res=1)
-	{
-        i = L->inicio;
-        int cont=1;
-        	printf(" Codigo        Dias de Trabajo       Hora-Apertura   Hora-Cierre\n" ); 
-        while(i->siguiente!=NULL){
-            printf("\n %s          %s                %s         %s\n" , i->codigo, i->dias, i->horaApertura, i->horaCierre );
-            i = i->siguiente;
-
-        }
-        printf("\n+-------------------------------------------------------------------+\n");		
-		
-	}else{
-		printf( "\n***No se han encontrado Oficinas registradas***");
-	}
-	
-	//liberarListaAsignaciones(L);
-}
+/****************************************************************Procedimientos para Requerimientos***********************************************************************************************/
 
 /*
 	Entradas: Los diferentes objetos de la estructura Requerimiento(identificador, tipo, descripcion, riesgo, 
 	           dependencia, recursos, esfuerzo). 
-	Salidas: LLama a la función guardarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
+	Salidas: Llama a la función guardarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
 	Restricciones: No tiene restricciones.
 */
 void registrarRequerimiento(){
@@ -1305,14 +1193,14 @@ void registrarRequerimiento(){
 	gets(requerimiento->tipo);
 	printf("\n Ingrese la Descripcion: (Ejm. El sistema debe....) \n");
 	gets(requerimiento->descripcion);
-	printf("\n Ingrese el riesgo: (Ejm. ....) \n");
+	printf("\n Ingrese el riesgo: \n");
 	gets(requerimiento->riesgo);
 	printf("\n Ingrese la dependencia: (Ejm. RQ-001) \n");
 	gets(requerimiento->dependencia);
 	printf("\n Ingrese los recursos:\n");
 	gets(requerimiento->recursos);
 	strcpy(requerimiento->estado, "Por hacer");
-	printf("\n Ingrese el esfuerzo: ( 1...10 ) \n");
+	printf("\n Ingrese el esfuerzo: ( 1...16 ) \n");
 	gets(requerimiento->esfuerzo);
 	consultarOficinas();
 	printf("\n Ingrese el codigo de la oficina para la seleccion del horario: \n");
@@ -1346,7 +1234,7 @@ void guardarRequerimiento(Requerimiento *requerimiento){
 }
 
 /*
-	Entradas: Una puntero a una lista del tipo ListaRequerimientos de Requerimientos.
+	Entradas: Un puntero a una lista del tipo ListaRequerimientos de Requerimientos.
 	Salidas: Una lista   enlazada con los diferentes objetos de la estructura Requerimiento(identificador, tipo, 
 			descripcion, riesgo, dependencia, recursos, esfuerzo).
 	Restricciones: Ninguna.
@@ -1425,7 +1313,7 @@ int cargarRequerimientos(struct ListaRequerimientos *L){
 }
 
 /*
-	Entradas: Un dato que indique el identificador del Requerimiento por consultar
+	Entradas: Una cadena de caracteres que indique el identificador del Requerimiento por consultar
 	Salidas: Los datos relacionado al Requerimiento consultado en caso de que existan, de lo contrario un mensaje indicando 
 			que no se ha encontrado.
 	Restricciones: Ninguna
@@ -1512,7 +1400,7 @@ void consultarRequerimiento(){
 }
 
 /*
-	Entradas: Un dato que indique el identificador del Requerimiento
+	Entradas: Una cadena de caracteres que indique el identificador del Requerimiento
 	Salidas: Retorna 1 en caso de que el valor recibido coindicida con un Requerimiento ya registrado, caso contrario retorna un 0.
 	Restricciones: Ninguna
 */
@@ -1548,7 +1436,7 @@ int validarIDRequerimiento(const char identificador []){
 
 /*
 	Entradas: Los objetos de tipo, recursos o estado de la estructura Requerimiento.
-	Salidas: Llama a la función guardarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
+	Salidas: Llama a la función actualizarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
 	Restricciones: No tiene restricciones.
 */
 void modificarRequerimiento(){
@@ -1666,7 +1554,7 @@ void modificarRequerimiento(){
 }
 
 /*
-	Entradas: Una puntero a una lista del tipo ListaRequerimientos de Requerimientos.
+	Entradas: Un puntero a una lista del tipo ListaRequerimientos de Requerimientos.
 	Salidas: Se sobreescribe el archivo que almacena la lista de requerimietnos con los valores modificados.
 	Restricciones: No tiene restricciones.
 */
@@ -1698,42 +1586,8 @@ void actualizarRequerimientos(struct ListaRequerimientos *L){
 }
 
 /*
-	Entradas: Dos cadenas de caracteres con los valores de dos horas con el formato hh:mm
-	Salidas: 1 indica que la hora del del requerimiento es mayor que la de la asigancion
-			 2 indica que la hora del del requerimiento es menor que la de la asigancion
-			 0 indica que ambas horas son iguales
-	Restricciones: No tiene restricciones.
-*/
-int validarHoras(char horaRQ[], char horaAS[]){
-    
-    int hRQ, mRQ, hAS, mAS;
-		
-	//Obtener valores hora 1
-	separarHoras(horaRQ, &hRQ, &mRQ);
-	//Obtener valores hora 2
-	separarHoras(horaAS, &hAS, &mAS);
-
-    if(hRQ==hAS){
-        if(mRQ==mAS){
-        	return 0;
-		}else if (mRQ>mAS){
-            return 1;
-        }else{
-			return 2;
-        }
-    }
-    
-    if(hRQ > hAS){
-        return 1;
-    }else{
-		return 2;
-    }
-
-}
-
-/*
-	Entradas: Un objeto de tipo estado de la estructura Requerimiento.
-	Salidas: Llama a la función guardarRequerimiento para guardar los datos al registrarlos en un archivo .txt. 
+	Entradas: Un objeto de tipo estado de la estructura Requerimiento y una cadena de caracteres que indique el identificador del Requerimiento.
+	Salidas: Se actualiza el estado del requerimiento y se llama a la función actualizaRequerimiento para guardar los datos en un archivo .txt. 
 	Restricciones: No tiene restricciones.
 */
 void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[]){
@@ -1754,6 +1608,105 @@ void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[]
 }
 
 /*
+	Entradas: Un puntero a una lista del tipo ListaOficinas de Oficinas.
+	Salidas: Una lista enlazada con los diferentes objetos de la estructura Asignacion (codgo, dias, horaApertura, horaCierre). 
+	Restricciones: Ninguna.
+*/
+int cargarOficinas(struct ListaOficinas *L){
+	
+	struct Oficina *oficina, *aux;
+
+	aux =(struct Oficina *) malloc (sizeof(struct Oficina));
+
+	ArchOficinas = fopen("Archivos\\Oficinas.txt","r");
+
+	if(ArchOficinas==NULL){
+		return 0;	
+	}else{
+
+		while(!feof(ArchOficinas)){
+			fgets(aux->codigo, 50, ArchOficinas); 
+			quitaFinLinea(aux->codigo);
+			fgets(aux->dias, 30, ArchOficinas);
+			quitaFinLinea(aux->dias);
+			fgets(aux->horaApertura, 15, ArchOficinas); 
+			quitaFinLinea(aux->horaApertura);
+			fgets(aux->horaCierre, 15, ArchOficinas);
+			quitaFinLinea(aux->horaCierre);	
+			
+			if(L->inicio == NULL) 
+			{
+				//Inserta al inicio de la lista
+				L->inicio =(struct Oficina *) malloc (sizeof(struct Oficina));
+				strcpy(L->inicio->codigo , aux->codigo);
+				strcpy(L->inicio->dias , aux->dias); 
+				strcpy(L->inicio->horaApertura , aux->horaApertura ); 
+				strcpy(L->inicio->horaCierre , aux->horaCierre); 
+				L->inicio->siguiente = NULL; 
+				L->inicio->anterior = NULL; 
+				L->final = L->inicio;
+	
+			}else{	
+				//Inserta al final de la lista	
+				L->final->siguiente =(struct Oficina *) malloc (sizeof(struct Oficina));
+				strcpy(L->final->siguiente->codigo , aux->codigo);
+				strcpy(L->final->siguiente->dias , aux->dias); 
+				strcpy(L->final->siguiente->horaApertura , aux->horaApertura ); 
+				strcpy(L->final->siguiente->horaCierre , aux->horaCierre); 
+				L->final->siguiente->siguiente = NULL; 
+				L->final->siguiente->anterior = L->final; 
+				L->final = L->final->siguiente;
+			}		
+		}
+		fclose(ArchAsignaciones);
+	}	
+	return 1;
+}
+
+/*
+	Entradas: Ninguna
+			que no se han encontrado.
+	Salidas: Los datos relacionado a las Oficinas registradas, sus dias laborales y horas de apertur y cierre.
+	Restricciones: Ninguna
+*/
+void consultarOficinas(){
+
+	struct ListaOficinas *L;
+	struct Oficina *i;
+	int res=0;
+	
+	printf("\n+-------------------------------------------------------------------+\n");
+	printf( "                         Oficinas y Horarios" );
+	printf("\n+-------------------------------------------------------------------+\n");
+	
+	L = (struct ListaOficinas *) malloc(sizeof(struct ListaOficinas));
+	L->inicio = NULL;
+	L->final = NULL;
+	
+	res=cargarOficinas(L);
+
+	if(res=1)
+	{
+        i = L->inicio;
+        int cont=1;
+        	printf(" Codigo        Dias de Trabajo       Hora-Apertura   Hora-Cierre\n" ); 
+        while(i->siguiente!=NULL){
+            printf("\n %s          %s                %s         %s\n" , i->codigo, i->dias, i->horaApertura, i->horaCierre );
+            i = i->siguiente;
+
+        }
+        printf("\n+-------------------------------------------------------------------+\n");		
+		
+	}else{
+		printf( "\n***No se han encontrado Oficinas registradas***");
+	}
+	
+	//liberarListaAsignaciones(L);
+}
+
+/****************************************************************Procedimientos para Asignaciones***********************************************************************************************/
+
+/*
 	Entradas: Los diferentes objetos de la estructura Asignacion(fechaSolicitud, horaInicio, horaFin, recurso, identificador 
 			descripcion, miembros, prioridad y estado). 
 	Salidas: Llama a la función guardarAsignacion para guardar los datos al registrarlos en un archivo .txt. 
@@ -1768,12 +1721,13 @@ void registrarAsignacion(){
 	printf("+-------------------------------+\n");	
 
 	struct Asignacion *asignacion;
-	int prioridad=0, val0=0, val1=0, val2=0, val3=0, res=0, res2=0;
+	int prioridad=0, val0=0, val1=0, val2=0, val3=0, res=0, res2=0, res3=0;
 	
 	asignacion=(struct Asignacion *) malloc (sizeof(struct Asignacion));
 	
 	char fecha [50];
 	char hRQ_Inicio[10], hRQ_Fin[10], hAS_Inicio[10], hAS_Fin[10];
+	char idRQ [15], miembro[15];
 	
 	struct ListaRequerimientos *LRQ;
     struct Requerimiento *iRQ;
@@ -1789,8 +1743,23 @@ void registrarAsignacion(){
     LOf->inicio = NULL;
     LOf->final = NULL;
 	
-	printf("\n Ingrese el Codigo de la Asignacion: (Ejm. AS-001) \n");
-	gets(asignacion->codigoAsignacion);
+	struct ListaAsignaciones *LA;
+	LA = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+	LA->inicio = NULL;
+	LA->final = NULL;
+
+	res3=cargarAsignaciones(LA);
+		
+	do{
+        printf("\n Ingrese el Codigo de la Asignacion: (Ejm. AS-001) \n");
+		gets(asignacion->codigoAsignacion);
+
+        if(validarAsignacion(LA, asignacion->codigoAsignacion, idRQ, miembro)==1){
+			printf("\n **El codigo ingresado corresponde una Asignacion registrada**\n ");        
+        }else{
+        	break;  
+        }
+    }while(1);
 	
 	obtenerFechaActual(fecha);
 	strcpy(asignacion->fechaSolicitud, fecha);
@@ -1912,7 +1881,7 @@ void guardarAsignacion(Asignacion *asignacion){
 }
 
 /*
-	Entradas: Una puntero a una lista del tipo ListaAsiganciones de Asignaciones.
+	Entradas: Un puntero a una lista del tipo ListaAsignaciones de Asignaciones.
 	Salidas: Una lista enlazada con los diferentes objetos de la estructura Asignacion (fechaSolicitud, horaInicio, 
 			horaFin, recurso, identificador, descripcion, miembros, prioridad y estado). 
 	Restricciones: Ninguna.
@@ -1993,76 +1962,6 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 }
 
 /*
-	Entradas: Una puntero a una lista del tipo ListaAsiganciones de Asignaciones.
-	Salidas: Una lista enlazada con los diferentes objetos de la estructura Asignacion, ordenadas por fecha de solicitud. 
-	Restricciones: Ninguna.
-*/
-void ordenarAsignaciones(struct ListaAsignaciones *L){
-	
-	struct Asignacion *i, *j, *temp;
-	char fecha1[15], fecha2[15];	
-	int res=0;
-
-	temp=(struct Asignacion *) malloc (sizeof(struct Asignacion));
-	
-	i = L->inicio;
-	while( i->siguiente!= NULL){
-		
-		j = i->siguiente;
-		while( j->siguiente!= NULL){
-			strcpy(fecha1, i->fechaSolicitud);
-			strcpy(fecha2, j->fechaSolicitud);
-				
-			res = compararFechas(fecha1, fecha2);
-
-			if(res==1){
-				
-				//Guardar los valores del nodo i
-				strcpy(temp->codigoAsignacion,i->codigoAsignacion);
-				strcpy(temp->fechaSolicitud,i->fechaSolicitud);
-				strcpy(temp->horaInicio, i->horaInicio);
-				strcpy(temp->horaFin, i->horaFin);
-				strcpy(temp->recurso, i->recurso);
-				strcpy(temp->identificador, i->identificador);
-				strcpy(temp->descripcion, i->descripcion);
-				strcpy(temp->miembros, i->miembros);
-				strcpy(temp->prioridad, i->prioridad);
-				strcpy(temp->estado, i->estado);
-				
-				//Asignar los valores del nodo j al nodo i
-				strcpy(i->codigoAsignacion, j->codigoAsignacion);				
-				strcpy(i->fechaSolicitud, j->fechaSolicitud);
-				strcpy(i->horaInicio, j->horaInicio);
-				strcpy(i->horaFin, j->horaFin);
-				strcpy(i->recurso, j->recurso);
-				strcpy(i->identificador, j->identificador);
-				strcpy(i->descripcion, j->descripcion);
-				strcpy(i->miembros, j->miembros);
-				strcpy(i->prioridad, j->prioridad);
-				strcpy(i->estado, j->estado);
-				
-				//Asignar los valores guardados del nodo i al nodo j
-				strcpy(j->codigoAsignacion, temp->codigoAsignacion);
-				strcpy(j->fechaSolicitud, temp->fechaSolicitud);
-				strcpy(j->horaInicio, temp->horaInicio);
-				strcpy(j->horaFin, temp->horaFin);
-				strcpy(j->recurso, temp->recurso);
-				strcpy(j->identificador, temp->identificador);
-				strcpy(j->descripcion, temp->descripcion);
-				strcpy(j->miembros, temp->miembros);
-				strcpy(j->prioridad, temp->prioridad);
-				strcpy(j->estado, temp->estado);
-				
-			}
-			
-			j = j->siguiente;
-		}
-		i = i->siguiente;
-	}
-	
-} 
-
-/*
 	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar las Asignaciones
 	Salidas: Los datos relacionado a las Asignaciones del Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
 			que no se han encontrado.
@@ -2082,7 +1981,7 @@ void consultarAsignaciones(){
 	printf( "Consultar Asignaciones de un Miembro\n" );
 	printf("+-------------------------------------+\n");
 	
-	printf("\n Ingrese la la cedula del miembro: (Ejm.208140809) \n ");
+	printf("\n Ingrese la cedula del miembro: (Ejm.208140809) \n ");
 	gets(id);
 
 	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
@@ -2114,8 +2013,9 @@ void consultarAsignaciones(){
 			}
 			i = i->siguiente;
 		}
-		if(val!=0){
-			printf( "\n***No se han encontrado Asignaciones***");
+		
+		if(val!=1){
+			printf( "\n***No se han registrado Asignaciones para este miembro***");
 		}
 		
 	}else{
@@ -2129,86 +2029,12 @@ void consultarAsignaciones(){
 }
 
 /*
-    Entradas:  
-    Salidas: 
-    Restricciones: 
-*/
-int validarAsignacion(struct ListaAsignaciones *L, char idAsignacion[], char idRQ[], char idMiembro[]){
-	struct  Asignacion *i;
-
-    i = L->inicio;
-    while( i->siguiente!= NULL){
-        if(strcmp(i->codigoAsignacion, idAsignacion)==0){
-        	strcpy(idRQ,i->identificador);
-        	strcpy(idMiembro,i->miembros);
-			return 1;		
-		}
-        i = i->siguiente;
-    }
-	
-	return 0;
-}
-
-/*
-    Entradas:  
-    Salidas: 
-    Restricciones: 
-*/
-void modificarCalificacion(struct ListaCalificaciones *L,  char idAsignacion[]){
-	struct Calificacion *i;
-	int calificacionInt;
-	char calificacionChar [20];
-
-    i = L->inicio;
-    while( i->siguiente!= NULL){
-        if(strcmp(idAsignacion, i->codigoAsignacion)==0){
-			calificacionInt = atoi(i->calificacion);
-			calificacionInt = calificacionInt - 1;
-			sprintf(calificacionChar, "%d", calificacionInt);
-			strcpy(i->calificacion, calificacionChar);	
-			printf("%s", i->calificacion);	
-		}
-        i = i->siguiente;
-    }
-	
-	actualizarCalificacion(L);
-}
-
-
-/*
-	Entradas: 
-	Salidas: 
-	Restricciones: 
-*/
-void actualizarCalificacion(struct ListaCalificaciones *L){
-	
-	struct Calificacion *i;
-	
-	 if (remove("Archivos\\Calificaciones.txt") != 0)
-	 	return;
-	 	
-	ArchRequerimiento=fopen("Archivos\\Calificaciones.txt","a+");
-	if(ArchRequerimiento==NULL){
-		printf("\n Error al intentar usar el archivo.\n");	
-	}else{
-		
-		i = L->inicio;
-        while( i->siguiente!= NULL){
-			fprintf(ArchCalificaciones,"%s\n%s\n%s\n%s\n", i->codigoAsignacion, i->codigoRequerimiento, i->miembro,  i->calificacion);
-            i = i->siguiente;
-        }
-		
-	}
-	fclose(ArchRequerimiento);
-
-}
-
-/*
     Entradas: Un ID determinado en la tabla que se presenta de Asiganciones. 
     Salidas: Se cambia el estado de la asignacion escogida por el ID a Cancelada . 
     Restricciones: No valida.
 */
 void cancelarAsignacion(){
+	
     struct ListaAsignaciones *L;
     struct ListaCalificaciones *LC;
     struct Asignacion *i;
@@ -2309,6 +2135,223 @@ void cancelarAsignacion(){
 }
 
 /*
+	Entradas: Ninguna.
+	Salidas: Se actualiza el estado de algunas de las asignaciones registradas a Aprobada.
+	Restricciones: Ninguna.
+*/
+void atencionAsignaciones(){
+
+	struct ListaAsignaciones *L;
+	struct Asignacion *i;
+	int val=3, res=0;
+	char opcion[3];
+	
+	system( "CLS" );
+	printf("\n\n+-------------------------------------+\n");
+	printf("      Gestor de Requerimientos       \n");
+	printf("+-------------------------------------+\n");
+	printf( "         Atencion Asignaciones\n" );
+	printf("+-------------------------------------+\n");
+
+	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+	L->inicio = NULL;
+	L->final = NULL;
+
+	res=cargarAsignaciones(L);
+	printf("res: %d", res);
+	if(res==1)
+	{		
+		
+			remove("Archivos\\Asignaciones.txt");	
+			i = L->inicio;
+			while( i->siguiente!= NULL){
+				printf("dentro del while\n");
+				printf("estado: %s\n", i->estado);
+				if (strcmp( i->estado , "Aprobada" )==1){
+					printf("dentro del if\n");
+					printf("\n+-------------------------------+\n");
+					printf("ID de la Asignacion: %s \n", i->codigoAsignacion);
+					printf("Fecha de Solicitud: %s \n", i->fechaSolicitud);
+					printf("Hora de Inicio: %s \n", i->horaInicio ); 
+					printf("Hora de Fin: %s \n", i->horaFin); 
+					printf("Identificador: %s \n", i->identificador); 
+					printf("Recurso: %s \n", i->recurso); 
+					printf("Descripcion: %s \n", i->descripcion);
+					printf("Miembros: %s \n", i->miembros); 
+					printf("Priodidad: %s \n", i->prioridad ); 
+					printf("Estado: %s \n", i->estado); 
+					printf("+-------------------------------+\n");
+					printf("\n Desea atender esta asignacion \n");
+					printf("\n  Digite 1 para SI, 0 para NO \n");
+					printf("+-------------------------------+\n");
+					printf("--> ");
+
+					gets(opcion);
+					
+
+					if ( strcmp(opcion ,"1")==0){
+						strcpy(i->estado, "Aprobada");
+						guardarAsignacion(i);
+						printf("\nLa asignacion %s fue atendida\n", i->codigoAsignacion);	
+						
+					}									
+				}
+				
+				i=i->siguiente;	
+			}
+
+	}else{
+		printf( "\n***No se han registrado Asignaciones***");
+	}
+	
+
+	
+	liberarListaAsignaciones(L);
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);	
+}
+
+/*
+    Entradas: Una cadena de caracteres que indica el código de requerimiento consultado
+    Salidas: -1 en caso de que se tengan 3 o más asignaciones relacionadas al requerimiento recibido, 1 si fueran menos de 3.
+    Restricciones: Ninguna.
+*/
+int validarAsignaciones(const char identificador[]){
+
+   	struct ListaAsignaciones *L;
+	struct Asignacion *i;
+	int val=3, res=0, similitud=0, contAsignaciones=0;
+	char id [50];
+
+	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+	L->inicio = NULL;
+	L->final = NULL;
+
+	res=cargarAsignaciones(L);
+	
+	if(res==1)
+	{
+		i = L->inicio;
+		while( i->siguiente!= NULL){
+			strcpy(id, i->identificador);		
+			similitud = compararCadenas(id, identificador);
+            if(similitud==1){   
+				contAsignaciones++;
+            }
+			i = i->siguiente;
+		}
+		
+		if(contAsignaciones>=3){   		       	
+        	return -1;
+        }   	
+    	return 1;
+				
+	}else{
+		return 1;
+	}	
+	liberarListaAsignaciones(L);
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);
+}
+
+/*
+	Entradas: Un puntero a una lista del tipo ListaAsiganciones de Asignaciones.
+	Salidas: Una lista enlazada con los diferentes objetos de la estructura Asignacion, ordenadas por fecha de solicitud. 
+	Restricciones: Ninguna.
+*/
+void ordenarAsignaciones(struct ListaAsignaciones *L){
+	
+	struct Asignacion *i, *j, *temp;
+	char fecha1[15], fecha2[15];	
+	int res=0;
+
+	temp=(struct Asignacion *) malloc (sizeof(struct Asignacion));
+	
+	i = L->inicio;
+	while( i->siguiente!= NULL){
+		
+		j = i->siguiente;
+		while( j->siguiente!= NULL){
+			strcpy(fecha1, i->fechaSolicitud);
+			strcpy(fecha2, j->fechaSolicitud);
+				
+			res = compararFechas(fecha1, fecha2);
+
+			if(res==1){
+				
+				//Guardar los valores del nodo i
+				strcpy(temp->codigoAsignacion,i->codigoAsignacion);
+				strcpy(temp->fechaSolicitud,i->fechaSolicitud);
+				strcpy(temp->horaInicio, i->horaInicio);
+				strcpy(temp->horaFin, i->horaFin);
+				strcpy(temp->recurso, i->recurso);
+				strcpy(temp->identificador, i->identificador);
+				strcpy(temp->descripcion, i->descripcion);
+				strcpy(temp->miembros, i->miembros);
+				strcpy(temp->prioridad, i->prioridad);
+				strcpy(temp->estado, i->estado);
+				
+				//Asignar los valores del nodo j al nodo i
+				strcpy(i->codigoAsignacion, j->codigoAsignacion);				
+				strcpy(i->fechaSolicitud, j->fechaSolicitud);
+				strcpy(i->horaInicio, j->horaInicio);
+				strcpy(i->horaFin, j->horaFin);
+				strcpy(i->recurso, j->recurso);
+				strcpy(i->identificador, j->identificador);
+				strcpy(i->descripcion, j->descripcion);
+				strcpy(i->miembros, j->miembros);
+				strcpy(i->prioridad, j->prioridad);
+				strcpy(i->estado, j->estado);
+				
+				//Asignar los valores guardados del nodo i al nodo j
+				strcpy(j->codigoAsignacion, temp->codigoAsignacion);
+				strcpy(j->fechaSolicitud, temp->fechaSolicitud);
+				strcpy(j->horaInicio, temp->horaInicio);
+				strcpy(j->horaFin, temp->horaFin);
+				strcpy(j->recurso, temp->recurso);
+				strcpy(j->identificador, temp->identificador);
+				strcpy(j->descripcion, temp->descripcion);
+				strcpy(j->miembros, temp->miembros);
+				strcpy(j->prioridad, temp->prioridad);
+				strcpy(j->estado, temp->estado);
+				
+			}
+			
+			j = j->siguiente;
+		}
+		i = i->siguiente;
+	}
+	
+} 
+
+/*
+    Entradas: Un puntero a una lista del tipo ListaAsiganciones, tres cadenas de caracteres para la consulta y almacenamiento del código de la asignacion, de requerimiento y del miembro  
+    Salidas: 1 en caso de que alguna asignación registrada coincida con el código recibido por parámetro, y la asignacion de los valores del código de de requerimiento y del miembro que
+    		correspondan a la asignacion encontrada, caso contrario retorna -1
+    Restricciones: 
+*/
+int validarAsignacion(struct ListaAsignaciones *L, char idAsignacion[], char idRQ[], char idMiembro[]){
+	struct  Asignacion *i;
+
+    i = L->inicio;
+    while( i->siguiente!= NULL){
+        if(strcmp(i->codigoAsignacion, idAsignacion)==0){
+        	strcpy(idRQ,i->identificador);
+        	strcpy(idMiembro,i->miembros);
+			return 1;		
+		}
+        i = i->siguiente;
+    }
+	
+	return 0;
+}
+
+
+/****************************************************************Procedimientos para Incidentes***********************************************************************************************/
+
+/*
 	Entradas: Los diferentes objetos de la estructura Incidente(codigoRequerimiento, codigoAsignacion, descripcionIncidente, fecha). 
 	Salidas: LLama a la función guardarIncidente para guardar los datos al registrarlos en un archivo .txt. 
 	Restricciones: No tiene restricciones.
@@ -2333,7 +2376,7 @@ void registrarIncidentes(){
 	gets(incidente->codigoIncidente);	
 	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ-000) \n");
 	gets(incidente->codigoRequerimiento);
-	printf("\n Ingrese el Codigo de Asignacion: (Ejm. 1, 2, 3, 4....) \n");
+	printf("\n Ingrese el Codigo de Asignacion: (Ejm. AS-001) \n");
 	gets(incidente->codigoAsignacion);
 	printf("\n Ingrese la Descripcion de Incidente: \n");
 	printf(" (Ejm. Requerimiento no terminado, con errores, o incompleto)\n");
@@ -2369,7 +2412,7 @@ void guardarIncidentes(Incidentes *incidente){
 }
 
 /*
-	Entradas: Una puntero a una lista del tipo ListaIncidentes de Incidentes.
+	Entradas: Un puntero a una lista del tipo ListaIncidentes de Incidentes.
 	Salidas: Una lista   enlazada con los diferentes objetos de la estructura Incidente (codigoRequerimiento, codigoAsignacion, 
 			descripcionIncidente, fecha). 
 	Restricciones: Ninguna.
@@ -2516,7 +2559,7 @@ void consultarIncidentes(int tipoConsulta){
 			
 			iAs = LAs->inicio;
 			while( iAs->siguiente!= NULL){
-				if(strcmp(i->codigoAsignacion,iAs->codigoAsignacion)){
+				if(strcmp(i->codigoAsignacion,iAs->codigoAsignacion)==0){
 					printf("\n+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +");
 					printf("\n              Detalle del Incidente\n");
 					printf("+- - - - - - - - - - - - - - - - - - - - - - - - - - - - +\n");
@@ -2543,6 +2586,103 @@ void consultarIncidentes(int tipoConsulta){
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
+}
+
+/*
+    Entradas: Una cadena de caracteres que indica el código de requerimiento consultado
+    Salidas: -1 en caso de que se tengan 3 o más incidentes relacionadas al requerimiento recibido, 1 si fueran menos de 3.
+    Restricciones: Ninguna.
+*/
+int validarIncidentes(const char identificador[]){
+
+   	struct ColaIncidentes *C;
+	struct Incidentes *i;
+	int val=3, res=0, similitud=0, contIncidentes=0;
+	char id [50];
+
+	C = (struct ColaIncidentes *) malloc(sizeof(struct ColaIncidentes));
+	C->inicio = NULL;
+	C->final = NULL;
+
+	res=cargarIncidentes(C);
+	
+	if(res==1)
+	{
+		i = C->inicio;
+		while( i->siguiente!= NULL){
+			strcpy(id, i->codigoRequerimiento);		
+			similitud = compararCadenas(id, identificador);
+            if(similitud==1){   
+				contIncidentes++;
+            }
+			i = i->siguiente;
+		}
+		
+		if(contIncidentes>=3){   		       	
+        	return -1;
+        }   	
+    	return 1;
+				
+	}else{
+		return 1;
+	}	
+	liberarColaIncidentes(C);
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);
+}
+
+/****************************************************************Procedimientos para Calificaciones***********************************************************************************************/
+
+/*
+    Entradas: Un puntero a una lista del tipo ListaCalificaciones, y una cadena de caracteres indicando el código de la asignacion.
+    Salidas: Se modifica el valor de la calificacion registrada con el código recibido por parámetro.
+    Restricciones: Ninguna.
+*/
+void modificarCalificacion(struct ListaCalificaciones *L,  char idAsignacion[]){
+	struct Calificacion *i;
+	int calificacionInt;
+	char calificacionChar [20];
+
+    i = L->inicio;
+    while( i->siguiente!= NULL){
+        if(strcmp(idAsignacion, i->codigoAsignacion)==0){
+			calificacionInt = atoi(i->calificacion);
+			calificacionInt = calificacionInt - 1;
+			strcpy(i->calificacion, calificacionChar);		
+		}
+        i = i->siguiente;
+    }
+	
+	actualizarCalificacion(L);
+}
+
+/*
+	Entradas: Un puntero a una lista del tipo ListaCalificaciones
+	Salidas:  Se sobreescribe el archivo que almacena la lista de calificaciones con los valores modificados.
+	Restricciones: Ninguna
+*/
+void actualizarCalificacion(struct ListaCalificaciones *L){
+	
+	struct Calificacion *i;
+	
+	 if (remove("Archivos\\Calificaciones.txt") != 0)
+	 	return;
+	 	
+	ArchRequerimiento=fopen("Archivos\\Calificaciones.txt","a+");
+	if(ArchRequerimiento==NULL){
+		printf("\n Error al intentar usar el archivo.\n");	
+	}else{
+		
+		i = L->inicio;
+        while( i->siguiente!= NULL){
+			fprintf(ArchCalificaciones,"%s\n%s\n%s\n%s\n", i->codigoAsignacion, i->codigoRequerimiento, i->miembro,  i->calificacion);
+            i = i->siguiente;
+        }
+		
+	}
+	fclose(ArchRequerimiento);
+
 }
 
 /*
@@ -2651,9 +2791,9 @@ void guardarCalificacion(Calificacion *calificacion){
 }
 
 /*
-	Entradas: 
-	Salidas: 
-	Restricciones: 
+	Entradas: Un puntero a una lista del tipo ListaCalificaciones
+	Salidas: carga los valroes de las calificaciones registradas en la lista referida por parámetro.
+	Restricciones: Ninguna
 */
 int cargarCalificaciones(struct ListaCalificaciones *L){
 	
@@ -2705,10 +2845,64 @@ int cargarCalificaciones(struct ListaCalificaciones *L){
 	return 1;
 }
 
+
+/****************************************************************Procedimientos para Analisis de Datos*******************************************************************************************/
+
 /*
-	Entradas: 
-	Salidas: 
-	Restricciones: 
+	Entradas: Un dato que indique el tipo de reporte que será solicitado por medio del análisis de los datos registrados
+	Salidas: Se llama a la funcion corrspondiente para la consulta de cada uno de los reportes.
+	Restricciones: Ninguna
+*/
+void analisisDeDatos(int tipoAnalisis){
+
+	system( "CLS" );
+	printf("\n\n+--------------------------------------+\n");
+	printf("        Gestor de Requerimientos       \n");
+	printf("+--------------------------------------+\n");
+	printf( "	     Analisis de Datos\n" );
+	printf("+--------------------------------------+\n");
+	
+	switch(tipoAnalisis){
+			case 1:
+				printf( "Requerimientos con mas Asignaciones \n");
+				printf("+--------------------------------------+\n");				
+			
+				consultarTopAsignaciones();
+				
+				break;
+			case 2:
+				printf(      "Horarios mas Utilizados \n");
+				printf("+--------------------------------------+\n");				
+			
+				consultarTopHorarios();
+				
+				break;
+			case 3:
+				printf( "Miembros de Equipo con mas Asignaciones \n");
+				printf("+--------------------------------------+\n");				
+			
+				consultarTopMiembros();
+				
+				break;
+			case 4:
+				printf( "  Requerimientos con mayor esfuerzo \n");
+				printf("+-------------------------------------+\n");				
+			
+				consultarTopEsfuerzo();
+				
+				break;
+		}
+	
+	 
+	printf("\n\nPresione una tecla para regresar..." ); 
+	getchar();
+	fflush(stdin);
+}
+
+/*
+	Entradas:  Una cadena de caracteres y un valor entero.
+	Salidas: Crea un nodo del tipo NodoTopAsignacion.
+	Restricciones: Ninguna.
 */
 NodoTopAsignacion* crearNodoAsignacion(char identificador[], int cantidad){
 	NodoTopAsignacion *nuevo;
@@ -2721,8 +2915,8 @@ NodoTopAsignacion* crearNodoAsignacion(char identificador[], int cantidad){
 }
 
 /*
-	Entradas: 
-	Salidas: 
+	Entradas: Un puntero a una lista del tipo ListaTopAsignaciones
+	Salidas: La lista  recibida como parámetro, ordenada por el valordel dato cantidad
 	Restricciones: Ninguna.
 */
 void ordenarTopAsignaciones(struct ListaTopAsignaciones *LT){
@@ -2760,9 +2954,9 @@ void ordenarTopAsignaciones(struct ListaTopAsignaciones *LT){
 } 
 
 /*
-	Entradas: 
-	Salidas: 
-	Restricciones: 
+	Entradas: Ninguna
+	Salidas: Desplegar los valores del top de requerimietnos con más asignaciones
+	Restricciones: Ninguna
 */
 void consultarTopAsignaciones(){
 	struct ListaAsignaciones *L;
@@ -2844,9 +3038,9 @@ void consultarTopAsignaciones(){
 }
 
 /*
-	Entradas: 
-	Salidas: 
-	Restricciones: 
+	Entradas: Una cadena de caracteres y un valor entero
+	Salidas: Crea un nodo del tipo NodoTopHorario
+	Restricciones: Ninguna
 */
 NodoTopHorario* crearNodoHorario(char identificador[], int cantidad){
 	NodoTopHorario *nuevo;
@@ -2859,8 +3053,8 @@ NodoTopHorario* crearNodoHorario(char identificador[], int cantidad){
 }
 
 /*
-	Entradas: 
-	Salidas: 
+	Entradas: Un puntero a una lista del tipo ListaTopHorarios
+	Salidas: La lista  recibida como parámetro, ordenada por el valordel dato cantidad
 	Restricciones: Ninguna.
 */
 void ordenarTopHorarios(struct ListaTopHorarios *LT){
@@ -2898,9 +3092,9 @@ void ordenarTopHorarios(struct ListaTopHorarios *LT){
 } 
 
 /*
-	Entradas: 
-	Salidas: 
-	Restricciones: 
+	Entradas: Ninguna
+	Salidas: Desplegar los valores del top de horarios más utilizados
+	Restricciones: Ninguna
 */
 void consultarTopHorarios(){
 	struct ListaRequerimientos *L;
@@ -3009,9 +3203,9 @@ void consultarTopHorarios(){
 }
 
 /*
-	Entradas: 
-	Salidas: 
-	Restricciones: 
+	Entradas:  Una cadena de caracteres y un valor entero
+	Salidas: Crea un nodo del tipo NodoTopMiembro
+	Restricciones: Ninguna
 */
 NodoTopMiembro* crearNodoMiembro(char identificador[], int cantidad){
 	NodoTopMiembro *nuevo;
@@ -3024,8 +3218,8 @@ NodoTopMiembro* crearNodoMiembro(char identificador[], int cantidad){
 }
 
 /*
-	Entradas: 
-	Salidas: 
+	Entradas: Un puntero a una lista del tipo ListaTopMiembros
+	Salidas: La lista  recibida como parámetro, ordenada por el valor del dato cantidad
 	Restricciones: Ninguna.
 */
 void ordenarTopMiembros(struct ListaTopMiembros *LT){
@@ -3063,9 +3257,9 @@ void ordenarTopMiembros(struct ListaTopMiembros *LT){
 } 
 
 /*
-	Entradas: 
-	Salidas: 
-	Restricciones: 
+	Entradas: Ninguna
+	Salidas: Desplegar los valores del top de miembros con más asignaciones
+	Restricciones: Ninguna
 */
 void consultarTopMiembros(){
 	struct ListaAsignaciones *L;
@@ -3147,9 +3341,9 @@ void consultarTopMiembros(){
 }
 
 /*
-	Entradas: 
-	Salidas: 
-	Restricciones: 
+	Entradas:  Una cadena de caracteres y un valor entero
+	Salidas: Crea un nodo del tipo NodoTopEsfuerzo
+	Restricciones: Ninguna
 */
 NodoTopEsfuerzo* crearNodoEsfuerzo(char identificador[], int cantidad){
 	NodoTopEsfuerzo *nuevo;
@@ -3162,8 +3356,8 @@ NodoTopEsfuerzo* crearNodoEsfuerzo(char identificador[], int cantidad){
 }
 
 /*
-	Entradas: 
-	Salidas: 
+	Entradas: Un puntero a una lista del tipo ListaTopMiembros 
+	Salidas: La lista  recibida como parámetro, ordenada por el valor del dato cantidad
 	Restricciones: Ninguna.
 */
 void ordenarTopEsfuerzo(struct ListaTopEsfuerzo *LT){
@@ -3201,9 +3395,9 @@ void ordenarTopEsfuerzo(struct ListaTopEsfuerzo *LT){
 } 
 
 /*
-	Entradas: 
-	Salidas: 
-	Restricciones: 
+	Entradas: Ninguna
+	Salidas: Desplegar los valores del top de requerimientos con un mayor esfuerzo
+	Restricciones: Ninguna
 */
 void consultarTopEsfuerzo(){
 	struct ListaRequerimientos *L;
@@ -3279,57 +3473,7 @@ void consultarTopEsfuerzo(){
 	fflush(stdin);
 }
 
-/*
-	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar las Asignaciones
-	Salidas: Los datos relacionado a las Asignaciones del Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
-			que no se han encontrado.
-	Restricciones: Ninguna
-*/
-void analisisDeDatos(int tipoAnalisis){
-
-	system( "CLS" );
-	printf("\n\n+--------------------------------------+\n");
-	printf("        Gestor de Requerimientos       \n");
-	printf("+--------------------------------------+\n");
-	printf( "	     Analisis de Datos\n" );
-	printf("+--------------------------------------+\n");
-	
-	switch(tipoAnalisis){
-			case 1:
-				printf( "Requerimientos con mas Asignaciones \n");
-				printf("+--------------------------------------+\n");				
-			
-				consultarTopAsignaciones();
-				
-				break;
-			case 2:
-				printf(      "Horarios mas Utilizados \n");
-				printf("+--------------------------------------+\n");				
-			
-				consultarTopHorarios();
-				
-				break;
-			case 3:
-				printf( "Miembros de Equipo con mas Asignaciones \n");
-				printf("+--------------------------------------+\n");				
-			
-				consultarTopMiembros();
-				
-				break;
-			case 4:
-				printf( "  Requerimientos con mayor esfuerzo \n");
-				printf("+-------------------------------------+\n");				
-			
-				consultarTopEsfuerzo();
-				
-				break;
-		}
-	
-	 
-	printf("\n\nPresione una tecla para regresar..." ); 
-	getchar();
-	fflush(stdin);
-}
+/****************************************************************Procedimientos para liberar Est. de Datos***********************************************************************************/
 
 /*
 	Entradas: Un puntero a una lista de nodos de tipo struct Miembros de Equipo.
@@ -3419,6 +3563,140 @@ void liberarColaIncidentes(ColaIncidentes *C){
 	}
 	
 }
+
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct Calificacion.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarListaCalificaciones(ListaCalificaciones *L){
+	struct Calificacion *n, *aux;
+	if(L->inicio == NULL)
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
+
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct Oficina.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarListaOficinas(ListaOficinas *L){
+	struct Oficina *n, *aux;
+	if(L->inicio == NULL)
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
+
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct NodoTopAsignacion.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarTopAsignaciones(ListaTopAsignaciones *L){
+	struct NodoTopAsignacion *n, *aux;
+	if(L->inicio == NULL)
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
+
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct NodoTopHorario.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarTopHorarios(ListaTopHorarios *L){
+		
+	struct NodoTopHorario *n, *aux;
+	if(L->inicio == NULL)
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
+
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct NodoTopEsfuerzo.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarTopEsfuerzo(ListaTopEsfuerzo *L){
+	struct NodoTopEsfuerzo *n, *aux;
+	if(L->inicio == NULL)
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
+
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct NodoTopMiembro.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarTopMiembros(ListaTopMiembros *L){
+	struct NodoTopMiembro *n, *aux;
+	if(L->inicio == NULL)
+		return;
+	if(L->inicio->siguiente == NULL)
+		return;		
+	n = L->inicio;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
+
 
 int main(){ 
 

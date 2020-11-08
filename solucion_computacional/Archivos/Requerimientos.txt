@@ -16,3 +16,39 @@ Nignuno
 Por hacer
 7
 OF005
+RQ007
+Funcional
+El programa debe habilitar la opcion de Crear Nuevo
+Moderado
+RQ005
+Ninguno
+Por hacer
+6
+OF003
+RQ003
+Funcional
+El programa debe habilitar la opcion de Crear Nuevo
+Moderado
+RQ005
+Ninguno
+Por hacer
+6
+OF003
+RQ009
+Funcional
+El programa debe habilitar la opcion de Crear Nuevo
+Moderado
+RQ005
+Ninguno
+Por hacer
+6
+OF003
+RQ003
+Funcional
+El programa debe habilitar la opcion de Crear Nuevo
+Moderado
+RQ003
+Ninguno
+Por hacer
+6
+OF003
