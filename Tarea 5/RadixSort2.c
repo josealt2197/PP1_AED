@@ -1,92 +1,79 @@
-#include <stdio.h>
+// C implementation of Radix Sort
+#include<stdio.h>
+#include<stdlib.h>
 
-void printArray(int * arreglo, int tamano){
-  
-  int i;
-  printf("[ ");
-  for (i = 0; i < tamano; i++)
-    printf("%d ", arreglo[i]);
-  printf("]\n");
+// This  function gives maximum value in array[]
+int getMax(int A[], int n)
+{
+    int i;
+    int max = A[0];
+    for (i = 1; i < n; i++){
+        if (A[i] > max)
+            max = A[i];
+    }
+    return max;
 }
 
-int obtenerValorMayor(int * arreglo, int tamano){
-  
-  int i;
-  int mayorNumero = -1;
-  
-  for(i = 0; i < tamano; i++){
-    if(arreglo[i] > mayorNumero)
-      mayorNumero = arreglo[i];
-  }
-  
-  return mayorNumero;
+// Main Radix Sort sort function
+void radixSort(int A[], int n)
+{
+    int i,digitPlace = 1;
+    int result[n]; // resulting array
+    // Find the largest number to know number of digits
+    int largestNum = getMax(A, n);
+
+
+    //we run loop until we reach the largest digit place
+    while(largestNum/digitPlace >0){
+
+        int count[10] = {0};
+         //Store the count of "keys" or digits in count[]
+        for (i = 0; i < n; i++)
+            count[ (A[i]/digitPlace)%10 ]++;
+
+        // Change count[i] so that count[i] now contains actual
+        //  position of this digit in result[]
+        //  Working similar to the counting sort algorithm
+        for (i = 1; i < 10; i++)
+            count[i] += count[i - 1];
+
+        // Build the resulting array
+        for (i = n - 1; i >= 0; i--)
+        {
+            result[count[ (A[i]/digitPlace)%10 ] - 1] = A[i];
+            count[ (A[i]/digitPlace)%10 ]--;
+        }
+
+        // Now main array A[] contains sorted
+        // numbers according to current digit place
+        for (i = 0; i < n; i++)
+            A[i] = result[i];
+
+            // Move to next digit place
+            digitPlace *= 10;
+    }
 }
 
-// Radix Sort
-void radixSort(int * arreglo, int tamano){
-  
-  printf("\n\nRadix Sort en la lista desordenada\n\n");
-
-  // Se utiliza la base 10
-  int i;
-  int semiOrdenados[tamano];
-  int digitoSignificativo = 1;
-  int mayorNumero = obtenerValorMayor(arreglo, tamano);
-  
-  // Bucle hasta llegar al dígito significativo más grande
-  while (mayorNumero / digitoSignificativo > 0){
-    
-    printf("\n\tOrdenando posicion del %d ", digitoSignificativo);
-    printArray(arreglo, tamano);
-    
-    int bucket[10] = { 0 };
-    
-    // Cuenta el número de "claves" o dígitos que entrarán en cada depósito (bucket).
-    for (i = 0; i < tamano; i++){
-    	bucket[(arreglo[i] / digitoSignificativo) % 10]++;
-    	printf("\n %d", ((arreglo[i] / digitoSignificativo) % 10));
-	}
-
-      
-    /**
-	 * Agregue el recuento de los depósitos anteriores, 
-	 * Adquiere los índices después del final de cada ubicación de depósito en el arreglo 
-	    * Funciona de manera similar al algoritmo de clasificación de recuento
-     **/
-    for (i = 1; i < 10; i++)
-      bucket[i] += bucket[i - 1];
-    
-    // Usa el depósito para llenar el arreglo "semiOrdenados"
-    for (i = tamano - 1; i >= 0; i--)
-      semiOrdenados[--bucket[(arreglo[i] / digitoSignificativo) % 10]] = arreglo[i]; 
-    
-    for (i = 0; i < tamano; i++)
-      arreglo[i] = semiOrdenados[i];
-    
-    // Move to next significant digit
-    digitoSignificativo *= 10;
-    
-    printf("\t\tBucket: ");
-    printArray(bucket, 10);
-  }
+// Function to print an array
+void printArray(int A[], int n)
+{
+    int i;
+    for (i = 0; i < n; i++)
+    printf("%d ", A[i]);
+    printf("\n");
 }
 
-int main(){
-  
-  printf("\n\nEjemplo de Radix Sort en C\n");
-  printf("----------------------------------\n");
-  
-  int tamano = 12;
-  int lista[] = {10, 2, 303, 4021, 293, 1, 0, 429, 480, 92, 2999, 14};
-  
-  printf("\nLista Desordenada: ");
-  printArray(&lista[0], tamano);
-  
-  radixSort(&lista[0], tamano);
-  
-  printf("\nLista Ordenada:");
-  printArray(&lista[0], tamano);
-  printf("\n");
-  
-  return 0;
+// Driver program to test above functions
+int main()
+{
+    int a[] = {209,3,48,91,66,101,30,795, 27, 53, 27832};
+    int n = sizeof(a)/sizeof(a[0]);
+    printf("Unsorted Array: ");
+    printArray(a, n);
+
+    radixSort(a, n);
+
+    printf("Sorted Array: ");
+    printArray(a, n);
+    return 0;
 }

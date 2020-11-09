@@ -30,15 +30,16 @@ typedef struct NodoTopEsfuerzo NodoTopEsfuerzo;
 
 //Tipos para la construccion de las estructuras de datos
 typedef struct ColaMiembros ColaMiembros;
+typedef struct ColaIncidentes ColaIncidentes;
 typedef struct ListaRequerimientos ListaRequerimientos;
 typedef struct ListaAsignaciones ListaAsignaciones;
-typedef struct ColaIncidentes ColaIncidentes;
 typedef struct ListaCalificaciones ListaCalificaciones;
 typedef struct ListaOficinas ListaOficinas;
 typedef struct ListaTopAsignaciones ListaTopAsignaciones;
 typedef struct ListaTopHorarios ListaTopHorarios;
 typedef struct ListaTopEsfuerzo ListaTopEsfuerzo;
 typedef struct ListaTopMiembros ListaTopMiembros;
+typedef struct PilaAsignaciones PilaAsignaciones;
 
 //Procedimientos para Menus de Opciones
 void MenuPrincipal();
@@ -85,7 +86,8 @@ void registrarIncidentes();
 void guardarIncidentes(Incidentes *incidente);
 int cargarIncidentes(struct ColaIncidentes *C);
 void consultarIncidentes(int tipoConsulta);
-int validarIncidentes(const char identificador[]);
+int contarIncidentes (const char identificador[]);
+int validarIncidentes(ColaIncidentes *C, const char identificador[]);
 
 //Procedimientos para Calificaciones
 void registrarCalificaciones();
@@ -170,7 +172,6 @@ struct Asignacion{
     char miembros[15];
     char prioridad[15];
     char estado[15];
-    Asignacion *anterior;
     Asignacion *siguiente;
     
 };
@@ -277,6 +278,9 @@ struct ListaTopEsfuerzo{
 	NodoTopEsfuerzo *final;
 };
 
+struct PilaAsignaciones{
+	Asignacion *tope;
+};
 /****************************************************************Menús de Opciones***********************************************************************************************/
 
 /*
@@ -1017,7 +1021,7 @@ void consultarMiembroEquipo(){
                         if(compararCadenas(iAsig->miembros, i->cedula)==1){
                             val2=0;
                             printf("\n~~~~Datos de la Asignacion~~~~\n");
-                            printf("Asignacion Numero: %s \n", iAsig->identificador);
+                            printf("Asignacion Numero: %s \n", iAsig->codigoAsignacion);
                             printf("Descripcion: %s \n", iAsig->descripcion);
                             printf("Priodidad: %s \n", iAsig->prioridad ); 
                             printf("Estado: %s \n", iAsig->estado);
@@ -1075,6 +1079,10 @@ void consultarMiembroEquipo(){
         printf( "\nNo se ha registrado ningún Miembro*");
     }
     liberarColaMiembros(C);
+    liberarColaIncidentes(CIncidente);
+    liberarListaAsignaciones(LAsig);
+    liberarListaRequerimientos(LReque);
+    
     printf("\n\nPresione una tecla para regresar..." ); 
     getchar();
     fflush(stdin);
@@ -1393,6 +1401,7 @@ void consultarRequerimiento(){
 	}
 	
 	liberarListaRequerimientos(L);
+	liberarListaOficinas(LOf);	
     printf("\n\nPresione una tecla para regresar..." ); 
     getchar();
     fflush(stdin);
@@ -1700,7 +1709,7 @@ void consultarOficinas(){
 		printf( "\n***No se han encontrado Oficinas registradas***");
 	}
 	
-	//liberarListaAsignaciones(L);
+	liberarListaOficinas(L);
 }
 
 /****************************************************************Procedimientos para Asignaciones***********************************************************************************************/
@@ -1816,7 +1825,7 @@ void registrarAsignacion(){
     printf("\n+-----------------------------------------------------------------------------------+\n");           
 	gets(asignacion->identificador);
 	
-	val2=validarIncidentes(asignacion->identificador);
+	val2=contarIncidentes(asignacion->identificador);
 	if(val2==-1){ //Validar el numero de Incidentes para el requerimiento seleccionado.
 		printf("\n***No es posible completar la asignacion, el requerimiento\n   seleccionado posee 3 o mas incidentes***");
 		printf("\n\nPresione una tecla para regresar..." ); 
@@ -1855,8 +1864,12 @@ void registrarAsignacion(){
 	modificarEstadoRQ(LRQ, asignacion->identificador);
 
 	guardarAsignacion(asignacion);
-
+	
+	liberarListaRequerimientos(LRQ);
+	liberarListaAsignaciones(LA);
+	liberarListaOficinas(LOf);
 	free(asignacion);
+	
 	getchar();	
 }
 
@@ -1934,7 +1947,6 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 				strcpy(L->inicio->prioridad , aux->prioridad ); 
 				strcpy(L->inicio->estado , aux->estado); 
 				L->inicio->siguiente = NULL; 
-				L->inicio->anterior = NULL; 
 				L->final = L->inicio;
 	
 			}else{	
@@ -1951,11 +1963,61 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 				strcpy(L->final->siguiente->prioridad , aux->prioridad ); 
 				strcpy(L->final->siguiente->estado , aux->estado); 
 				L->final->siguiente->siguiente = NULL; 
-				L->final->siguiente->anterior = L->final; 
 				L->final = L->final->siguiente;
 			}		
 		}
 		fclose(ArchAsignaciones);
+	}	
+	return 1;
+}
+
+/*
+	Entradas: Un puntero a una pila del tipo PilaAsignaciones de Asignaciones.
+	Salidas: Una pila con los diferentes objetos de la estructura Asignacion (fechaSolicitud, horaInicio, 
+			horaFin, recurso, identificador, descripcion, miembros, prioridad y estado). 
+	Restricciones: Ninguna.
+*/
+int cargarPilaAsignaciones(struct PilaAsignaciones *P){
+	
+	struct Asignacion *nuevo, *i;
+
+	ArchAsignaciones = fopen("Archivos\\Asignaciones.txt","r");
+
+	if(ArchAsignaciones==NULL){
+		return 0;	
+	}else{
+
+		while(!feof(ArchAsignaciones)){
+			
+			nuevo =(struct Asignacion *) malloc (sizeof(struct Asignacion));
+			
+			fgets(nuevo->codigoAsignacion, 15, ArchAsignaciones); 
+			quitaFinLinea(nuevo->codigoAsignacion);
+			fgets(nuevo->fechaSolicitud, 50, ArchAsignaciones); 
+			quitaFinLinea(nuevo->fechaSolicitud);
+			fgets(nuevo->horaInicio, 15, ArchAsignaciones); 
+			quitaFinLinea(nuevo->horaInicio);
+			fgets(nuevo->horaFin, 15, ArchAsignaciones);
+			quitaFinLinea(nuevo->horaFin);	
+			fgets(nuevo->recurso, 50, ArchAsignaciones);
+			quitaFinLinea(nuevo->recurso);		
+			fgets(nuevo->identificador, 10, ArchAsignaciones);
+			quitaFinLinea(nuevo->identificador);
+			fgets(nuevo->descripcion, 100, ArchAsignaciones);
+			quitaFinLinea(nuevo->descripcion);
+			fgets(nuevo->miembros, 15, ArchAsignaciones);
+			quitaFinLinea(nuevo->miembros);
+			fgets(nuevo->prioridad, 15, ArchAsignaciones);
+			quitaFinLinea(nuevo->prioridad);
+			fgets(nuevo->estado, 15, ArchAsignaciones);
+			quitaFinLinea(nuevo->estado);
+			
+			nuevo->siguiente = P->tope;
+			P->tope = nuevo;
+				
+		}
+		fclose(ArchAsignaciones);
+		
 	}	
 	return 1;
 }
@@ -1968,9 +2030,9 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 */
 void consultarAsignaciones(){
 
-	struct ListaAsignaciones *L;
+	struct PilaAsignaciones *P;
 	struct Asignacion *i;
-	int val=3, res=0;
+	int val=0, res=0;
 	char id[12];
 	
 	system( "CLS" );
@@ -1983,20 +2045,16 @@ void consultarAsignaciones(){
 	printf("\n Ingrese la cedula del miembro: (Ejm.208140809) \n ");
 	gets(id);
 
-	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
-	L->inicio = NULL;
-	L->final = NULL;
+	P = (struct PilaAsignaciones *) malloc(sizeof(struct PilaAsignaciones));
+	P->tope = NULL;
 
-	res=cargarAsignaciones(L);
+	res=cargarPilaAsignaciones(P);
 
 	if(res=1)
 	{
-		ordenarAsignaciones(L);	
 		printf("\n+-------------------------------+\n");
-		i = L->inicio;
-		while( i->siguiente!= NULL){
-			val=strcmp(id,i->miembros);
-			if(val==0){
+		for(i = P->tope; i!= NULL; i = i->siguiente){
+			if(strcmp(id,i->miembros)==0){
 				printf("ID de la Asignacion: %s \n", i->codigoAsignacion);
 				printf("Fecha de Solicitud: %s \n", i->fechaSolicitud);
 				printf("Hora de Inicio: %s \n", i->horaInicio ); 
@@ -2008,12 +2066,12 @@ void consultarAsignaciones(){
 				printf("Priodidad: %s \n", i->prioridad ); 
 				printf("Estado: %s \n", i->estado); 
 				printf("+-------------------------------+\n");
+				val=1;
 			
 			}
-			i = i->siguiente;
 		}
 		
-		if(val!=1){
+		if(val==0){
 			printf( "\n***No se han registrado Asignaciones para este miembro***");
 		}
 		
@@ -2021,7 +2079,7 @@ void consultarAsignaciones(){
 		printf( "\n***No se han registrado Asignaciones***");
 	}
 	
-	liberarListaAsignaciones(L);
+	//liberarPilaAsignaciones(P);
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
@@ -2256,76 +2314,6 @@ int validarAsignaciones(const char identificador[]){
 }
 
 /*
-	Entradas: Un puntero a una lista del tipo ListaAsiganciones de Asignaciones.
-	Salidas: Una lista enlazada con los diferentes objetos de la estructura Asignacion, ordenadas por fecha de solicitud. 
-	Restricciones: Ninguna.
-*/
-void ordenarAsignaciones(struct ListaAsignaciones *L){
-	
-	struct Asignacion *i, *j, *temp;
-	char fecha1[15], fecha2[15];	
-	int res=0;
-
-	temp=(struct Asignacion *) malloc (sizeof(struct Asignacion));
-	
-	i = L->inicio;
-	while( i->siguiente!= NULL){
-		
-		j = i->siguiente;
-		while( j->siguiente!= NULL){
-			strcpy(fecha1, i->fechaSolicitud);
-			strcpy(fecha2, j->fechaSolicitud);
-				
-			res = compararFechas(fecha1, fecha2);
-
-			if(res==1){
-				
-				//Guardar los valores del nodo i
-				strcpy(temp->codigoAsignacion,i->codigoAsignacion);
-				strcpy(temp->fechaSolicitud,i->fechaSolicitud);
-				strcpy(temp->horaInicio, i->horaInicio);
-				strcpy(temp->horaFin, i->horaFin);
-				strcpy(temp->recurso, i->recurso);
-				strcpy(temp->identificador, i->identificador);
-				strcpy(temp->descripcion, i->descripcion);
-				strcpy(temp->miembros, i->miembros);
-				strcpy(temp->prioridad, i->prioridad);
-				strcpy(temp->estado, i->estado);
-				
-				//Asignar los valores del nodo j al nodo i
-				strcpy(i->codigoAsignacion, j->codigoAsignacion);				
-				strcpy(i->fechaSolicitud, j->fechaSolicitud);
-				strcpy(i->horaInicio, j->horaInicio);
-				strcpy(i->horaFin, j->horaFin);
-				strcpy(i->recurso, j->recurso);
-				strcpy(i->identificador, j->identificador);
-				strcpy(i->descripcion, j->descripcion);
-				strcpy(i->miembros, j->miembros);
-				strcpy(i->prioridad, j->prioridad);
-				strcpy(i->estado, j->estado);
-				
-				//Asignar los valores guardados del nodo i al nodo j
-				strcpy(j->codigoAsignacion, temp->codigoAsignacion);
-				strcpy(j->fechaSolicitud, temp->fechaSolicitud);
-				strcpy(j->horaInicio, temp->horaInicio);
-				strcpy(j->horaFin, temp->horaFin);
-				strcpy(j->recurso, temp->recurso);
-				strcpy(j->identificador, temp->identificador);
-				strcpy(j->descripcion, temp->descripcion);
-				strcpy(j->miembros, temp->miembros);
-				strcpy(j->prioridad, temp->prioridad);
-				strcpy(j->estado, temp->estado);
-				
-			}
-			
-			j = j->siguiente;
-		}
-		i = i->siguiente;
-	}
-	
-} 
-
-/*
     Entradas: Un puntero a una lista del tipo ListaAsiganciones, tres cadenas de caracteres para la consulta y almacenamiento del código de la asignacion, de requerimiento y del miembro  
     Salidas: 1 en caso de que alguna asignación registrada coincida con el código recibido por parámetro, y la asignacion de los valores del código de de requerimiento y del miembro que
     		correspondan a la asignacion encontrada, caso contrario retorna -1
@@ -2363,7 +2351,15 @@ void registrarIncidentes(){
 	printf( "  Crear un nuevo incidente\n" );
 	printf("+-------------------------------+\n");	
 	
-	struct Incidentes *incidente;
+	struct ColaIncidentes *C;
+	struct Incidentes *i, *incidente;
+	int res;
+	
+	C = (struct ColaIncidentes *) malloc(sizeof(struct ColaIncidentes));
+	C->inicio = NULL;
+	C->final = NULL;
+
+	res=cargarIncidentes(C);
 
 	incidente= (struct Incidentes *) malloc (sizeof(struct Incidentes));
 	
@@ -2371,8 +2367,17 @@ void registrarIncidentes(){
 		printf("Espacio insuficiente para almacenar los datos.\n");	
 	}
 	
-	printf("\n Ingrese el Codigo del Incidente: (Ejm. IN001) \n");
-	gets(incidente->codigoIncidente);	
+	do{
+        printf("\n Ingrese el Codigo del Incidente: (Ejm. IN-001) \n");
+		gets(incidente->codigoIncidente);
+	
+        if(validarIncidentes(C, incidente->codigoIncidente)==1){
+			printf("\n **El codigo ingresado corresponde con un Incidente registrado**\n ");        
+        }else{
+        	break;  
+        }
+    }while(1);
+		
 	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ-000) \n");
 	gets(incidente->codigoRequerimiento);
 	printf("\n Ingrese el Codigo de Asignacion: (Ejm. AS-001) \n");
@@ -2386,6 +2391,7 @@ void registrarIncidentes(){
 	incidente->siguiente=NULL;
 
 	guardarIncidentes(incidente);
+	liberarColaIncidentes(C);
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();	
 }
@@ -2582,6 +2588,7 @@ void consultarIncidentes(int tipoConsulta){
 		printf( "\n***No se han registrado Incidentes***");
 	}	
 	liberarColaIncidentes(C);
+	liberarListaAsignaciones(LAs);
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
@@ -2592,7 +2599,7 @@ void consultarIncidentes(int tipoConsulta){
     Salidas: -1 en caso de que se tengan 3 o más incidentes relacionadas al requerimiento recibido, 1 si fueran menos de 3.
     Restricciones: Ninguna.
 */
-int validarIncidentes(const char identificador[]){
+int contarIncidentes(const char identificador[]){
 
    	struct ColaIncidentes *C;
 	struct Incidentes *i;
@@ -2629,6 +2636,29 @@ int validarIncidentes(const char identificador[]){
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
+}
+
+/*
+    Entradas: Una cadena de caracteres que indica el código del incidente registrado
+    Salidas: -1 en caso de que exista un incidente con el identificador recibido, 1.
+    Restricciones: Ninguna.
+*/
+int validarIncidentes(ColaIncidentes *C, const char identificador[]){
+
+	struct Incidentes *i;
+	char id [50];
+	
+	i = C->inicio;
+	while( i->siguiente!= NULL){
+		strcpy(id, i->codigoIncidente);		
+        if(strcmp(id, identificador)==0){   
+			return 1;
+        }
+		i = i->siguiente;
+	}
+	
+	return -1;	
+
 }
 
 /****************************************************************Procedimientos para Calificaciones***********************************************************************************************/
@@ -2765,7 +2795,10 @@ void registrarCalificaciones(){
 	}else{
 		guardarCalificacion(calificacion);
 	}
-		
+	
+	
+	liberarListaAsignaciones(L);
+	liberarListaCalificaciones(LC);	
 	printf("\n\nPresione una tecla para regresar..." ); 
     getchar();	
 }
@@ -2776,7 +2809,6 @@ void registrarCalificaciones(){
 	Restricciones: No tiene restricciones.
 */
 void guardarCalificacion(Calificacion *calificacion){
-	
 
 	ArchCalificaciones=fopen("Archivos\\Calificaciones.txt","a+");
 	if(ArchCalificaciones==NULL){
@@ -3032,6 +3064,7 @@ void consultarTopAsignaciones(){
 	
 	//Liberar la cola
 	liberarListaAsignaciones(L);
+	liberarTopAsignaciones(LT);
 
 	fflush(stdin);
 }
@@ -3197,6 +3230,8 @@ void consultarTopHorarios(){
 	
 	//Liberar la cola
 	liberarListaRequerimientos(L);
+	liberarTopHorarios(LT);
+	liberarListaOficinas(LOf);
 
 	fflush(stdin);
 }
@@ -3335,7 +3370,8 @@ void consultarTopMiembros(){
 	
 	//Liberar la cola
 	liberarListaAsignaciones(L);
-
+	liberarTopMiembros(LT);
+	
 	fflush(stdin);
 }
 

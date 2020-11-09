@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <time.h> 
 
-#define CANTIDAD 500
+#define CANTIDAD 10
 
 typedef struct Lista Lista;
 typedef struct Nodo Nodo;
@@ -219,29 +219,54 @@ int obtenerValorMayor(Lista *L){
 // Ordena una lista mediante el algoritmo de Radix Sort
 void radixSort(Lista *L){
 
-	int i;
+	int i,  posicion=0, valor=0;
 	Nodo *j, *k;
-	NodoD *nd;
+	NodoD *nd, *ndAux;
 	
 	Lista *semiOrdenados;
 	semiOrdenados = listaSimple();
+	
+	for (i = 0; i< CANTIDAD; i++)  
+    { 
+	 	insertarDato(semiOrdenados, 0);
+    }
+    
+	ListaD *aux;
+	aux = listaDoble();
+
+    for(j = L->inicio; j!= NULL; j = j->siguiente){
+		insertarDato_NodoD(aux, j->dato);
+	}
 
 	int digitoSignificativo = 1;
 	int mayorNumero = obtenerValorMayor(L);
 	
-	// Bucle hasta llegar al dígito significativo más grande
+//	// Bucle hasta llegar al dígito significativo más grande
 	while (mayorNumero / digitoSignificativo > 0){
 		
 		ListaD *bucket;
 		bucket = listaDoble();
 
+		for (i = 0; i< 11; i++)  
+	    { 
+		 	insertarDato_NodoD(bucket, 0);
+	    }     
+	    
 		// Cuenta el número de "claves" o dígitos que entrarán en cada depósito (bucket).
-		nd = bucket->inicio;
-		for(j = L->inicio; j!= NULL; j = j->siguiente){
-			insertarDato_NodoD(bucket, ((j->dato / digitoSignificativo) % 10));
-			nd = nd->siguiente;
+		
+		for(ndAux = aux->inicio; ndAux!= NULL; ndAux = ndAux->siguiente){
+			posicion=0;
+			nd = bucket->inicio;
+			while(nd!=NULL){
+				if(posicion==(((ndAux->dato / digitoSignificativo) % 10)+1)){
+					nd->dato=nd->dato+1;
+				}
+				posicion++;
+				nd = nd->siguiente;
+			}
 		}
-			
+		
+
 		/**
 		* Agregue el recuento de los depósitos anteriores, 
 		* Adquiere los índices después del final de cada ubicación de depósito en el arreglo 
@@ -251,38 +276,52 @@ void radixSort(Lista *L){
 			nd->dato = nd->dato + nd->anterior->dato;
 		}
 
+		for(ndAux = aux->final; ndAux!= NULL; ndAux = ndAux->anterior){
+			
+			posicion=0;
+			nd = bucket->inicio;
+			while(nd!=NULL){
+				if(posicion==((ndAux->dato / digitoSignificativo) % 10)){
+					valor=(nd->dato)-1;
+					nd->dato=(nd->dato)-1;
+					break;
+				}
+				posicion++;
+				nd = nd->siguiente;
+			}
+			
+			posicion=0;
+			k = semiOrdenados->inicio;
+			while(k!=NULL){
+				if(posicion==valor){
+					k->dato=ndAux->dato;
+					break;
+				}
+				posicion++;
+				k = k->siguiente;
+			}
 
-		// Usa el depósito para llenar el arreglo "semiOrdenados"
-		for(nd = bucket->inicio->siguiente; nd!= NULL; nd = nd->siguiente){
-			nd->dato = nd->dato + nd->anterior->dato;
 		}
 		
-				
-		for(j = semiOrdenados->inicio; j!= NULL; j = j->siguiente){
-			j->dato = j->dato + j->siguiente->dato;
-
-		}
-		
-		
-		
-//		for (i = CANTIDAD - 1; i >= 0; i--)
-//			semiOrdenados[--bucket[(arreglo[i] / digitoSignificativo) % 10]] = arreglo[i]; 
-//			
-//			semiOrdenados[bucket[ (arreglo[i]/digitoSignificativo)%10 ] - 1] = arreglo[i];
-//            bucket[ (arreglo[i]/digitoSignificativo)%10 ]--;
-
 		k=semiOrdenados->inicio;
-		for(j= L->inicio; j!= NULL; j = j->siguiente){
-			j->dato = k->dato;	
+		for(ndAux= aux->inicio; ndAux!= NULL; ndAux = ndAux->siguiente){
+			ndAux->dato = k->dato;	
 			k = k->siguiente;
 		}
 		
-		liberarListaDoble(bucket);
+		//liberarListaDoble(bucket);
 		
 		// Move to next significant digit
 		digitoSignificativo *= 10;
 				
 	}
+	
+	k=L->inicio;
+	for(ndAux= aux->inicio; ndAux!= NULL; ndAux = ndAux->siguiente){
+		ndAux->dato = k->dato;	
+		k = k->siguiente;
+	}
+	
 	liberarLista(semiOrdenados);
 }
 
@@ -290,7 +329,7 @@ void radixSort(Lista *L){
 int numeroAleatorio(){
     int numero;
 
-    numero = (rand() % (CANTIDAD - 1 + 1)) + 1; 
+    numero = (rand() % (100 - 1 + 1)) + 1; 
 
     return numero;
 }
@@ -308,8 +347,12 @@ void main ()
     { 
 	 	aleatorio=numeroAleatorio();
         insertarDato(L,aleatorio);
+        
     } 
-
+    
+    mostrarLista(L);
+	printf("\n");
+	
 	/*****************************************************************************************/
 
 //	printf("\n****BUSQUEDA LINEAL****\n");	
@@ -325,17 +368,19 @@ void main ()
   	/*****************************************************************************************/
   	
   	radixSort(L);
+  	
+  	mostrarLista(L);
 
-	printf("\n****BUSQUEDA BINARIA****\n");
-	printf("\n-->Valor a consultar: %d \n", aleatorio);
-	resultado=obtenerTamano(L);
-
-    resultado = findBinarySearch(L, aleatorio, 0, resultado); 
-	
-	if(resultado >= 0)
-		printf("\n-->El dato se encuentra en la posicion %d\n", resultado);	
-	else	
-		printf("\n-->El dato no esta en lista\n");
+//	printf("\n****BUSQUEDA BINARIA****\n");
+//	printf("\n-->Valor a consultar: %d \n", aleatorio);
+//	resultado=obtenerTamano(L);
+//
+//    resultado = findBinarySearch(L, aleatorio, 0, resultado); 
+//	
+//	if(resultado >= 0)
+//		printf("\n-->El dato se encuentra en la posicion %d\n", resultado);	
+//	else	
+//		printf("\n-->El dato no esta en lista\n");
 			
 	/*****************************************************************************************/
 	
