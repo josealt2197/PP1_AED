@@ -95,6 +95,7 @@ void guardarCalificacion(Calificacion *calificacion);
 void actualizarCalificacion(struct ListaCalificaciones *L);
 void modificarCalificacion(struct ListaCalificaciones *L,  char idAsignacion[]);
 void actualizarCalificacion(struct ListaCalificaciones *L);
+double promedioCalificaciones(const char idRequerimiento[]);
 
 //Procedimientos para Análisis de Datos
 void analisisDeDatos(int tipoAnalisis);
@@ -125,9 +126,9 @@ int validarHoras(char horaRQ[], char horaAS[]);
 
 //Procedimientos para liberar estructuras de datos
 void liberarColaMiembros(ColaMiembros *C);
+void liberarColaIncidentes(ColaIncidentes *C);
 void liberarListaRequerimientos(ListaRequerimientos *L);
 void liberarListaAsignaciones(ListaAsignaciones *L);
-void liberarColaIncidentes(ColaIncidentes *C);
 void liberarTopMiembros(ListaTopMiembros *L);
 void liberarTopEsfuerzo(ListaTopEsfuerzo *L);
 void liberarTopHorarios(ListaTopHorarios *L);
@@ -146,8 +147,7 @@ struct Requerimiento{
     char esfuerzo[5];
     char oficina [15];
     Requerimiento *siguiente;
-    Requerimiento *anterior;
-    
+
 };
 
 struct MiembroEquipo{
@@ -156,7 +156,6 @@ struct MiembroEquipo{
     char correo[50];
     char nivel_acceso[3];
     char telefono[15];
-    MiembroEquipo *anterior;
     MiembroEquipo *siguiente;
     
 };
@@ -182,7 +181,6 @@ struct Incidentes{
     char codigoAsignacion[15];
     char descripcionIncidente[100];
     char fecha[20];
-    Incidentes *anterior;
     Incidentes *siguiente;
 };
 
@@ -191,7 +189,6 @@ struct Calificacion{
     char codigoAsignacion[15];
     char miembro[30];
     char calificacion[10];
-    Calificacion *anterior;
     Calificacion *siguiente;
 };
 
@@ -200,7 +197,6 @@ struct Oficina{
     char dias[30];
     char horaApertura[15];
     char horaCierre[15];
-    Oficina *anterior;
     Oficina *siguiente;
 };
 
@@ -890,7 +886,7 @@ int cargarMiembros(struct ColaMiembros *C){
 	
 	struct MiembroEquipo *aux;
 
-	aux =(struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
+	
 
 	ArchMiembros = fopen("Archivos\\MiembroEquipo.txt","r");
 
@@ -898,6 +894,8 @@ int cargarMiembros(struct ColaMiembros *C){
 		return 0;
 	}else{
 		while(!feof(ArchMiembros)){
+			aux =(struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
+			
 			fgets(aux->cedula, 12, ArchMiembros); 
 			quitaFinLinea(aux->cedula);
 			fgets(aux->nombre_completo, 50, ArchMiembros); 
@@ -912,26 +910,14 @@ int cargarMiembros(struct ColaMiembros *C){
 			if(C->inicio == NULL) 
 			{
 				//Inserta al inicio de la lista
-				C->inicio = (struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
-				strcpy(C->inicio->cedula , aux->cedula);
-				strcpy(C->inicio->nombre_completo , aux->nombre_completo); 
-				strcpy(C->inicio->correo , aux->correo ); 
-				strcpy(C->inicio->nivel_acceso , aux->nivel_acceso); 
-				strcpy(C->inicio->telefono , aux->telefono); 
+				C->inicio = aux;
 				C->inicio->siguiente = NULL; 
-				C->inicio->anterior = NULL; 
 				C->final = C->inicio;
 	
 			}else{	
 				//Inserta al final de la lista	
-				C->final->siguiente = (struct MiembroEquipo *) malloc (sizeof(struct MiembroEquipo));
-				strcpy(C->final->siguiente->cedula , aux->cedula);
-				strcpy(C->final->siguiente->nombre_completo , aux->nombre_completo); 
-				strcpy(C->final->siguiente->correo , aux->correo ); 
-				strcpy(C->final->siguiente->nivel_acceso , aux->nivel_acceso); 
-				strcpy(C->final->siguiente->telefono , aux->telefono); 
+				C->final->siguiente = aux; 
 				C->final->siguiente->siguiente = NULL; 
-				C->final->siguiente->anterior = C->final; 
 				C->final = C->final->siguiente;
 			}		
 		}
@@ -1013,9 +999,10 @@ void consultarMiembroEquipo(){
 	                printf("+-------------------------------------+\n");
 	                printf( "      Requerimientos Asignados   \n" );
 	                printf("+-------------------------------------+\n");
-					if(resRequerimiento=1)
+					
+					if(resAsignacion==1)
                 	{
-
+	
                     iAsig = LAsig->inicio;
                     while( iAsig->siguiente!= NULL){
                         if(compararCadenas(iAsig->miembros, i->cedula)==1){
@@ -1037,18 +1024,22 @@ void consultarMiembroEquipo(){
                                     printf("    Estado: %s \n", iReque->estado);
                                     printf("    +-------------------------------------+\n");
 									
-									iIncidente = CIncidente->inicio;
-                                    while(iIncidente->siguiente!= NULL){
-	                                    if (compararCadenas(iIncidente->codigoRequerimiento , iReque->identificador)==1){
-	                                    	
-	                                        printf("\n        ~~~~Datos de Incidentes~~~~\n");
-	                                        printf("        Descripcion del incidente: %s \n", iIncidente->descripcionIncidente); 
-	                                        printf("        Fecha de Incidente: %s \n", iIncidente->fecha);
-	                                        printf("        +-------------------------------------+\n");
-	
+									if(resIncidente==1)
+                					{
+									
+										iIncidente = CIncidente->inicio;
+	                                    while(iIncidente->siguiente!= NULL){
+		                                    if (compararCadenas(iIncidente->codigoRequerimiento , iReque->identificador)==1){
+		                                    	
+		                                        printf("\n        ~~~~Datos de Incidentes~~~~\n");
+		                                        printf("        Descripcion del incidente: %s \n", iIncidente->descripcionIncidente); 
+		                                        printf("        Fecha de Incidente: %s \n", iIncidente->fecha);
+		                                        printf("        +-------------------------------------+\n");
+		
+		                                    }
+	                                    	iIncidente = iIncidente->siguiente;
 	                                    }
-                                    	iIncidente = iIncidente->siguiente;
-                                    }
+	                            	}
 								
 								}
                                 iReque = iReque->siguiente;
@@ -1064,7 +1055,7 @@ void consultarMiembroEquipo(){
                         printf( "\nNo tiene requerimentos asignados");
                     }
                 }else{
-                    printf( "\nNo se han registrado Requerimientos");
+                    printf( "\nNo tiene requerimentos asignados");
                 }
 
                 break;
@@ -1250,7 +1241,7 @@ int cargarRequerimientos(struct ListaRequerimientos *L){
 
 	struct Requerimiento *requerimiento, *aux;
 		
-	aux = (struct Requerimiento *) malloc(sizeof(struct Requerimiento));
+	
 
 	ArchRequerimiento = fopen("Archivos\\Requerimientos.txt","r");
 
@@ -1259,6 +1250,8 @@ int cargarRequerimientos(struct ListaRequerimientos *L){
 	}else{
 
 		while(!feof(ArchRequerimiento)){
+			aux = (struct Requerimiento *) malloc(sizeof(struct Requerimiento));
+			
 			fgets(aux->identificador, 50, ArchRequerimiento); 
 			quitaFinLinea(aux->identificador);
 			fgets(aux->tipo, 20, ArchRequerimiento); 
@@ -1281,34 +1274,14 @@ int cargarRequerimientos(struct ListaRequerimientos *L){
 			if(L->inicio == NULL) 
 			{
 				//Inserta al inicio de la lista
-				L->inicio = (struct Requerimiento *) malloc (sizeof(struct Requerimiento));
-				strcpy(L->inicio->identificador , aux->identificador);
-				strcpy(L->inicio->tipo , aux->tipo); 
-				strcpy(L->inicio->descripcion , aux->descripcion ); 
-				strcpy(L->inicio->riesgo , aux->riesgo); 
-				strcpy(L->inicio->dependencia , aux->dependencia); 
-				strcpy(L->inicio->recursos , aux->recursos); 
-				strcpy(L->inicio->estado , aux->estado); 
-				strcpy(L->inicio->esfuerzo , aux->esfuerzo);
-				strcpy(L->inicio->oficina , aux->oficina);
+				L->inicio = aux;
 				L->inicio->siguiente = NULL; 
-				L->inicio->anterior = NULL; 
 				L->final = L->inicio;
 	
 			}else{	
 				//Inserta al final de la lista	
-				L->final->siguiente = (struct Requerimiento *) malloc (sizeof(struct Requerimiento));
-				strcpy(L->final->siguiente->identificador , aux->identificador);
-				strcpy(L->final->siguiente->tipo , aux->tipo); 
-				strcpy(L->final->siguiente->descripcion , aux->descripcion ); 
-				strcpy(L->final->siguiente->riesgo , aux->riesgo); 
-				strcpy(L->final->siguiente->dependencia , aux->dependencia); 
-				strcpy(L->final->siguiente->recursos , aux->recursos); 
-				strcpy(L->final->siguiente->estado , aux->estado); 
-				strcpy(L->final->siguiente->esfuerzo , aux->esfuerzo);
-				strcpy(L->final->siguiente->oficina , aux->oficina);
+				L->final->siguiente = aux;
 				L->final->siguiente->siguiente = NULL; 
-				L->final->siguiente->anterior = L->final; 
 				L->final = L->final->siguiente;
 			}		
 		}
@@ -1572,12 +1545,11 @@ void actualizarRequerimientos(struct ListaRequerimientos *L){
 	
 	 if (remove("Archivos\\Requerimientos.txt") != 0)
 	 	return;
-	 	
+	
 	ArchRequerimiento=fopen("Archivos\\Requerimientos.txt","a+");
 	if(ArchRequerimiento==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
-		
 		i = L->inicio;
         while( i->siguiente!= NULL){
 			fprintf(ArchRequerimiento,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", i->identificador, i->tipo, i->descripcion,
@@ -1586,6 +1558,8 @@ void actualizarRequerimientos(struct ListaRequerimientos *L){
         }
 		
 	}
+	
+	
 	fclose(ArchRequerimiento);
 	printf("\n ==>Informacion guardada<==.\n");
 	
@@ -1602,7 +1576,7 @@ void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[]
 	struct Requerimiento *i;
 	char id[15];
 	int val;
-
+	
     i = L->inicio;
     while( i->siguiente!= NULL){
         if(strcmp(i->identificador, identificador)==0){
@@ -1611,8 +1585,7 @@ void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[]
         i = i->siguiente;
     }
 
-	actualizarRequerimientos(L);
-	liberarListaRequerimientos(L);	
+	actualizarRequerimientos(L);	
 }
 
 /*
@@ -1624,7 +1597,7 @@ int cargarOficinas(struct ListaOficinas *L){
 	
 	struct Oficina *oficina, *aux;
 
-	aux =(struct Oficina *) malloc (sizeof(struct Oficina));
+	
 
 	ArchOficinas = fopen("Archivos\\Oficinas.txt","r");
 
@@ -1633,6 +1606,9 @@ int cargarOficinas(struct ListaOficinas *L){
 	}else{
 
 		while(!feof(ArchOficinas)){
+			
+			aux =(struct Oficina *) malloc (sizeof(struct Oficina));
+			
 			fgets(aux->codigo, 50, ArchOficinas); 
 			quitaFinLinea(aux->codigo);
 			fgets(aux->dias, 30, ArchOficinas);
@@ -1645,24 +1621,14 @@ int cargarOficinas(struct ListaOficinas *L){
 			if(L->inicio == NULL) 
 			{
 				//Inserta al inicio de la lista
-				L->inicio =(struct Oficina *) malloc (sizeof(struct Oficina));
-				strcpy(L->inicio->codigo , aux->codigo);
-				strcpy(L->inicio->dias , aux->dias); 
-				strcpy(L->inicio->horaApertura , aux->horaApertura ); 
-				strcpy(L->inicio->horaCierre , aux->horaCierre); 
+				L->inicio = aux;
 				L->inicio->siguiente = NULL; 
-				L->inicio->anterior = NULL; 
 				L->final = L->inicio;
 	
 			}else{	
 				//Inserta al final de la lista	
-				L->final->siguiente =(struct Oficina *) malloc (sizeof(struct Oficina));
-				strcpy(L->final->siguiente->codigo , aux->codigo);
-				strcpy(L->final->siguiente->dias , aux->dias); 
-				strcpy(L->final->siguiente->horaApertura , aux->horaApertura ); 
-				strcpy(L->final->siguiente->horaCierre , aux->horaCierre); 
-				L->final->siguiente->siguiente = NULL; 
-				L->final->siguiente->anterior = L->final; 
+				L->final->siguiente = aux;
+				L->final->siguiente->siguiente = NULL;
 				L->final = L->final->siguiente;
 			}		
 		}
@@ -1742,134 +1708,152 @@ void registrarAsignacion(){
     
     struct ListaOficinas *LOf;
     struct Oficina *iOf;
+    
+    struct ListaAsignaciones *LA;
 	
 	LRQ = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
     LRQ->inicio = NULL;
     LRQ->final = NULL;
     
-    LOf = (struct ListaOficinas *) malloc(sizeof(struct ListaOficinas));
-    LOf->inicio = NULL;
-    LOf->final = NULL;
-	
-	struct ListaAsignaciones *LA;
-	LA = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
-	LA->inicio = NULL;
-	LA->final = NULL;
-
-	res3=cargarAsignaciones(LA);
+    res = cargarRequerimientos(LRQ);
+    
+    if(res==1){
+    	LOf = (struct ListaOficinas *) malloc(sizeof(struct ListaOficinas));
+	    LOf->inicio = NULL;
+	    LOf->final = NULL;
 		
-	do{
-        printf("\n Ingrese el Codigo de la Asignacion: (Ejm. AS-001) \n");
-		gets(asignacion->codigoAsignacion);
-
-        if(validarAsignacion(LA, asignacion->codigoAsignacion, idRQ, miembro)==1){
-			printf("\n **El codigo ingresado corresponde una Asignacion registrada**\n ");        
-        }else{
-        	break;  
-        }
-    }while(1);
-	
-	obtenerFechaActual(fecha);
-	strcpy(asignacion->fechaSolicitud, fecha);
-	
-	printf("\n Ingrese las Cedula del Miembro: (Ejm. 105450656) \n");
-	gets(asignacion->miembros);
-	
-	val0=validarCedula(asignacion->miembros);
-	if(val0!=1){//Validar el miembro se encuentra registrado.
-		printf("\n***No es posible completar la asignacion, la cedula ingresada\n   no corresponde a ningun miembro registrado***");
-		printf("\n\nPresione una tecla para regresar..." ); 
-		getchar();
-		return;
-	}
-	
-	val1=validarNivelMiembro(asignacion->miembros);
-	if(val1==-1){//Validar el nivel de acceso para el miembro consultado.
-		printf("\n***No es posible completar la asignacion, el nivel de acceso\n   del miembro consultado debe ser mayor a 3***");
-		printf("\n\nPresione una tecla para regresar..." ); 
-		getchar();
-		return;
-	}
-	
-	printf("\n Ingrese la Hora de Inicio: (Ejm. 07:25) \n");
-	gets(asignacion->horaInicio);
-	printf("\n Ingrese el Hora de Fin: (Ejm. 14:25) \n");
-	gets(asignacion->horaFin);
-	
-	printf("\n Ingrese el ID del Requerimiento: \n");
-	//Mostrar Requerimientos
-	res = cargarRequerimientos(LRQ);
-	res2 = cargarOficinas(LOf);
-
-	iRQ = LRQ->inicio;
-	printf("\n                     ***Lista de Requerimientos Compatibles***\n");
-	printf("+-----------------------------------------------------------------------------------+\n");
-	printf("\n   ID        Oficina      Hora-Apertura   Hora-Cierre  Dias de Trabajo   Descripcion\n" ); 
-    while(iRQ->siguiente!= NULL){         
-    	iOf = LOf->inicio;
-        while(iOf->siguiente!= NULL){
-            if (compararCadenas(iOf->codigo , iRQ->oficina)==1){
-            	strcpy(hRQ_Inicio, iOf->horaApertura);
-    			strcpy(hRQ_Fin, iOf->horaCierre);
-    			strcpy(hAS_Inicio, asignacion->horaInicio);
-    			strcpy(hAS_Fin, asignacion->horaFin);
-            	if((validarHoras(hRQ_Inicio, hAS_Inicio)==2 || validarHoras(hRQ_Inicio, hAS_Inicio)==0) && (validarHoras(hRQ_Fin, hAS_Fin)==1 || validarHoras(hRQ_Fin, hAS_Fin)==0)){
-            		printf("\n   %s      %s           %s        %s         %s       %s\n" , iRQ->identificador, iOf->codigo, iOf->horaApertura, iOf->horaCierre, iOf->dias, iRQ->descripcion);
-            		
-            	}
-            }
-        	iOf = iOf->siguiente;
-        }
-    	iRQ = iRQ->siguiente;
-    }
-    printf("\n+-----------------------------------------------------------------------------------+\n");           
-	gets(asignacion->identificador);
-	
-	val2=contarIncidentes(asignacion->identificador);
-	if(val2==-1){ //Validar el numero de Incidentes para el requerimiento seleccionado.
-		printf("\n***No es posible completar la asignacion, el requerimiento\n   seleccionado posee 3 o mas incidentes***");
-		printf("\n\nPresione una tecla para regresar..." ); 
-		getchar();	
-		return;
-	}
-	
-	val3=validarAsignaciones(asignacion->identificador);
-	if(val3==-1){ //Validar el numero de Asignaciones para el requerimiento seleccionado.
-		printf("\n***No es posible completar la asignacion, el numero de\n   participantes es mayor a 3***");
-		printf("\n\nPresione una tecla para regresar..." ); 
-		getchar();	
-		return;
-	}
-	
-	printf("\n Ingrese el Recurso (Opcional): \n");
-	gets(asignacion->recurso);
-	
-	printf("\n Ingrese la Descripcion: \n");
-	gets(asignacion->descripcion);
 		
-	prioridad = numeroAleatorio();
-
-	switch(prioridad){
-		case 1:  strcpy(asignacion->prioridad, "ALTA");
-			break;
-		case 2: strcpy(asignacion->prioridad, "MEDIA");
-			break;
-		case 3: strcpy(asignacion->prioridad, "BAJA");
-			break;		
-	}		
-	strcpy(asignacion->estado, "En proceso");
+		LA = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
+		LA->inicio = NULL;
+		LA->final = NULL;
 	
-	//Actualizar el Estado del Requerimiento
-	printf("%s \n", asignacion->identificador);
-	modificarEstadoRQ(LRQ, asignacion->identificador);
-
-	guardarAsignacion(asignacion);
+		res3=cargarAsignaciones(LA);
+			
+		do{
+	        printf("\n Ingrese el Codigo de la Asignacion: (Ejm. AS-001) \n");
+			gets(asignacion->codigoAsignacion);
+			
+			if(res3==1){
+				if(validarAsignacion(LA, asignacion->codigoAsignacion, idRQ, miembro)==1){
+					printf("\n **El codigo ingresado corresponde una Asignacion registrada**\n ");        
+		        }else{
+		        	break;  
+		        }
+			}else{
+				break;
+			}
+		        
+	    }while(1);
+		
+		obtenerFechaActual(fecha);
+		strcpy(asignacion->fechaSolicitud, fecha);
+		
+		printf("\n Ingrese las Cedula del Miembro: (Ejm. 105450656) \n");
+		gets(asignacion->miembros);
+		
+		val0=validarCedula(asignacion->miembros);
+		if(val0!=1){//Validar el miembro se encuentra registrado.
+			printf("\n***No es posible completar la asignacion, la cedula ingresada\n   no corresponde a ningun miembro registrado***");
+			printf("\n\nPresione una tecla para regresar..." ); 
+			getchar();
+			return;
+		}
+		
+		val1=validarNivelMiembro(asignacion->miembros);
+		if(val1==-1){//Validar el nivel de acceso para el miembro consultado.
+			printf("\n***No es posible completar la asignacion, el nivel de acceso\n   del miembro consultado debe ser mayor a 3***");
+			printf("\n\nPresione una tecla para regresar..." ); 
+			getchar();
+			return;
+		}
+		
+		printf("\n Ingrese la Hora de Inicio: (Ejm. 07:25) \n");
+		gets(asignacion->horaInicio);
+		printf("\n Ingrese el Hora de Fin: (Ejm. 14:25) \n");
+		gets(asignacion->horaFin);
+		
+		printf("\n Ingrese el ID del Requerimiento: \n");
+		//Mostrar Requerimientos
+		
+		res3 = cargarOficinas(LOf);
 	
-	liberarListaRequerimientos(LRQ);
-	liberarListaAsignaciones(LA);
-	liberarListaOficinas(LOf);
-	free(asignacion);
+		iRQ = LRQ->inicio;
+		printf("\n                     ***Lista de Requerimientos Compatibles***\n");
+		printf("+-----------------------------------------------------------------------------------+\n");
+		printf("\n   ID        Oficina      Hora-Apertura   Hora-Cierre  Dias de Trabajo   Descripcion\n" ); 
+	    while(iRQ->siguiente!= NULL){         
+	    	iOf = LOf->inicio;
+	        while(iOf->siguiente!= NULL){
+	            if (compararCadenas(iOf->codigo , iRQ->oficina)==1){
+	            	strcpy(hRQ_Inicio, iOf->horaApertura);
+	    			strcpy(hRQ_Fin, iOf->horaCierre);
+	    			strcpy(hAS_Inicio, asignacion->horaInicio);
+	    			strcpy(hAS_Fin, asignacion->horaFin);
+	            	if((validarHoras(hRQ_Inicio, hAS_Inicio)==2 || validarHoras(hRQ_Inicio, hAS_Inicio)==0) && (validarHoras(hRQ_Fin, hAS_Fin)==1 || validarHoras(hRQ_Fin, hAS_Fin)==0)){
+	            		printf("\n   %s      %s           %s        %s         %s       %s\n" , iRQ->identificador, iOf->codigo, iOf->horaApertura, iOf->horaCierre, iOf->dias, iRQ->descripcion);
+	            		
+	            	}
+	            }
+	        	iOf = iOf->siguiente;
+	        }
+	    	iRQ = iRQ->siguiente;
+	    }
+	    printf("\n+-----------------------------------------------------------------------------------+\n");           
+		gets(asignacion->identificador);
+		
+		val2=contarIncidentes(asignacion->identificador);
+		if(val2==-1){ //Validar el numero de Incidentes para el requerimiento seleccionado.
+			printf("\n***No es posible completar la asignacion, el requerimiento\n   seleccionado posee 3 o mas incidentes***");
+			printf("\n\nPresione una tecla para regresar..." ); 
+			getchar();	
+			return;
+		}
+		
+		val3=validarAsignaciones(asignacion->identificador);
+		if(val3==-1){ //Validar el numero de Asignaciones para el requerimiento seleccionado.
+			printf("\n***No es posible completar la asignacion, el numero de\n   participantes es mayor a 3***");
+			printf("\n\nPresione una tecla para regresar..." ); 
+			getchar();	
+			return;
+		}
+		
+		printf("\n Ingrese el Recurso (Opcional): \n");
+		gets(asignacion->recurso);
+		
+		printf("\n Ingrese la Descripcion: \n");
+		gets(asignacion->descripcion);
+			
+		prioridad = numeroAleatorio();
 	
+		switch(prioridad){
+			case 1:  strcpy(asignacion->prioridad, "ALTA");
+				break;
+			case 2: strcpy(asignacion->prioridad, "MEDIA");
+				break;
+			case 3: strcpy(asignacion->prioridad, "BAJA");
+				break;		
+		}		
+		strcpy(asignacion->estado, "En proceso");
+		
+		//Actualizar el Estado del Requerimiento
+		modificarEstadoRQ(LRQ, asignacion->identificador);
+	
+		guardarAsignacion(asignacion);
+		
+		
+		liberarListaAsignaciones(LA);
+		liberarListaOficinas(LOf);
+		
+	
+	}else{
+		printf("\n***No es posible completar la asignacion, no se ha resgistrado\n   ningún requerimiento***");
+		printf("\n\nPresione una tecla para regresar..." ); 
+	}
+	
+	
+    liberarListaRequerimientos(LRQ);
+    free(asignacion);
+    
 	getchar();	
 }
 
@@ -1902,8 +1886,6 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 	
 	struct Asignacion *asignacion, *aux;
 
-	aux =(struct Asignacion *) malloc (sizeof(struct Asignacion));
-
 	ArchAsignaciones = fopen("Archivos\\Asignaciones.txt","r");
 
 	if(ArchAsignaciones==NULL){
@@ -1911,6 +1893,8 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 	}else{
 
 		while(!feof(ArchAsignaciones)){
+			aux =(struct Asignacion *) malloc (sizeof(struct Asignacion));
+			
 			fgets(aux->codigoAsignacion, 15, ArchAsignaciones); 
 			quitaFinLinea(aux->codigoAsignacion);
 			fgets(aux->fechaSolicitud, 50, ArchAsignaciones); 
@@ -1935,33 +1919,13 @@ int cargarAsignaciones(struct ListaAsignaciones *L){
 			if(L->inicio == NULL) 
 			{
 				//Inserta al inicio de la lista
-				L->inicio =(struct Asignacion *) malloc (sizeof(struct Asignacion));
-				strcpy(L->inicio->codigoAsignacion , aux->codigoAsignacion);
-				strcpy(L->inicio->fechaSolicitud , aux->fechaSolicitud);
-				strcpy(L->inicio->horaInicio , aux->horaInicio ); 
-				strcpy(L->inicio->horaFin , aux->horaFin); 
-				strcpy(L->inicio->recurso , aux->recurso); 
-				strcpy(L->inicio->identificador , aux->identificador); 
-				strcpy(L->inicio->descripcion , aux->descripcion);
-				strcpy(L->inicio->miembros , aux->miembros); 
-				strcpy(L->inicio->prioridad , aux->prioridad ); 
-				strcpy(L->inicio->estado , aux->estado); 
+				L->inicio = aux;
 				L->inicio->siguiente = NULL; 
 				L->final = L->inicio;
 	
 			}else{	
 				//Inserta al final de la lista	
-				L->final->siguiente =(struct Asignacion *) malloc (sizeof(struct Asignacion));
-				strcpy(L->final->siguiente->codigoAsignacion , aux->codigoAsignacion);
-				strcpy(L->final->siguiente->fechaSolicitud , aux->fechaSolicitud);
-				strcpy(L->final->siguiente->horaInicio , aux->horaInicio ); 
-				strcpy(L->final->siguiente->horaFin , aux->horaFin); 
-				strcpy(L->final->siguiente->identificador , aux->identificador); 
-				strcpy(L->final->siguiente->descripcion , aux->descripcion);
-				strcpy(L->final->siguiente->recurso , aux->recurso);
-				strcpy(L->final->siguiente->miembros , aux->miembros); 
-				strcpy(L->final->siguiente->prioridad , aux->prioridad ); 
-				strcpy(L->final->siguiente->estado , aux->estado); 
+				L->final->siguiente = aux; 
 				L->final->siguiente->siguiente = NULL; 
 				L->final = L->final->siguiente;
 			}		
@@ -2321,6 +2285,8 @@ int validarAsignaciones(const char identificador[]){
 */
 int validarAsignacion(struct ListaAsignaciones *L, char idAsignacion[], char idRQ[], char idMiembro[]){
 	struct  Asignacion *i;
+	
+	printf("Dentro");
 
     i = L->inicio;
     while( i->siguiente!= NULL){
@@ -2371,11 +2337,17 @@ void registrarIncidentes(){
         printf("\n Ingrese el Codigo del Incidente: (Ejm. IN-001) \n");
 		gets(incidente->codigoIncidente);
 	
-        if(validarIncidentes(C, incidente->codigoIncidente)==1){
-			printf("\n **El codigo ingresado corresponde con un Incidente registrado**\n ");        
-        }else{
-        	break;  
-        }
+        
+		if(res==1){
+			if(validarIncidentes(C, incidente->codigoIncidente)==1){
+				printf("\n **El codigo ingresado corresponde con un Incidente registrado**\n ");        
+	        }else{
+	        	break;  
+	        }
+		}else{
+			break;	
+		}
+		
     }while(1);
 		
 	printf("\n Ingrese el Codigo del Requerimiento: (Ejm. RQ-000) \n");
@@ -2426,7 +2398,7 @@ int cargarIncidentes(struct ColaIncidentes *C){
 	
 	struct Incidentes *aux;
 
-	aux = (struct Incidentes *) malloc (sizeof(struct Incidentes));
+	
 
 	ArchIncidentes = fopen("Archivos\\Incidentes.txt","r");
 
@@ -2435,6 +2407,9 @@ int cargarIncidentes(struct ColaIncidentes *C){
 	}else{
 	
 		while(!feof(ArchIncidentes)){
+			
+			aux = (struct Incidentes *) malloc (sizeof(struct Incidentes));
+			
 			fgets(aux->codigoIncidente, 15, ArchIncidentes);
 			quitaFinLinea(aux->codigoIncidente);
 			fgets(aux->codigoRequerimiento, 15, ArchIncidentes); 
@@ -2448,26 +2423,14 @@ int cargarIncidentes(struct ColaIncidentes *C){
 						
 			if(C->inicio == NULL){
 				//Inserta al inicio de la lista
-				C->inicio = (struct Incidentes *) malloc (sizeof(struct Incidentes));
-				strcpy(C->inicio->codigoIncidente , aux->codigoIncidente);
-				strcpy(C->inicio->codigoRequerimiento , aux->codigoRequerimiento);
-				strcpy(C->inicio->codigoAsignacion , aux->codigoAsignacion ); 
-				strcpy(C->inicio->descripcionIncidente , aux->descripcionIncidente); 
-				strcpy(C->inicio->fecha , aux->fecha); 
+				C->inicio = aux;
 				C->inicio->siguiente = NULL; 
-				C->inicio->anterior = NULL; 
 				C->final = C->inicio;
 	
 			}else{
 				//Inserta al final de la lista	
-				C->final->siguiente =(struct Incidentes *) malloc (sizeof(struct Incidentes));
-				strcpy(C->final->siguiente->codigoIncidente , aux->codigoIncidente);
-				strcpy(C->final->siguiente->codigoRequerimiento , aux->codigoRequerimiento);
-				strcpy(C->final->siguiente->codigoAsignacion , aux->codigoAsignacion ); 
-				strcpy(C->final->siguiente->descripcionIncidente , aux->descripcionIncidente); 
-				strcpy(C->final->siguiente->fecha , aux->fecha); 
+				C->final->siguiente = aux;
 				C->final->siguiente->siguiente = NULL; 
-				C->final->siguiente->anterior = C->final; 
 				C->final = C->final->siguiente;
 			}		
 		}
@@ -2775,7 +2738,6 @@ void registrarCalificaciones(){
 	gets(calificacion->calificacion);
 	printf("\n");
 	calificacion->siguiente=NULL;
-	calificacion->anterior=NULL;
 	
     i = LC->inicio;
     while( i->siguiente!= NULL){
@@ -2829,9 +2791,7 @@ void guardarCalificacion(Calificacion *calificacion){
 int cargarCalificaciones(struct ListaCalificaciones *L){
 	
 	struct Calificacion *aux;
-
-	aux = (struct Calificacion *) malloc (sizeof(struct Calificacion));
-
+	
 	ArchCalificaciones = fopen("Archivos\\Calificaciones.txt","r");
 
 	if(ArchCalificaciones==NULL){
@@ -2839,6 +2799,9 @@ int cargarCalificaciones(struct ListaCalificaciones *L){
 	}else{
 	
 		while(!feof(ArchCalificaciones)){
+			
+			aux = (struct Calificacion *) malloc (sizeof(struct Calificacion));
+			
 			fgets(aux->codigoAsignacion, 15, ArchCalificaciones);
 			quitaFinLinea(aux->codigoAsignacion);
 			fgets(aux->codigoRequerimiento, 15, ArchCalificaciones); 
@@ -2850,24 +2813,14 @@ int cargarCalificaciones(struct ListaCalificaciones *L){
 						
 			if(L->inicio == NULL){
 				//Inserta al inicio de la lista
-				L->inicio = (struct Calificacion *) malloc (sizeof(struct Calificacion));
-				strcpy(L->inicio->codigoAsignacion , aux->codigoAsignacion);
-				strcpy(L->inicio->codigoRequerimiento , aux->codigoRequerimiento);
-				strcpy(L->inicio->miembro , aux->miembro ); 
-				strcpy(L->inicio->calificacion , aux->calificacion); 
+				L->inicio = aux;
 				L->inicio->siguiente = NULL; 
-				L->inicio->anterior = NULL; 
 				L->final = L->inicio;
 	
 			}else{
 				//Inserta al final de la lista	
-				L->final->siguiente =(struct Calificacion *) malloc (sizeof(struct Calificacion));
-				strcpy(L->final->siguiente->codigoAsignacion , aux->codigoAsignacion);
-				strcpy(L->final->siguiente->codigoRequerimiento , aux->codigoRequerimiento);
-				strcpy(L->final->siguiente->miembro , aux->miembro ); 
-				strcpy(L->final->siguiente->calificacion , aux->calificacion); 
+				L->final->siguiente = aux;
 				L->final->siguiente->siguiente = NULL; 
-				L->final->siguiente->anterior = L->final; 
 				L->final = L->final->siguiente;
 			}		
 		}
@@ -2875,6 +2828,47 @@ int cargarCalificaciones(struct ListaCalificaciones *L){
 	}	
 	return 1;
 }
+
+/*
+	Entradas: Ninguna
+	Salidas: El promedio de las calificaciones registradas para un requerimiento.
+	Restricciones: Ninguna
+*/
+double promedioCalificaciones(const char idRequerimiento[]){
+	
+	struct ListaCalificaciones *LC;
+	LC = (struct ListaCalificaciones *) malloc(sizeof(struct ListaCalificaciones));
+    LC->inicio = NULL;
+    LC->final = NULL;
+    
+    struct Calificacion *aux;
+    
+    int res, suma=0, cantidad=0;
+    double promedio=0;
+        
+	res=cargarCalificaciones(LC);
+	
+	if(res == 0){	
+		return 0;	
+	}else{
+		aux = LC->inicio;
+		while( aux->siguiente!= NULL){	
+	        if(strcmp(aux->codigoRequerimiento, idRequerimiento)==0){   
+				suma += atoi(aux->calificacion);
+				cantidad++;
+	        }
+			aux = aux->siguiente;
+		}
+		
+	}
+	
+	promedio = suma/cantidad;	
+	
+	return promedio;
+	
+	liberarListaCalificaciones(LC);		
+}
+
 
 
 /****************************************************************Procedimientos para Analisis de Datos*******************************************************************************************/
