@@ -27,6 +27,7 @@ typedef struct NodoTopAsignacion NodoTopAsignacion;
 typedef struct NodoTopHorario NodoTopHorario;
 typedef struct NodoTopMiembro NodoTopMiembro;
 typedef struct NodoTopEsfuerzo NodoTopEsfuerzo;
+typedef struct NodoPrioridad NodoPrioridad;
 
 //Tipos para la construccion de las estructuras de datos
 typedef struct ColaMiembros ColaMiembros;
@@ -40,6 +41,7 @@ typedef struct ListaTopHorarios ListaTopHorarios;
 typedef struct ListaTopEsfuerzo ListaTopEsfuerzo;
 typedef struct ListaTopMiembros ListaTopMiembros;
 typedef struct PilaAsignaciones PilaAsignaciones;
+typedef struct ColaPrioridad ColaPrioridad;
 
 //Procedimientos para Menus de Opciones
 void MenuPrincipal();
@@ -136,6 +138,7 @@ void liberarTopAsignaciones(ListaTopAsignaciones *L);
 void liberarListaOficinas(ListaOficinas *L);
 void liberarListaCalificaciones(ListaCalificaciones *L);
 void liberarPilaAsignaciones(PilaAsignaciones *P);
+
 
 struct Requerimiento{
     char identificador[50];
@@ -277,6 +280,19 @@ struct ListaTopEsfuerzo{
 
 struct PilaAsignaciones{
 	Asignacion *tope;
+};
+
+struct NodoPrioridad{
+	char prioridad[10];
+	Asignacion *asignacion;
+	NodoPrioridad *siguiente;
+	
+};
+
+struct ColaPrioridad{
+	NodoPrioridad *frente;
+	NodoPrioridad *final;
+
 };
 
 /****************************************************************Menús de Opciones***********************************************************************************************/
@@ -1773,7 +1789,7 @@ void registrarAsignacion(){
 		printf("\n Ingrese el Hora de Fin: (Ejm. 14:25) \n");
 		gets(asignacion->horaFin);
 		
-		printf("\n Ingrese el ID del Requerimiento: \n");
+		
 		//Mostrar Requerimientos
 		
 		res3 = cargarOficinas(LOf);
@@ -1800,6 +1816,7 @@ void registrarAsignacion(){
 	    	iRQ = iRQ->siguiente;
 	    }
 	    printf("\n+-----------------------------------------------------------------------------------+\n");           
+		printf("\n Ingrese el ID del Requerimiento: \n");
 		gets(asignacion->identificador);
 		
 		val2=contarIncidentes(asignacion->identificador);
@@ -1863,12 +1880,43 @@ void registrarAsignacion(){
 	Salidas: Guardar los datos de la estructura en un archivo .txt. 
 	Restricciones: No tiene restricciones.
 */
-void guardarAsignacion(Asignacion *asignacion){
+void actualizarAsignaciones(struct ListaAsignaciones *L ){
+	
+	struct Asignacion *asignacion;
+	
+	 if (remove("Archivos\\Asignaciones.txt") != 0)
+	 	return;
 	
 	ArchAsignaciones=fopen("Archivos\\Asignaciones.txt","a+");
 	if(ArchAsignaciones==NULL){
 		printf("\n Error al intentar usar el archivo.\n");	
 	}else{
+		asignacion = L->inicio;
+        while( asignacion->siguiente!= NULL){
+        	printf("Dentro Update\n");
+			fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", asignacion->codigoAsignacion, asignacion->fechaSolicitud, asignacion->horaInicio, asignacion->horaFin, asignacion->recurso, asignacion->identificador, 
+																asignacion->descripcion,  asignacion->miembros, asignacion->prioridad, asignacion->estado);
+            asignacion = asignacion->siguiente;
+        }
+		
+	}
+	
+	fclose(ArchAsignaciones);
+
+}
+
+/*
+	Entradas: Una estructura Asignación. 
+	Salidas: Guardar los datos de la estructura en un archivo .txt. 
+	Restricciones: No tiene restricciones.
+*/
+void guardarAsignacion (Asignacion *asignacion){
+	
+	ArchAsignaciones=fopen("Archivos\\Asignaciones.txt","a+");
+	if(ArchAsignaciones==NULL){
+		printf("\n Error al intentar usar el archivo.\n");	
+	}else{
+		
 		fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", asignacion->codigoAsignacion, asignacion->fechaSolicitud, asignacion->horaInicio, asignacion->horaFin, asignacion->recurso, asignacion->identificador, 
 																asignacion->descripcion,  asignacion->miembros, asignacion->prioridad, asignacion->estado);
 					
@@ -1988,6 +2036,124 @@ int cargarPilaAsignaciones(struct PilaAsignaciones *P){
 }
 
 /*
+	Entradas: Un puntero a una pila del tipo PilaAsignaciones de Asignaciones.
+	Salidas: Una pila con los diferentes objetos de la estructura Asignacion (fechaSolicitud, horaInicio, 
+			horaFin, recurso, identificador, descripcion, miembros, prioridad y estado). 
+	Restricciones: Ninguna.
+*/
+void cargarColaPrioridad(struct ColaPrioridad *CP, struct ListaAsignaciones *L){
+	
+	struct Asignacion *i;
+	struct NodoPrioridad *nodoPrioridad;
+
+	for(i = L->inicio; i!= NULL; i = i->siguiente){
+		if(strcmp(i->prioridad, "ALTA")==0){
+			nodoPrioridad = (struct NodoPrioridad *) malloc (sizeof(struct NodoPrioridad));
+			nodoPrioridad->asignacion = i;
+			strcpy(nodoPrioridad->prioridad, "ALTA");
+			nodoPrioridad->siguiente=NULL;
+			
+			if(CP->frente == NULL){
+				//Inserta el primer nodo
+				CP->frente = nodoPrioridad;
+				CP->frente->siguiente = NULL; 
+				CP->final = CP->frente;
+	
+			}else{				
+				//Inserta al final de la cola	
+				CP->final->siguiente = nodoPrioridad; 
+				CP->final->siguiente->siguiente = NULL; 
+				CP->final = CP->final->siguiente;
+			}			
+		}
+	}
+	
+	for(i = L->inicio; i!= NULL; i = i->siguiente){
+		if(strcmp(i->prioridad, "MEDIA")==0){
+			nodoPrioridad = (struct NodoPrioridad *) malloc (sizeof(struct NodoPrioridad));
+			nodoPrioridad->asignacion = i;
+			strcpy(nodoPrioridad->prioridad, "MEDIA");
+			nodoPrioridad->siguiente=NULL;
+			
+			if(CP->frente == NULL){
+				//Inserta el primer nodo
+				CP->frente = nodoPrioridad;
+				CP->frente->siguiente = NULL; 
+				CP->final = CP->frente;
+	
+			}else{				
+				//Inserta al final de la cola	
+				CP->final->siguiente = nodoPrioridad; 
+				CP->final->siguiente->siguiente = NULL; 
+				CP->final = CP->final->siguiente;
+			}			
+		}
+	}
+	
+	for(i = L->inicio; i!= NULL; i = i->siguiente){
+		if(strcmp(i->prioridad, "BAJA")==0){
+			nodoPrioridad = (struct NodoPrioridad *) malloc (sizeof(struct NodoPrioridad));
+			nodoPrioridad->asignacion = i;
+			strcpy(nodoPrioridad->prioridad, "BAJA");
+			nodoPrioridad->siguiente=NULL;
+			
+			if(CP->frente == NULL){
+				//Inserta el primer nodo
+				CP->frente = nodoPrioridad;
+				CP->frente->siguiente = NULL; 
+				CP->final = CP->frente;
+	
+			}else{				
+				//Inserta al final de la cola	
+				CP->final->siguiente = nodoPrioridad; 
+				CP->final->siguiente->siguiente = NULL; 
+				CP->final = CP->final->siguiente;
+			}			
+		}
+	}
+	
+}
+
+/*
+    Entradas:  
+    Salidas: 
+    Restricciones: No valida.
+*/
+int validarHorario(ListaAsignaciones *L,  NodoPrioridad *np){
+
+    struct Asignacion *i;
+
+
+    i = L->inicio;
+    while( i->siguiente!= NULL){
+    	printf("ID i: %s\n", i->identificador);
+    	printf("ID np: %s\n", np->asignacion->identificador );
+    	if (strcmp( i->identificador , np->asignacion->identificador )==0){
+    		printf("Dentro 1\n");
+			if ((validarHoras(i->horaInicio, np->asignacion->horaInicio )==1) && (validarHoras(i->horaInicio, np->asignacion->horaFin )==1 || validarHoras(i->horaInicio, np->asignacion->horaFin )==0)){
+    			printf("Dentro 2\n");
+				strcpy(i->estado, "Aprobada");
+    			return 1;
+			}
+			
+			if ((validarHoras(i->horaFin, np->asignacion->horaInicio )==2 || validarHoras(i->horaFin, np->asignacion->horaInicio )==0) && (validarHoras(i->horaFin, np->asignacion->horaInicio )==2)){
+    			printf("Dentro 3\n");
+				strcpy(i->estado, "Aprobada");
+    			return 1;
+			}
+			
+			strcpy(i->estado, "Rechazada");
+			printf("Fuera if's'\n");
+    		return -1;	
+   	
+    	}
+
+        i = i->siguiente;     
+    }
+    
+}
+
+/*
 	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar las Asignaciones
 	Salidas: Los datos relacionado a las Asignaciones del Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
 			que no se han encontrado.
@@ -1997,7 +2163,7 @@ void consultarAsignaciones(){
 
 	struct PilaAsignaciones *P;
 	struct Asignacion *i;
-	int val=0, val2=0, res=0;
+	int val=0, val2=0, res=0, res2=0;
 	char id[12];
 	
 	struct ListaCalificaciones *LC;
@@ -2014,7 +2180,7 @@ void consultarAsignaciones(){
 	printf( "Consultar Asignaciones de un Miembro\n" );
 	printf("+-------------------------------------+\n");
 	
-	printf("\n Ingrese la cedula del miembro: (Ejm.208140809) \n ");
+	printf("\n Ingrese la cedula del miembro: (Ejm.304560789) \n ");
 	gets(id);
 
 	P = (struct PilaAsignaciones *) malloc(sizeof(struct PilaAsignaciones));
@@ -2022,7 +2188,7 @@ void consultarAsignaciones(){
 
 	res=cargarPilaAsignaciones(P);
 
-	if(res=1)
+	if(res==1)
 	{
 		printf("\n+-------------------------------+\n");
 		for(i = P->tope; i!= NULL; i = i->siguiente){
@@ -2038,11 +2204,11 @@ void consultarAsignaciones(){
 				printf("  Priodidad: %s \n", i->prioridad ); 
 				printf("  Estado: %s \n", i->estado); 
 				
-				res=cargarCalificaciones(LC);
+				res2=cargarCalificaciones(LC);
 	
-				if(res == 0){	
-					printf( "\n-->No se ha registrado una Calificacion para esta asignacion");		
-				}else{
+				if(res2 == 0){	
+					printf("  Calificacion: sin registrar \n");	
+				}else{		
 					aux = LC->inicio;
 					while( aux->siguiente!= NULL){	
 				        if(strcmp(aux->codigoAsignacion, i->codigoAsignacion)==0){   
@@ -2054,7 +2220,7 @@ void consultarAsignaciones(){
 					}
 					
 					if(val2==0){
-						printf( "\n-->No se ha registrado una Calificacion para esta asignacion");			
+						printf("  Calificacion: sin registrar \n");				
 					}
 					
 				}
@@ -2198,8 +2364,8 @@ void cancelarAsignacion(){
 void atencionAsignaciones(){
 
 	struct ListaAsignaciones *L;
-	struct Asignacion *i;
-	int val=3, res=0;
+	struct NodoPrioridad *i;
+	int val=3, res=0, res2=0;
 	char opcion[3];
 	
 	system( "CLS" );
@@ -2212,45 +2378,57 @@ void atencionAsignaciones(){
 	L = (struct ListaAsignaciones *) malloc(sizeof(struct ListaAsignaciones));
 	L->inicio = NULL;
 	L->final = NULL;
+	
+	struct ColaPrioridad *CP;
+	CP = (struct ColaPrioridad *) malloc(sizeof(struct ColaPrioridad));
+    CP->frente = NULL;
+    CP->final = NULL;
 
 	res=cargarAsignaciones(L);
-	if(res==1){		
+	
+	if(res==1){	
+	
+		cargarColaPrioridad(CP, L);	
 		
-			remove("Archivos\\Asignaciones.txt");	
-			i = L->inicio;
-			while( i->siguiente!= NULL){
-				if (strcmp( i->estado , "Aprobada" )==1){
-					printf("dentro del if\n");
-					printf("\n+-------------------------------+\n");
-					printf("ID de la Asignacion: %s \n", i->codigoAsignacion);
-					printf("Fecha de Solicitud: %s \n", i->fechaSolicitud);
-					printf("Hora de Inicio: %s \n", i->horaInicio ); 
-					printf("Hora de Fin: %s \n", i->horaFin); 
-					printf("Identificador: %s \n", i->identificador); 
-					printf("Recurso: %s \n", i->recurso); 
-					printf("Descripcion: %s \n", i->descripcion);
-					printf("Miembros: %s \n", i->miembros); 
-					printf("Priodidad: %s \n", i->prioridad ); 
-					printf("Estado: %s \n", i->estado); 
-					printf("+-------------------------------+\n");
-					printf("\n Desea atender esta asignacion \n");
-					printf("\n  Digite 1 para SI, 0 para NO \n");
-					printf("+-------------------------------+\n");
-					printf("--> ");
-
-					gets(opcion);
-					
-
-					if ( strcmp(opcion ,"1")==0){
-						strcpy(i->estado, "Aprobada");
-						guardarAsignacion(i);
-						printf("\nLa asignacion %s fue atendida\n", i->codigoAsignacion);	
-						
-					}									
-				}
+		for(i = CP->frente; i!= NULL; i = i->siguiente){
+		
+			if (strcmp( i->asignacion->estado , "Aprobada" )==1){		
+				printf("\n+-------------------------------+\n");
+				printf("      Asignacion: %s \n", i->asignacion->codigoAsignacion);
+				printf("  Fecha de Solicitud: %s \n", i->asignacion->fechaSolicitud);
+				printf("  Hora de Inicio: %s \n", i->asignacion->horaInicio ); 
+				printf("  Hora de Fin: %s \n", i->asignacion->horaFin); 
+				printf("  Requerimiento: %s \n", i->asignacion->identificador); 
+				printf("  Recurso: %s \n", i->asignacion->recurso); 
+				printf("  Descripcion: %s \n", i->asignacion->descripcion);
+				printf("  Miembros: %s \n", i->asignacion->miembros); 
+				printf("  Priodidad: %s \n", i->asignacion->prioridad ); 
+				printf("  Estado: %s \n", i->asignacion->estado); 
+				printf("+-------------------------------+\n");
+				printf("-->Desea atender esta asignacion? \n");
+				printf("<--Digite 1 para SI, 2 para NO, o 3 para finalizar:");
+	
+				gets(opcion);
 				
-				i=i->siguiente;	
+				if ( strcmp(opcion ,"3")==0){
+					break;			
+				}
+	
+				if ( strcmp(opcion ,"1")==0){
+					res2=validarHorario(L, i);
+					
+					if(res2==1){
+						printf("\n-->La asignacion %s ha sido Aprobada\n", i->asignacion->codigoAsignacion);	
+					}else{
+						printf("\n-->La asignacion %s ha sido Rechazada\n", i->asignacion->codigoAsignacion);
+					}
+					
+										
+				}												
 			}
+		}
+				
+		actualizarAsignaciones(L);
 
 	}else{
 		printf( "\n***No se han registrado Asignaciones***");

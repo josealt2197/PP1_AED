@@ -7,3 +7,12 @@ Proyector
 Activo
 15
 OF-001
+RQ-002
+Funcional
+Debe abrir ventana 2
+Moderado
+Ninguna
+Proyector
+Activo
+15
+OF-003
