@@ -135,6 +135,7 @@ void liberarTopHorarios(ListaTopHorarios *L);
 void liberarTopAsignaciones(ListaTopAsignaciones *L);
 void liberarListaOficinas(ListaOficinas *L);
 void liberarListaCalificaciones(ListaCalificaciones *L);
+void liberarPilaAsignaciones(PilaAsignaciones *P);
 
 struct Requerimiento{
     char identificador[50];
@@ -277,6 +278,7 @@ struct ListaTopEsfuerzo{
 struct PilaAsignaciones{
 	Asignacion *tope;
 };
+
 /****************************************************************Menús de Opciones***********************************************************************************************/
 
 /*
@@ -1346,6 +1348,7 @@ void consultarRequerimiento(){
                 printf(" Estado: %s \n", i->estado);
                 printf(" Esfuerzo: %s \n", i->esfuerzo);
                 printf(" Oficina: %s \n", i->oficina);
+                printf(" Calificacion Promedio: %.2f \n", promedioCalificaciones(i->identificador));
                 
                 iOf = LOf->inicio;
                 while(iOf->siguiente!= NULL){
@@ -1596,8 +1599,6 @@ void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[]
 int cargarOficinas(struct ListaOficinas *L){
 	
 	struct Oficina *oficina, *aux;
-
-	
 
 	ArchOficinas = fopen("Archivos\\Oficinas.txt","r");
 
@@ -1996,8 +1997,15 @@ void consultarAsignaciones(){
 
 	struct PilaAsignaciones *P;
 	struct Asignacion *i;
-	int val=0, res=0;
+	int val=0, val2=0, res=0;
 	char id[12];
+	
+	struct ListaCalificaciones *LC;
+	LC = (struct ListaCalificaciones *) malloc(sizeof(struct ListaCalificaciones));
+    LC->inicio = NULL;
+    LC->final = NULL;
+    
+    struct Calificacion *aux;
 	
 	system( "CLS" );
 	printf("\n\n+-------------------------------------+\n");
@@ -2019,19 +2027,40 @@ void consultarAsignaciones(){
 		printf("\n+-------------------------------+\n");
 		for(i = P->tope; i!= NULL; i = i->siguiente){
 			if(strcmp(id,i->miembros)==0){
-				printf("ID de la Asignacion: %s \n", i->codigoAsignacion);
-				printf("Fecha de Solicitud: %s \n", i->fechaSolicitud);
-				printf("Hora de Inicio: %s \n", i->horaInicio ); 
-				printf("Hora de Fin: %s \n", i->horaFin); 
-				printf("Identificador: %s \n", i->identificador); 
-				printf("Recurso: %s \n", i->recurso); 
-				printf("Descripcion: %s \n", i->descripcion);
-				printf("Miembros: %s \n", i->miembros); 
-				printf("Priodidad: %s \n", i->prioridad ); 
-				printf("Estado: %s \n", i->estado); 
+				printf("       Asignacion: %s \n", i->codigoAsignacion);
+				printf("  Fecha de Solicitud: %s \n", i->fechaSolicitud);
+				printf("  Hora de Inicio: %s \n", i->horaInicio ); 
+				printf("  Hora de Fin: %s \n", i->horaFin); 
+				printf("  Requerimiento: %s \n", i->identificador); 
+				printf("  Recurso: %s \n", i->recurso); 
+				printf("  Descripcion: %s \n", i->descripcion);
+				printf("  Miembros: %s \n", i->miembros); 
+				printf("  Priodidad: %s \n", i->prioridad ); 
+				printf("  Estado: %s \n", i->estado); 
+				
+				res=cargarCalificaciones(LC);
+	
+				if(res == 0){	
+					printf( "\n-->No se ha registrado una Calificacion para esta asignacion");		
+				}else{
+					aux = LC->inicio;
+					while( aux->siguiente!= NULL){	
+				        if(strcmp(aux->codigoAsignacion, i->codigoAsignacion)==0){   
+							printf("  Calificacion: %s \n", aux->calificacion); 
+							val2=1;
+							break;
+				        }
+						aux = aux->siguiente;
+					}
+					
+					if(val2==0){
+						printf( "\n-->No se ha registrado una Calificacion para esta asignacion");			
+					}
+					
+				}
+				
 				printf("+-------------------------------+\n");
 				val=1;
-			
 			}
 		}
 		
@@ -2043,7 +2072,8 @@ void consultarAsignaciones(){
 		printf( "\n***No se han registrado Asignaciones***");
 	}
 	
-	//liberarPilaAsignaciones(P);
+	liberarListaCalificaciones(LC);
+	liberarPilaAsignaciones(P);
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
 	fflush(stdin);
@@ -2075,7 +2105,7 @@ void cancelarAsignacion(){
     
 	res=cargarAsignaciones(L);
     
-    if(res=1)
+    if(res==1)
     {
         printf("\n\n+-----------------------Lista de Asignaciones-----------------------+\n");
         printf("\n+-------------------------------------------------------------------+\n");
@@ -2093,7 +2123,12 @@ void cancelarAsignacion(){
         printf("\n+-------------------------------------------------------------------+\n");
 
     }else{
-        printf( "\nNo se han registrado Asignaciones");
+        printf("\nNo se han registrado Asignaciones");
+        
+        printf("\nPresione una tecla para regresar..." ); 
+        getchar();
+        return;
+        
     }
 	int eliminar=0;
     printf("Ingrese el numero del ID de la asignacion que desea cancelar: ");
@@ -2179,15 +2214,11 @@ void atencionAsignaciones(){
 	L->final = NULL;
 
 	res=cargarAsignaciones(L);
-	printf("res: %d", res);
-	if(res==1)
-	{		
+	if(res==1){		
 		
 			remove("Archivos\\Asignaciones.txt");	
 			i = L->inicio;
 			while( i->siguiente!= NULL){
-				printf("dentro del while\n");
-				printf("estado: %s\n", i->estado);
 				if (strcmp( i->estado , "Aprobada" )==1){
 					printf("dentro del if\n");
 					printf("\n+-------------------------------+\n");
@@ -2224,9 +2255,7 @@ void atencionAsignaciones(){
 	}else{
 		printf( "\n***No se han registrado Asignaciones***");
 	}
-	
-
-	
+		
 	liberarListaAsignaciones(L);
 	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();
@@ -2285,8 +2314,6 @@ int validarAsignaciones(const char identificador[]){
 */
 int validarAsignacion(struct ListaAsignaciones *L, char idAsignacion[], char idRQ[], char idMiembro[]){
 	struct  Asignacion *i;
-	
-	printf("Dentro");
 
     i = L->inicio;
     while( i->siguiente!= NULL){
@@ -2731,28 +2758,28 @@ void registrarCalificaciones(){
         }else{
             printf("\n **El ID no corresponde con ninguna Asignacion registrada**\n ");
         }
-    }while(1);
-	
+    }while(1);	
 	
 	printf("\n Ingrese la Calificacion de Requerimiento (1-100): \n");
 	gets(calificacion->calificacion);
-	printf("\n");
 	calificacion->siguiente=NULL;
 	
-    i = LC->inicio;
-    while( i->siguiente!= NULL){
-        if(strcmp(calificacion->codigoAsignacion, i->codigoAsignacion)==0){
-			strcpy(i->codigoAsignacion, calificacion->codigoAsignacion);
-			strcpy(i->codigoRequerimiento, calificacion->codigoRequerimiento);
-            strcpy(i->miembro,calificacion->miembro);
-            strcpy(i->calificacion,calificacion->calificacion);
-            actualizar=1;
-            break;
-		}
-        i = i->siguiente;
-    }
+	if(res2==1){
+		i = LC->inicio;
+	    while( i->siguiente!= NULL){
+	        if(strcmp(calificacion->codigoAsignacion, i->codigoAsignacion)==0){
+				strcpy(i->codigoAsignacion, calificacion->codigoAsignacion);
+				strcpy(i->codigoRequerimiento, calificacion->codigoRequerimiento);
+	            strcpy(i->miembro,calificacion->miembro);
+	            strcpy(i->calificacion,calificacion->calificacion);
+	            actualizar=1;
+	            break;
+			}
+	        i = i->siguiente;
+	    }
+	}    
 	
-	if(actualizar=1){
+	if(actualizar==1){
 		actualizarCalificacion(LC);
 	}else{
 		guardarCalificacion(calificacion);
@@ -2761,7 +2788,7 @@ void registrarCalificaciones(){
 	
 	liberarListaAsignaciones(L);
 	liberarListaCalificaciones(LC);	
-	printf("\n\nPresione una tecla para regresar..." ); 
+	printf("\nPresione una tecla para regresar..." ); 
     getchar();	
 }
 
@@ -3001,7 +3028,7 @@ void consultarTopAsignaciones(){
 
 	res=cargarAsignaciones(L);
 
-	if(res=1)
+	if(res==1)
 	{
 		i = L->inicio;
 		while( i->siguiente!= NULL){
@@ -3043,6 +3070,7 @@ void consultarTopAsignaciones(){
 		
 	}else{
 		printf( "\n***No se han registrado Asignaciones***");
+		return;
 	}
 	
 	ordenarTopAsignaciones(LT);
@@ -3149,7 +3177,7 @@ void consultarTopHorarios(){
 
 	res=cargarRequerimientos(L);
 
-	if(res=1)
+	if(res==1)
 	{
 		i = L->inicio;
 		while( i->siguiente!= NULL){
@@ -3190,7 +3218,8 @@ void consultarTopHorarios(){
 		}
 		
 	}else{
-		printf( "\n***No se han registrado Asignaciones***");
+		printf( "\n***No se han registrado Requerimientos***");
+		return;
 	}
 	
 	ordenarTopHorarios(LT);
@@ -3307,7 +3336,7 @@ void consultarTopMiembros(){
 
 	res=cargarAsignaciones(L);
 
-	if(res=1)
+	if(res==1)
 	{
 		i = L->inicio;
 		while( i->siguiente!= NULL){
@@ -3349,6 +3378,7 @@ void consultarTopMiembros(){
 		
 	}else{
 		printf( "\n***No se han registrado Asignaciones***");
+		return;
 	}
 	
 	ordenarTopMiembros(LT);
@@ -3448,7 +3478,7 @@ void consultarTopEsfuerzo(){
 
 	res=cargarRequerimientos(L);
 
-	if(res=1)
+	if(res==1)
 	{
 		i = L->inicio;
 		while( i->siguiente!= NULL){
@@ -3481,7 +3511,8 @@ void consultarTopEsfuerzo(){
 		}
 		
 	}else{
-		printf( "\n***No se han registrado Asignaciones***");
+		printf( "\n***No se han registrado Requerimientos***");
+		return;
 	}
 	
 	ordenarTopEsfuerzo(LT);
@@ -3726,6 +3757,27 @@ void liberarTopMiembros(ListaTopMiembros *L){
 	
 }
 
+/*
+	Entradas: Un puntero a una lista de nodos de tipo struct PilaAsignaciones.
+	Salidas: Se libera el espacio en memoria ocupado por los elementos de la lista a la cual señala el puntero recibido.
+	Restricciones: Ninguna
+*/
+void liberarPilaAsignaciones(PilaAsignaciones *P){
+	struct Asignacion *n, *aux;
+	if(P->tope == NULL)
+		return;
+	if(P->tope->siguiente == NULL)
+		return;		
+	n = P->tope;
+	
+	while(n != NULL)
+	{
+		aux = n;
+		n = n->siguiente;
+		free(aux);
+	}
+	
+}
 
 int main(){ 
 

@@ -1,0 +1,9 @@
+RQ-001
+Funcional
+Debe abrir ventana 1
+Moderado
+Ninguna
+Proyector
+Activo
+15
+OF-001
