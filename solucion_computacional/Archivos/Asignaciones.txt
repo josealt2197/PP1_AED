@@ -10,21 +10,21 @@ ALTA
 En proceso
 AS-002
 10/11/2020
-6:45
-12:00
+6
+12
 N
 RQ-002
 N
 305000781
 MEDIA
-En proceso
+Aprobada
 AS-003
 10/11/2020
-13:00
+10
 17:00
 N
 RQ-002
 N
 305000781
 MEDIA
-En proceso
+Rechazada

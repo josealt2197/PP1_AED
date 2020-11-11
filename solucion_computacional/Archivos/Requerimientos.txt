@@ -4,7 +4,7 @@ Debe abrir ventana 1
 Moderado
 Ninguna
 Proyector
-Activo
+Asignado
 15
 OF-001
 RQ-002
@@ -13,6 +13,6 @@ Debe abrir ventana 2
 Moderado
 Ninguna
 Proyector
-Activo
+Asignado
 15
 OF-003

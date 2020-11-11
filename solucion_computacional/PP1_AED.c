@@ -68,7 +68,7 @@ void consultarRequerimiento();
 int validarIDRequerimiento(const char identificador []);
 void modificarRequerimiento();
 void actualizarRequerimientos(struct ListaRequerimientos *L);
-void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[]);
+void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[], int condicion);
 int cargarOficinas(struct ListaOficinas *L);
 void consultarOficinas();
 
@@ -82,6 +82,8 @@ void atencionAsignaciones();
 int validarAsignaciones(const char identificador[]);
 void ordenarAsignaciones(struct ListaAsignaciones *L);
 int validarAsignacion(struct ListaAsignaciones *L, char idAsignacion[], char idRQ[], char idMiembro[]);
+int validarHorario(ListaAsignaciones *L,  NodoPrioridad *np);
+void actualizarAsignaciones(struct ListaAsignaciones *L );
 
 //Procedimientos para Incidentes
 void registrarIncidentes();
@@ -1577,13 +1579,7 @@ void actualizarRequerimientos(struct ListaRequerimientos *L){
         }
 		
 	}
-	
-	
 	fclose(ArchRequerimiento);
-	printf("\n ==>Informacion guardada<==.\n");
-	
-	printf("\n\nPresione una tecla para regresar..." ); 
-
 }
 
 /*
@@ -1591,7 +1587,7 @@ void actualizarRequerimientos(struct ListaRequerimientos *L){
 	Salidas: Se actualiza el estado del requerimiento y se llama a la función actualizaRequerimiento para guardar los datos en un archivo .txt. 
 	Restricciones: No tiene restricciones.
 */
-void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[]){
+void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[], int condicion){
 	struct Requerimiento *i;
 	char id[15];
 	int val;
@@ -1599,7 +1595,11 @@ void modificarEstadoRQ(struct ListaRequerimientos *L, const char identificador[]
     i = L->inicio;
     while( i->siguiente!= NULL){
         if(strcmp(i->identificador, identificador)==0){
-			strcpy(i->estado, "Activo");		
+			if(condicion == 1){
+				strcpy(i->estado, "Activo");
+			}else{
+				strcpy(i->estado, "Asignado");
+			}					
 		}
         i = i->siguiente;
     }
@@ -1854,10 +1854,11 @@ void registrarAsignacion(){
 		strcpy(asignacion->estado, "En proceso");
 		
 		//Actualizar el Estado del Requerimiento
-		modificarEstadoRQ(LRQ, asignacion->identificador);
+		modificarEstadoRQ(LRQ, asignacion->identificador, 1);
 	
 		guardarAsignacion(asignacion);
 		
+		printf("\n ==>Informacion guardada<==.\n");
 		
 		liberarListaAsignaciones(LA);
 		liberarListaOficinas(LOf);
@@ -1872,6 +1873,9 @@ void registrarAsignacion(){
     liberarListaRequerimientos(LRQ);
     free(asignacion);
     
+    	
+	
+	printf("\n\nPresione una tecla para regresar..." ); 
 	getchar();	
 }
 
@@ -1893,9 +1897,8 @@ void actualizarAsignaciones(struct ListaAsignaciones *L ){
 	}else{
 		asignacion = L->inicio;
         while( asignacion->siguiente!= NULL){
-        	printf("Dentro Update\n");
 			fprintf(ArchAsignaciones,"%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n", asignacion->codigoAsignacion, asignacion->fechaSolicitud, asignacion->horaInicio, asignacion->horaFin, asignacion->recurso, asignacion->identificador, 
-																asignacion->descripcion,  asignacion->miembros, asignacion->prioridad, asignacion->estado);
+																				 asignacion->descripcion,  asignacion->miembros, asignacion->prioridad, asignacion->estado);
             asignacion = asignacion->siguiente;
         }
 		
@@ -2115,45 +2118,6 @@ void cargarColaPrioridad(struct ColaPrioridad *CP, struct ListaAsignaciones *L){
 }
 
 /*
-    Entradas:  
-    Salidas: 
-    Restricciones: No valida.
-*/
-int validarHorario(ListaAsignaciones *L,  NodoPrioridad *np){
-
-    struct Asignacion *i;
-
-
-    i = L->inicio;
-    while( i->siguiente!= NULL){
-    	printf("ID i: %s\n", i->identificador);
-    	printf("ID np: %s\n", np->asignacion->identificador );
-    	if (strcmp( i->identificador , np->asignacion->identificador )==0){
-    		printf("Dentro 1\n");
-			if ((validarHoras(i->horaInicio, np->asignacion->horaInicio )==1) && (validarHoras(i->horaInicio, np->asignacion->horaFin )==1 || validarHoras(i->horaInicio, np->asignacion->horaFin )==0)){
-    			printf("Dentro 2\n");
-				strcpy(i->estado, "Aprobada");
-    			return 1;
-			}
-			
-			if ((validarHoras(i->horaFin, np->asignacion->horaInicio )==2 || validarHoras(i->horaFin, np->asignacion->horaInicio )==0) && (validarHoras(i->horaFin, np->asignacion->horaInicio )==2)){
-    			printf("Dentro 3\n");
-				strcpy(i->estado, "Aprobada");
-    			return 1;
-			}
-			
-			strcpy(i->estado, "Rechazada");
-			printf("Fuera if's'\n");
-    		return -1;	
-   	
-    	}
-
-        i = i->siguiente;     
-    }
-    
-}
-
-/*
 	Entradas: Un dato que indique la cédula del Miembro del Equipo por consultar las Asignaciones
 	Salidas: Los datos relacionado a las Asignaciones del Miembro consultado en caso de que existan, de lo contrario un mensaje indicando 
 			que no se han encontrado.
@@ -2357,6 +2321,77 @@ void cancelarAsignacion(){
 }
 
 /*
+    Entradas: Un puntero a una lista de asignaciones y un puntero a un NodoPrioridad.
+    Salidas: 1 si la asignacion consultada cumpe con las condiciones para ser aprobada o -1 si no cumple alguna de als condiciones.
+    Restricciones: No valida.
+*/
+int validarHorario(ListaAsignaciones *L,  NodoPrioridad *np){
+
+    struct Asignacion *i;
+
+    i = L->inicio;
+    while( i->siguiente!= NULL){
+    	
+    	if (strcmp( i->identificador , np->asignacion->identificador )==0 && strcmp( i->estado, "Aprobada" )==0){
+			if ((validarHoras(i->horaInicio, np->asignacion->horaInicio)==1) ){
+    			if(validarHoras(i->horaInicio, np->asignacion->horaFin )==1 || validarHoras(i->horaInicio, np->asignacion->horaFin )==0){
+	    			return 1;
+				}			
+			}
+			
+			if (validarHoras(i->horaFin, np->asignacion->horaInicio )==2 || validarHoras(i->horaFin, np->asignacion->horaInicio )==0){
+				if(validarHoras(i->horaFin, np->asignacion->horaFin )==2){
+    				return 1;
+				}		
+			}
+
+    		return -1;		
+    	}
+
+        i = i->siguiente;     
+    }
+    
+    return 1;
+    
+}
+
+/*
+    Entradas: Un puntero a una lista de asignaciones, el una cedena de caracteres con el identificador de una asignacion, y un entero indicado 1 si se se debe aprobar o -1 si se debe rechazar  
+    Salidas: Se modifica el estado de la asignacion que corresponda con el identificadro de la recibido a Aprobada o Rechazada según lo indique el entero condicion.
+    Restricciones: No valida.
+*/
+void actualizarEstadoAsignacion(ListaAsignaciones *L,  char identificador[], int condicion){
+
+    struct Asignacion *i;
+    int res=0;
+    
+    struct ListaRequerimientos *LRQ;
+    LRQ = (struct ListaRequerimientos *) malloc(sizeof(struct ListaRequerimientos));
+    LRQ->inicio = NULL;
+    LRQ->final = NULL;
+    
+    res = cargarRequerimientos(LRQ);
+
+    i = L->inicio;
+    while( i->siguiente!= NULL){
+    	if (strcmp( i->codigoAsignacion , identificador )==0 ){				
+			if(condicion==1){
+				strcpy(i->estado, "Aprobada");
+				modificarEstadoRQ(LRQ, i->identificador, 2);
+				break;
+			}else{
+				strcpy(i->estado, "Rechazada");
+				break;
+			}		
+    	}
+
+        i = i->siguiente;     
+    }
+    
+    liberarListaRequerimientos(LRQ);  
+}
+
+/*
 	Entradas: Ninguna.
 	Salidas: Se actualiza el estado de algunas de las asignaciones registradas a Aprobada.
 	Restricciones: Ninguna.
@@ -2410,12 +2445,14 @@ void atencionAsignaciones(){
 	
 				gets(opcion);
 				
-				if ( strcmp(opcion ,"3")==0){
+				if (strcmp(opcion ,"3")==0){
 					break;			
 				}
 	
-				if ( strcmp(opcion ,"1")==0){
+				if (strcmp(opcion ,"1")==0){
 					res2=validarHorario(L, i);
+					
+					actualizarEstadoAsignacion(L,  i->asignacion->codigoAsignacion, res2);
 					
 					if(res2==1){
 						printf("\n-->La asignacion %s ha sido Aprobada\n", i->asignacion->codigoAsignacion);	
