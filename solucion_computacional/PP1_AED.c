@@ -1087,7 +1087,7 @@ void consultarMiembroEquipo(){
         }
 
     }else{
-        printf( "\nNo se ha registrado ningún Miembro*");
+        printf( "\nNo se ha registrado ningun Miembro*");
     }
     liberarColaMiembros(C);
     liberarColaIncidentes(CIncidente);
@@ -1391,7 +1391,7 @@ void consultarRequerimiento(){
             printf( "\n**Requerimiento no encontrado***");
         }
     }else{		
-		printf("\n**No se ha registrado ningún requerimiento***");
+		printf("\n**No se ha registrado ningun requerimiento***");
 	}
 	
 	liberarListaRequerimientos(L);
@@ -1545,7 +1545,7 @@ void modificarRequerimiento(){
             printf( "\n**Requerimiento no encontrado***");
         }
     }else{		
-		printf("\n**No se ha registrado ningún requerimiento***");
+		printf("\n**No se ha registrado ningun requerimiento***");
 	}
 	
 	actualizarRequerimientos(L);
@@ -1865,7 +1865,7 @@ void registrarAsignacion(){
 		
 	
 	}else{
-		printf("\n***No es posible completar la asignacion, no se ha resgistrado\n   ningún requerimiento***");
+		printf("\n***No es posible completar la asignacion, no se ha resgistrado\n   ningun requerimiento***");
 		printf("\n\nPresione una tecla para regresar..." ); 
 	}
 	
@@ -2957,7 +2957,7 @@ void registrarCalificaciones(){
 	}
 	
 	if(res == 0){
-		printf("No ha resgistrado ninguna asignación\n");
+		printf("No ha resgistrado ninguna asignacion\n");
 		getchar();	
 		return;	
 	}
