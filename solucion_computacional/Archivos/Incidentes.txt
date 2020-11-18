@@ -1,0 +1,15 @@
+IN-001
+RQ-001
+AS-001
+RQ no terminado
+17/11/2020
+IN-002
+RQ-001
+AS-003
+RQ con errores
+17/11/2020
+IN-003
+RQ-001
+AS-005
+RQ incompleto
+17/11/2020

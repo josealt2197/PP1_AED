@@ -1,18 +1,90 @@
 RQ-001
 Funcional
-Debe abrir ventana 1
+El sistema permitir  a los usuarios autorizados el ingresar planes y cronogramas de proyecto.
 Moderado
 Ninguna
-Proyector
-Asignado
-15
+Laptop
+Activo
+14
 OF-001
 RQ-002
-Funcional
-Debe abrir ventana 2
-Moderado
-Ninguna
-Proyector
-Asignado
-15
+No Funcional
+El sistema permitir  aprobar, cambiar o actualizar planes y cronogramas de proyecto.
+Ninguno
+RQ-001
+Ninguno
+Por hacer
+10
 OF-003
+RQ-003
+Funcional
+El sistema permitir  el env¡o automatizado de cartas de entrega de ¢rdenes directamente al almac‚n.
+Ninguno
+RQ-002
+Varios
+Por hacer
+15
+OF-004
+RQ-004
+No Funcional
+A cada orden se le asignar  un identificador £nico, que ser  utilizado para identificarla en todos los procesos subsecuentes que se realicen sobre esta
+Ninguno
+RQ-003
+Ninguno
+Por hacer
+10
+OF-004
+RQ-005
+Funcional
+Los pedidos de compra que excedan los montos establecidos en el flujo de liberaciones de pedidos configurados, deber n pasar por las aprobaciones establecidas en dicho flujo de aprobaci¢n.
+Ninguno
+Ninguno
+Ninguno
+Por hacer
+5
+OF-006
+RQ-006
+Funcional
+Al aprobar un pedido, la solicitud pasar  al siguiente paso del flujo de trabajo (workflow) de aprobaci¢n configurado en el sistema.
+Ninguno
+RQ-002
+Ninguno
+Por hacer
+9
+OF-006
+RQ-007
+Funcional
+El campo de monto acepta £nicamente valores num‚ricos con dos decimales
+Ninguno
+Ninguna
+Ninguno
+Inactivo
+16
+OF-006
+RQ-008
+Funcional
+El campo direcci¢n acepta caracteres alfab‚ticos, num‚ricos y especiales.
+Alto
+RQ-003
+Ninguno
+Por hacer
+2
+OF-004
+RQ-009
+Funcional
+El campo fecha contable acepta £nicamente fechas que correspondan con periodos contables que est‚n abiertos en el sistema.
+Ninguno
+RQ-007
+Ninguno
+Por hacer
+15
+OF-005
+RQ-010
+Funcional
+El campo fecha de transacci¢n acepta £nicamente fechas anteriores al d¡a de hoy (d¡a actual).
+Alto
+Ninguno
+Ninguno
+Por hacer
+13
+OF-001

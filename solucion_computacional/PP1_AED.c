@@ -145,9 +145,9 @@ void liberarPilaAsignaciones(PilaAsignaciones *P);
 struct Requerimiento{
     char identificador[50];
     char tipo[20];
-    char descripcion[100];
+    char descripcion[200];
     char riesgo[60];
-    char dependencia[100];
+    char dependencia[10];
     char recursos[55];
     char estado [15];
     char esfuerzo[5];
@@ -1276,11 +1276,11 @@ int cargarRequerimientos(struct ListaRequerimientos *L){
 			quitaFinLinea(aux->identificador);
 			fgets(aux->tipo, 20, ArchRequerimiento); 
 			quitaFinLinea(aux->tipo);
-			fgets(aux->descripcion, 100, ArchRequerimiento);
+			fgets(aux->descripcion, 200, ArchRequerimiento);
 			quitaFinLinea(aux->descripcion);			
 			fgets(aux->riesgo, 60, ArchRequerimiento);
 			quitaFinLinea(aux->riesgo);
-			fgets(aux->dependencia, 100, ArchRequerimiento);
+			fgets(aux->dependencia, 10, ArchRequerimiento);
 			quitaFinLinea(aux->dependencia);
 			fgets(aux->recursos, 55, ArchRequerimiento);
 			quitaFinLinea(aux->recursos);
