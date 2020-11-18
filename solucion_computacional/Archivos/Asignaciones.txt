@@ -1,13 +1,13 @@
 AS-001
 12/03/2020
-7:30
+23:59
 12:00
 Ninguno
 RQ-001
 Ninguna
 305000781
 ALTA
-En proceso
+Cancelada
 AS-002
 13/03/2020
 9:00
@@ -17,7 +17,7 @@ RQ-002
 Ninguna
 305000781
 MEDIA
-En proceso
+Por hacer
 AS-003
 14/05/2020
 7:00
@@ -27,7 +27,7 @@ RQ-001
 Ninguna
 305000781
 BAJA
-En proceso
+Por hacer
 AS-004
 07/09/2020
 7:00
